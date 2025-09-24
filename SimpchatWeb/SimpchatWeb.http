@@ -1,0 +1,6 @@
+@SimpchatWeb_HostAddress = http://localhost:5196
+
+GET {{SimpchatWeb_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
