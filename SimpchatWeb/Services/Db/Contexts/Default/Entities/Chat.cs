@@ -7,8 +7,8 @@ namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
         public Guid Id { get; set; }
         public ChatTypes Type { get; set; }
         public ICollection<Message> Messages { get; set; }
-        public ICollection<Group> Groups { get; set; }
-        public ICollection<Conversation> Conversations { get; set; }
-        public ICollection<Channel> Channels { get; set; }
+        public Group Group { get; set; }
+        public Conversation Conversation { get; set; }
+        public Channel Channel { get; set; }
     }
 }

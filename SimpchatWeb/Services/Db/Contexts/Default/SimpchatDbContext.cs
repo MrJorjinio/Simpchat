@@ -115,8 +115,8 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             //<Group>
             modelBuilder.Entity<Group>()
                 .HasOne(g => g.Chat)
-                .WithMany(c => c.Groups)
-                .HasForeignKey(g => g.Id);
+                .WithOne(c => c.Group)
+                .HasForeignKey<Group>(g => g.Id);
             modelBuilder.Entity<Group>()
                 .HasKey(g => g.Id);
             modelBuilder.Entity<Group>()
@@ -149,8 +149,8 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             //<Conversation>
             modelBuilder.Entity<Conversation>()
                 .HasOne(c => c.Chat)
-                .WithMany(c => c.Conversations)
-                .HasForeignKey(c => c.Id);
+                .WithOne(c => c.Conversation)
+                .HasForeignKey<Conversation>(c => c.Id);
             modelBuilder.Entity<Conversation>()
                 .HasKey(c => c.Id);
             //</Conversation>
@@ -166,8 +166,8 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             //<Channel>
             modelBuilder.Entity<Channel>()
                 .HasOne(c => c.Chat)
-                .WithMany(c => c.Channels)
-                .HasForeignKey(c => c.Id);
+                .WithOne(c => c.Channel)
+                .HasForeignKey<Channel>(c => c.Id);
             modelBuilder.Entity<Channel>()
                 .HasKey(c => c.Id);
             modelBuilder.Entity<Channel>()
