@@ -1,10 +1,10 @@
 ﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
 {
-    public class GroupRolePermission
+    public class GlobalRolePermission
     {
         public Guid RoleId { get; set; }
         public Guid PermissionId { get; set; }
-        public GroupRole Role { get; set; }
-        public GroupPermission Permission { get; set; }
+        public GlobalRole Role { get; set; }
+        public GlobalPermission Permission { get; set; }
     }
 }

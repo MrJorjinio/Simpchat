@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SimpchatWeb.Services.Db.Contexts.Default;
@@ -11,9 +12,11 @@ using SimpchatWeb.Services.Db.Contexts.Default;
 namespace SimpchatWeb.Migrations
 {
     [DbContext(typeof(SimpchatDbContext))]
-    partial class SimpchatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250926064839_AddGlobalRolesAndFixGroupRolesUsersPermissionRelationship")]
+    partial class AddGlobalRolesAndFixGroupRolesUsersPermissionRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,9 +52,6 @@ namespace SimpchatWeb.Migrations
 
                     b.HasIndex("CreatedById");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
                     b.ToTable("Channels");
                 });
 
@@ -77,9 +77,8 @@ namespace SimpchatWeb.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -128,9 +127,8 @@ namespace SimpchatWeb.Migrations
                     b.Property<DateTimeOffset>("FormedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.HasKey("UserId", "FriendId");
 
@@ -151,8 +149,7 @@ namespace SimpchatWeb.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("character varying(250)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -161,10 +158,7 @@ namespace SimpchatWeb.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("GlobalPermissions");
+                    b.ToTable("GlobalPermission");
                 });
 
             modelBuilder.Entity("SimpchatWeb.Services.Db.Contexts.Default.Entities.GlobalRole", b =>
@@ -186,10 +180,7 @@ namespace SimpchatWeb.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("GlobalRoles");
+                    b.ToTable("GlobalRole");
                 });
 
             modelBuilder.Entity("SimpchatWeb.Services.Db.Contexts.Default.Entities.GlobalRolePermission", b =>
@@ -204,7 +195,7 @@ namespace SimpchatWeb.Migrations
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("GlobalRolesPermissions");
+                    b.ToTable("GlobalRolePermission");
                 });
 
             modelBuilder.Entity("SimpchatWeb.Services.Db.Contexts.Default.Entities.GlobalRoleUser", b =>
@@ -219,7 +210,7 @@ namespace SimpchatWeb.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("GlobalRolesUsers");
+                    b.ToTable("GlobalRoleUser");
                 });
 
             modelBuilder.Entity("SimpchatWeb.Services.Db.Contexts.Default.Entities.Group", b =>
@@ -246,9 +237,6 @@ namespace SimpchatWeb.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedById");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
 
                     b.ToTable("Groups");
                 });
@@ -285,10 +273,7 @@ namespace SimpchatWeb.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("GroupPermissions");
+                    b.ToTable("GroupPermission");
                 });
 
             modelBuilder.Entity("SimpchatWeb.Services.Db.Contexts.Default.Entities.GroupRole", b =>
@@ -304,9 +289,6 @@ namespace SimpchatWeb.Migrations
                         .HasColumnType("character varying(35)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
 
                     b.ToTable("GroupRoles");
                 });
@@ -446,6 +428,45 @@ namespace SimpchatWeb.Migrations
                     b.ToTable("Reactions");
                 });
 
+            modelBuilder.Entity("SimpchatWeb.Services.Db.Contexts.Default.Entities.Session", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTimeOffset>("ConnectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ConnectionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Device")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<DateTimeOffset>("DisconnectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Sessions");
+                });
+
             modelBuilder.Entity("SimpchatWeb.Services.Db.Contexts.Default.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -478,9 +499,6 @@ namespace SimpchatWeb.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Username")
-                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -775,6 +793,17 @@ namespace SimpchatWeb.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SimpchatWeb.Services.Db.Contexts.Default.Entities.Session", b =>
+                {
+                    b.HasOne("SimpchatWeb.Services.Db.Contexts.Default.Entities.User", "User")
+                        .WithMany("Sessions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SimpchatWeb.Services.Db.Contexts.Default.Entities.Channel", b =>
                 {
                     b.Navigation("Subscribers");
@@ -870,6 +899,8 @@ namespace SimpchatWeb.Migrations
                     b.Navigation("ReceivedFriendships");
 
                     b.Navigation("SentFriendships");
+
+                    b.Navigation("Sessions");
                 });
 #pragma warning restore 612, 618
         }

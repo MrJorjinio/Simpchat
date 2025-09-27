@@ -7,6 +7,6 @@
         public Guid PermissionId { get; set; }
         public User User { get; set; }
         public Group Group { get; set; }
-        public GroupRolePermission Permission { get; set; }
+        public GroupPermission Permission { get; set; }
     }
 }
