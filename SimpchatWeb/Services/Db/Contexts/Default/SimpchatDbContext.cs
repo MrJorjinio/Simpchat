@@ -7,7 +7,6 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
     public class SimpchatDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
-        public DbSet<Session> Sessions { get; set; }
         public DbSet<Reaction> Reactions { get; set; }
         public DbSet<MessageReaction> MessagesReactions { get; set; }
         public DbSet<Message> Messages { get; set; }
@@ -15,6 +14,7 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
         public DbSet<GroupUserPermission> GroupsUsersPermissions { get; set; }
         public DbSet<GroupRolePermission> GroupRolesPermissions { get; set; }
         public DbSet<GroupRole> GroupRoles { get; set; }
+        public DbSet<GroupPermission> GroupPermissions { get; set; }
         public DbSet<GroupParticipant> GroupsParticipants { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
@@ -23,10 +23,14 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
         public DbSet<Chat> Chats { get; set; }
         public DbSet<ChannelSubscriber> ChannelsSubscribers { get; set; }
         public DbSet<Channel> Channels { get; set; }
+        public DbSet<GlobalRole> GlobalRoles { get; set; }
+        public DbSet<GlobalPermission> GlobalPermissions { get; set; }
+        public DbSet<GlobalRolePermission> GlobalRolesPermissions { get; set; }
+        public DbSet<GlobalRoleUser> GlobalRolesUsers { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        public SimpchatDbContext(DbContextOptions<SimpchatDbContext> options)
+        : base(options)
         {
-            optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=simpchat;Username=postgres;Password=javohir04");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -34,7 +38,7 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             //<Enums>
             modelBuilder.HasPostgresEnum<ChatTypes>();
             modelBuilder.HasPostgresEnum<FriendshipsStatus>();
-            //<.Enums>
+            //<Enums>
             //<User>
             modelBuilder.Entity<User>()
                 .Property(u => u.Id)
@@ -46,15 +50,13 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<User>()
                 .Property(u => u.Description)
                 .HasMaxLength(85);
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Username)
+                .IsUnique();
+            modelBuilder.Entity<User>()
+                .Property(u => u.Username)
+                .IsRequired();
             //</User>
-            //<Session>
-            modelBuilder.Entity<Session>()
-                .Property(s => s.Id)
-                .HasDefaultValueSql("gen_random_uuid()");
-            modelBuilder.Entity<Session>()
-                .Property(s => s.Device)
-                .HasMaxLength(150);
-            //</Session>
             //<Reaction>
             modelBuilder.Entity<Reaction>()
                 .Property(r => r.Name)
@@ -88,18 +90,20 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
                 .WithMany(p => p.UsersAppliedTo)
                 .HasForeignKey(gup => gup.PermissionId);
             //</GroupUserPermission>
-            //<GroupRolePermission>
-            modelBuilder.Entity<GroupRolePermission>()
+            //<GroupPermission>
+            modelBuilder.Entity<GroupPermission>()
                 .Property(grp => grp.Id)
                 .HasDefaultValueSql("gen_random_uuid()");
-            modelBuilder.Entity<GroupRolePermission>()
+            modelBuilder.Entity<GroupPermission>()
                 .Property(grp => grp.Name)
                 .HasMaxLength(85);
-            modelBuilder.Entity<GroupRolePermission>()
-                .HasOne(grp => grp.RoleBelongTo)
-                .WithMany(r => r.Permissions)
-                .HasForeignKey(grp => grp.RoleId);
-            //</GroupRolePermission>
+            modelBuilder.Entity<GroupPermission>()
+                .HasIndex(gp => gp.Name)
+                .IsUnique();
+            modelBuilder.Entity<GroupPermission>()
+                .Property(gp => gp.Name)
+                .IsRequired();
+            //</GroupPermission>
             //<GroupRole>
             modelBuilder.Entity<GroupRole>()
                 .Property(gr => gr.Id)
@@ -107,7 +111,59 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<GroupRole>()
                 .Property(gr => gr.Name)
                 .HasMaxLength(35);
+            modelBuilder.Entity<GroupRole>()
+                .HasIndex(gr => gr.Name)
+                .IsUnique();
+            modelBuilder.Entity<GroupRole>()
+                .Property(gr => gr.Name)
+                .IsRequired();
             //</GroupRole>
+            //</GroupRolePermission>
+            modelBuilder.Entity<GroupRolePermission>()
+                .HasKey(grp => new { grp.RoleId, grp.PermissionId });
+            //</GroupRolePermission>
+            //<GlobalPermission>
+            modelBuilder.Entity<GlobalPermission>()
+                .Property(gp => gp.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity<GlobalPermission>()
+                .Property(gp => gp.Name)
+                .HasMaxLength(85);
+            modelBuilder.Entity<GlobalPermission>()
+                .HasIndex(gp => gp.Name)
+                .IsUnique();
+            modelBuilder.Entity<GlobalPermission>()
+                .Property(gp => gp.Name)
+                .IsRequired();
+            modelBuilder.Entity<GlobalPermission>()
+                .Property(gp => gp.Description)
+                .HasMaxLength(250);
+            //</GlobalPermission>
+            //<GlobalRole>
+            modelBuilder.Entity<GlobalRole>()
+                .Property(gr => gr.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity<GlobalRole>()
+                .Property(gr => gr.Name)
+                .HasMaxLength(35);
+            modelBuilder.Entity<GlobalRole>()
+                .Property(gr => gr.Description)
+                .HasMaxLength(250);
+            modelBuilder.Entity<GlobalRole>()
+                .HasIndex(gr => gr.Name)
+                .IsUnique();
+            modelBuilder.Entity<GlobalRole>()
+                .Property(gr => gr.Name)
+                .IsRequired();
+            //</GlobalRole>
+            //<GlobalRolePermission>
+            modelBuilder.Entity<GlobalRolePermission>()
+                .HasKey(grp => new { grp.RoleId, grp.PermissionId });
+            //</GlobalRolePermission>
+            //<GlobalRoleUser>
+            modelBuilder.Entity<GlobalRoleUser>()
+                .HasKey(gru => new { gru.UserId, gru.RoleId });
+            //</GlobalRoleUser>
             //<GroupParticipant>
             modelBuilder.Entity<GroupParticipant>()
                 .HasKey(gp => new { gp.GroupId, gp.UserId });
@@ -129,6 +185,12 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<Group>()
                 .Property(g => g.Description)
                 .HasMaxLength(200);
+            modelBuilder.Entity<Group>()
+                .HasIndex(g => g.Name)
+                .IsUnique();
+            modelBuilder.Entity<Group>()
+                .Property(g => g.Name)
+                .IsRequired();
             //</Group>
             //<Friendship>
             modelBuilder.Entity<Friendship>()
@@ -141,6 +203,9 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
                 .HasOne(f => f.Friend)
                 .WithMany(u => u.SentFriendships)
                 .HasForeignKey(u => u.FriendId);
+            modelBuilder.Entity<Friendship>()
+                .Property(f => f.Status)
+                .HasConversion<string>();
             //</Friendship>
             //<ConversationMember>
             modelBuilder.Entity<ConversationMember>()
@@ -158,6 +223,9 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<Chat>()
                 .Property(c => c.Id)
                 .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity<Chat>()
+                .Property(c => c.Type)
+                .HasConversion<string>();
             //</Chat>
             //<ChannelSubscriber>
             modelBuilder.Entity<ChannelSubscriber>()
@@ -180,6 +248,12 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<Channel>()
                 .Property(c => c.Description)
                 .HasMaxLength(200);
+            modelBuilder.Entity<Channel>()
+                .HasIndex(c => c.Name)
+                .IsUnique();
+            modelBuilder.Entity<Channel>()
+                .Property(c => c.Name)
+                .IsRequired();
             //</Channel>
         }
     }

@@ -1,3 +1,15 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using SimpchatWeb.Services.Auth;
+using SimpchatWeb.Services.DataInserter;
+using SimpchatWeb.Services.Db.Contexts.Default;
+using SimpchatWeb.Services.Interfaces;
+using SimpchatWeb.Services.Settings;
+using System.Text;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +18,38 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IDataInserter, DataInserter>();
+builder.Services.AddSingleton(sp =>
+    sp.GetRequiredService<IOptions<AppSettings>>().Value
+);
+
+builder.Services.Configure<AppSettings>(builder.Configuration);
+
+builder.Services.AddDbContext<SimpchatDbContext>(options =>
+{
+    var appSettings = builder.Configuration.Get<AppSettings>();
+    options.UseNpgsql(appSettings!.ConnectionStrings.Default);
+});
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer((options) =>
+    {
+        var appSettings = builder.Configuration.Get<AppSettings>();
+        options.TokenValidationParameters = new TokenValidationParameters()
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = appSettings!.JwtSettings.Issuer,
+            ValidAudience = appSettings!.JwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(appSettings!.JwtSettings.Key))
+        };
+    });
 
 var app = builder.Build();
 
@@ -17,6 +61,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
