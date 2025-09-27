@@ -9,13 +9,12 @@ namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
         public string Username { get; set; }
         public string Description { get; set; }
         public string PasswordHash { get; set; }
+        public string Salt { get; set; }
         public DateTimeOffset RegisteredAt { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset LastSeen { get; set; }
         public ICollection<Friendship> SentFriendships { get; set; }
-
         public ICollection<Friendship> ReceivedFriendships { get; set; }
         public ICollection<GroupParticipant> GroupsParticipated { get; set; }
-        public ICollection<Session> Sessions { get; set; }
         public ICollection<MessageReaction> MessageReactions { get; set; }
         public ICollection<Message> Messages { get; set; }
         public ICollection<Channel> Channels { get; set; }
@@ -23,5 +22,6 @@ namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
         public ICollection<ChannelSubscriber> ChannelsSubscribedTo { get; set; }
         public ICollection<GroupUserRole> GroupsRoles { get; set; }
         public ICollection<GroupUserPermission> GroupPermissions { get; set; }
+        public ICollection<GlobalRoleUser> GlobalRoles { get; set; }
     }   
 }

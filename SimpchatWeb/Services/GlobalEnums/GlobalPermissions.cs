@@ -1,0 +1,46 @@
+﻿namespace SimpchatWeb.Services.GlobalEnums
+{
+    public enum GlobalPermissions
+    {
+        //<User>/<Moderator>/<Admin>
+        UpdateOwnProfile,
+        SendMessage,
+        UpdateOwnMessage,
+        JoinGroup,
+        JoinChannel,
+        JoinConversation,
+        SearchUser,
+        CreateGroup,
+        UpdateOwnGroup,
+        CreateChannel,
+        UpdateOwnChannel,
+        CreateConversation,
+        SendFriendRequest,
+        AcceptFriendRequest,
+        BlockFriend,
+        GiveReaction,
+        //<User>/<Moderator>/<Admin>
+        //<Moderator>/<Admin>
+        UpdateAnyGroupBasics,
+        UpdateAnyChannelBasics,
+        BanUserTemporary,
+        BanUserFromAnyGroup,
+        BanUserFromAnyChannel,
+        IgnoreBlockFromUser,
+        //<Moderator>/<Admin>
+        //<Admin>
+        BanUserPermanently,
+        UpdateAnyGroup,
+        UpdateAnyChannel,
+        DeleteAnyGroup,
+        DeleteAnyChannel,
+        DeleteAnyUser,
+        DeleteAnyConversation,
+        DeleteAnyFriendship,
+        BlockAnyFriendship,
+        UpdateAnyUser,
+        IgnoreGroupRestrictions,
+        IgnoreChannelRestrictions
+        //<Admin>
+    }
+}
