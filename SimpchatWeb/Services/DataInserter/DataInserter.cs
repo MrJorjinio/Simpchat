@@ -24,21 +24,25 @@ namespace SimpchatWeb.Services.DataInserter
             {
                 return;
             }
+
             var permission = _dbContext.GlobalPermissions.FirstOrDefault(gp => gp.Name == permissionName);
             if (permission is null)
             {
                 return;
             }
+
             var dbRolePermission = _dbContext.GlobalRolesPermissions.Where(grp => grp.RoleId == role.Id && grp.PermissionId == permission.Id);
             if (dbRolePermission is not null)
             {
                 return;
             }
+
             var rolePermission = new GlobalRolePermission()
             {
                 RoleId = role.Id,
                 PermissionId = permission.Id
             };
+
             _dbContext.GlobalRolesPermissions.Add(rolePermission);
             _dbContext.SaveChanges();
         }
@@ -46,121 +50,60 @@ namespace SimpchatWeb.Services.DataInserter
         public void InsertSysGroupPermissions()
         {
             var sysGroupPermissions = Enum.GetNames<GroupPermissions>();
-            var dbGroupPermissions = _dbContext.GroupPermissions.ToList();
-            foreach (var sysGroupPermission in sysGroupPermissions)
+
+            var dbGroupPermissions = _dbContext.GroupPermissions
+                .Select(x => x.Name)
+                .ToHashSet();
+
+            var newPermissions = sysGroupPermissions
+                .Where(p => !dbGroupPermissions.Contains(p))
+                .Select(p => new GroupPermission { Name = p })
+                .ToList();
+
+            if (newPermissions.Count > 0)
             {
-                bool isExists = false;
-                if (dbGroupPermissions.Count != 0)
-                {
-                    foreach (var dbGroupPermission in dbGroupPermissions)
-                    {
-                        if (sysGroupPermission == dbGroupPermission.Name)
-                        {
-                            isExists = true;
-                            break;
-                        }
-                    }
-                    if (isExists is false)
-                    {
-                        var groupPermission = new GroupPermission()
-                        {
-                            Name = $"{sysGroupPermission}"
-                        };
-                        _dbContext.GroupPermissions.Add(groupPermission);
-                        _dbContext.SaveChanges();
-                    }
-                }
-                else
-                {
-                    var groupPermission = new GroupPermission()
-                    {
-                        Name = $"{sysGroupPermission}"
-                    };
-                    _dbContext.GroupPermissions.Add(groupPermission);
-                    _dbContext.SaveChanges();
-                }
+                _dbContext.GroupPermissions.AddRange(newPermissions);
+                _dbContext.SaveChanges();
             }
         }
 
         public void InsertSysPermissions()
         {
-            var systemGlobalPermissions = Enum.GetNames<GlobalPermissions>();
-            var dbGlobalPermissions = _dbContext.GlobalPermissions.ToList();
-            foreach (var systemGlobalPermission in systemGlobalPermissions)
+            var sysGlobalPermissions = Enum.GetNames<GlobalPermissions>();
+
+            var dbGlobalPermissions = _dbContext.GlobalPermissions
+                .Select(x => x.Name)
+                .ToHashSet();
+
+            var newPermissions = sysGlobalPermissions
+                .Where(p => !dbGlobalPermissions.Contains(p))
+                .Select(p => new GlobalPermission { Name = p, Description = $"for {p}" })
+                .ToList();
+
+            if (newPermissions.Count > 0)
             {
-                bool isExists = false;
-                if (dbGlobalPermissions.Count != 0) 
-                {
-                    foreach (var dbPermission in dbGlobalPermissions)
-                    {
-                        if (systemGlobalPermission == dbPermission.Name)
-                        {
-                            isExists = true;
-                            break;
-                        }
-                    }
-                    if (isExists is false)
-                    {
-                        var permission = new GlobalPermission()
-                        {
-                            Name = $"{systemGlobalPermission}",
-                            Description = $"for {systemGlobalPermission}"
-                        };
-                        _dbContext.GlobalPermissions.Add(permission);
-                        _dbContext.SaveChanges();
-                    }
-                }
-                else
-                {
-                    var permission = new GlobalPermission()
-                    {
-                        Name = $"{systemGlobalPermission}",
-                        Description = $"for {systemGlobalPermission}"
-                    };
-                    _dbContext.GlobalPermissions.Add(permission);
-                    _dbContext.SaveChanges();
-                }
+                _dbContext.GlobalPermissions.AddRange(newPermissions);
+                _dbContext.SaveChanges();
             }
         }
 
         public void InsertSysRoles()
         {
-            var systemGlobalRoles = Enum.GetNames<GlobalRoles>();
-            var dbGlobalRoles = _dbContext.GlobalRoles.ToList();
-            foreach (var systemGlobalRole in systemGlobalRoles)
+            var sysGlobalRoles = Enum.GetNames<GlobalRoles>();
+
+            var dbGlobalRoles = _dbContext.GlobalRoles
+                .Select(x => x.Name)
+                .ToHashSet();
+
+            var newRoles = sysGlobalRoles
+                .Where(r => !dbGlobalRoles.Contains(r))
+                .Select(r => new GlobalRole { Name = r, Description = $"for {r}" })
+                .ToList();
+
+            if (newRoles.Count > 0)
             {
-                bool isExists = false;
-                if (dbGlobalRoles.Count != 0)
-                {
-                    foreach (var dbGlobalRole in dbGlobalRoles)
-                    {
-                        if (systemGlobalRole == dbGlobalRole.Name)
-                        {
-                            isExists = true;
-                            break;
-                        }
-                    }
-                    if (isExists is false)
-                    {
-                        var globalRole = new GlobalRole()
-                        {
-                            Name = $"{systemGlobalRole}",
-                            Description = $"for {systemGlobalRole}"
-                        };
-                        _dbContext.GlobalRoles.Add(globalRole);
-                        _dbContext.SaveChanges();
-                    }
-                }
-                else
-                {
-                    var globalRole = new GlobalRole()
-                    {
-                        Name = $"{systemGlobalRole}",
-                        Description = $"for {systemGlobalRole}"
-                    };
-                    _dbContext.GlobalRoles.Add(globalRole);
-                    _dbContext.SaveChanges();
-                }
+                _dbContext.GlobalRoles.AddRange(newRoles);
+                _dbContext.SaveChanges();
             }
         }
 
@@ -168,7 +111,9 @@ namespace SimpchatWeb.Services.DataInserter
         {
             var globalDbPermission = _dbContext.GlobalPermissions
                 .FirstOrDefault(p => p.Name == permission.Name);
+
             bool isDescriptionGiven = permission.Description != string.Empty;
+
             if (globalDbPermission is null)
             {
                 var _permission = new GlobalPermission()

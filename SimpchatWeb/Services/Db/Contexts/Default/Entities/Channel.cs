@@ -1,7 +1,4 @@
-﻿using SimpchatWeb.Services.Db.Contexts.Default.Enums;
-using static System.Net.Mime.MediaTypeNames;
-
-namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
+﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
 {
     public class Channel
     {
