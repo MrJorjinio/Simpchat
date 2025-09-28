@@ -9,7 +9,9 @@ using SimpchatWeb.Services.DataInserter;
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Interfaces.Auth;
 using SimpchatWeb.Services.Interfaces.DataInserter;
+using SimpchatWeb.Services.Interfaces.Token;
 using SimpchatWeb.Services.Settings;
+using SimpchatWeb.Services.Token;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +51,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IGroupDataInserter, DataInserter>();
 builder.Services.AddScoped<IGroupDataInserter, DataInserter>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddSingleton(sp =>
     sp.GetRequiredService<IOptions<AppSettings>>().Value
 );
