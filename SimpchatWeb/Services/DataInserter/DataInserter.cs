@@ -1,13 +1,14 @@
 ﻿using AutoMapper;
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
+using SimpchatWeb.Services.Db.Contexts.Default.Enums;
 using SimpchatWeb.Services.Db.Contexts.Default.Models;
 using SimpchatWeb.Services.GlobalEnums;
-using SimpchatWeb.Services.Interfaces;
+using SimpchatWeb.Services.Interfaces.DataInserter;
 
 namespace SimpchatWeb.Services.DataInserter
 {
-    public class DataInserter : IDataInserter
+    public class DataInserter : IGlobalDataInserter, IGroupDataInserter
     {
         private readonly SimpchatDbContext _dbContext;
         private readonly IMapper _mapper;
@@ -42,7 +43,46 @@ namespace SimpchatWeb.Services.DataInserter
             _dbContext.SaveChanges();
         }
 
-        public void InsertAllSystemPermissions()
+        public void InsertSysGroupPermissions()
+        {
+            var sysGroupPermissions = Enum.GetNames<GroupPermissions>();
+            var dbGroupPermissions = _dbContext.GroupPermissions.ToList();
+            foreach (var sysGroupPermission in sysGroupPermissions)
+            {
+                bool isExists = false;
+                if (dbGroupPermissions.Count != 0)
+                {
+                    foreach (var dbGroupPermission in dbGroupPermissions)
+                    {
+                        if (sysGroupPermission == dbGroupPermission.Name)
+                        {
+                            isExists = true;
+                            break;
+                        }
+                    }
+                    if (isExists is false)
+                    {
+                        var groupPermission = new GroupPermission()
+                        {
+                            Name = $"{sysGroupPermission}"
+                        };
+                        _dbContext.GroupPermissions.Add(groupPermission);
+                        _dbContext.SaveChanges();
+                    }
+                }
+                else
+                {
+                    var groupPermission = new GroupPermission()
+                    {
+                        Name = $"{sysGroupPermission}"
+                    };
+                    _dbContext.GroupPermissions.Add(groupPermission);
+                    _dbContext.SaveChanges();
+                }
+            }
+        }
+
+        public void InsertSysPermissions()
         {
             var systemGlobalPermissions = Enum.GetNames<GlobalPermissions>();
             var dbGlobalPermissions = _dbContext.GlobalPermissions.ToList();
@@ -83,7 +123,7 @@ namespace SimpchatWeb.Services.DataInserter
             }
         }
 
-        public void InsertAllSystemRoles()
+        public void InsertSysRoles()
         {
             var systemGlobalRoles = Enum.GetNames<GlobalRoles>();
             var dbGlobalRoles = _dbContext.GlobalRoles.ToList();

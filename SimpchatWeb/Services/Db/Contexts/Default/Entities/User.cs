@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using SimpchatWeb.Services.Db.Contexts.Default.Enums;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
@@ -10,8 +11,9 @@ namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
         public string Description { get; set; }
         public string PasswordHash { get; set; }
         public string Salt { get; set; }
+        public UserStatus Status { get; set; } = UserStatus.Active;
         public DateTimeOffset RegisteredAt { get; set; } = DateTimeOffset.UtcNow;
-        public DateTimeOffset LastSeen { get; set; }
+        public DateTimeOffset LastSeen { get; set; } = DateTimeOffset.UtcNow;
         public ICollection<Friendship> SentFriendships { get; set; }
         public ICollection<Friendship> ReceivedFriendships { get; set; }
         public ICollection<GroupParticipant> GroupsParticipated { get; set; }

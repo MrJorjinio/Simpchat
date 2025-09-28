@@ -4,7 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos;
-using SimpchatWeb.Services.Interfaces;
+using SimpchatWeb.Services.Interfaces.Auth;
 using SimpchatWeb.Services.Settings;
 using System.Collections.ObjectModel;
 using System.IdentityModel.Tokens.Jwt;
@@ -45,7 +45,7 @@ namespace SimpchatWeb.Services.Auth
             var defaultRole = _dbContext.GlobalRoles.FirstOrDefault(gr => gr.Name == "User");
             if (defaultRole is not null)
             {
-                _user.GlobalRoles.Add(new GlobalRoleUser { UserId = dbUser.Id, RoleId = defaultRole.Id });
+                _dbContext.GlobalRolesUsers.Add(new GlobalRoleUser { UserId = dbUser.Id, RoleId = defaultRole.Id });
             }
             _dbContext.SaveChanges();
             var response = new UserResponseDto()

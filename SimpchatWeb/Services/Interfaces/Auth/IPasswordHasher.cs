@@ -1,4 +1,4 @@
-﻿namespace SimpchatWeb.Services.Interfaces
+﻿namespace SimpchatWeb.Services.Interfaces.Auth
 {
     public interface IPasswordHasher
     {

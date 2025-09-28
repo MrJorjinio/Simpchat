@@ -18,6 +18,8 @@
         SendFriendRequest,
         AcceptFriendRequest,
         BlockFriend,
+        AcceptFriend,
+        PendFriendRequest,
         GiveReaction,
         //<User>/<Moderator>/<Admin>
         //<Moderator>/<Admin>
@@ -30,15 +32,19 @@
         //<Moderator>/<Admin>
         //<Admin>
         BanUserPermanently,
+        UnblockAnyUser,
         UpdateAnyGroup,
         UpdateAnyChannel,
         DeleteAnyGroup,
         DeleteAnyChannel,
         DeleteAnyUser,
+        UpdateAnyUser,
         DeleteAnyConversation,
         DeleteAnyFriendship,
+        DeleteAnyMessage,
+        UpdateAnyMessage,
+        PinAnyMessage,
         BlockAnyFriendship,
-        UpdateAnyUser,
         IgnoreGroupRestrictions,
         IgnoreChannelRestrictions
         //<Admin>
