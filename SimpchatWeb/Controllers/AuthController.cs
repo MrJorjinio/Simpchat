@@ -18,20 +18,24 @@ namespace SimpchatWeb.Controllers
         public IActionResult Register(UserRegisterDto request)
         {
             var user = _authService.Register(request);
+
             if (user is null)
             {
                 return BadRequest();
             }
+
             return Ok();
         }
         [HttpPost("login")]
         public IActionResult Login(UserLoginDto request)
         {
             var token = _authService.Login(request);
+
             if (token is null)
             {
                 return BadRequest();
             }
+
             return Ok(token);
         }
     }
