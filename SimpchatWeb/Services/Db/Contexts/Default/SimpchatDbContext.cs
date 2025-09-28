@@ -37,7 +37,10 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
         {
             //<Enums>
             modelBuilder.HasPostgresEnum<ChatTypes>();
+            modelBuilder.HasPostgresEnum<ChatPrivacyType>();
+            modelBuilder.HasPostgresEnum<ChatParticipantStatus>();
             modelBuilder.HasPostgresEnum<FriendshipsStatus>();
+            modelBuilder.HasPostgresEnum<UserStatus>();
             //<Enums>
             //<User>
             modelBuilder.Entity<User>()
@@ -49,13 +52,23 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
                 .IsRequired();
             modelBuilder.Entity<User>()
                 .Property(u => u.Description)
-                .HasMaxLength(85);
+                .HasMaxLength(85)
+                .HasDefaultValue(string.Empty);
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
             modelBuilder.Entity<User>()
-                .Property(u => u.Username)
+                .Property(u => u.Status)
+                .HasConversion<string>()
+                .HasDefaultValue(UserStatus.Active)
                 .IsRequired();
+            modelBuilder.Entity<User>()
+                .Property(u => u.RegisteredAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'")
+                .IsRequired();
+            modelBuilder.Entity<User>()
+                .Property(u => u.LastSeen)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
             //</User>
             //<Reaction>
             modelBuilder.Entity<Reaction>()
@@ -96,13 +109,11 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
                 .HasDefaultValueSql("gen_random_uuid()");
             modelBuilder.Entity<GroupPermission>()
                 .Property(grp => grp.Name)
-                .HasMaxLength(85);
+                .HasMaxLength(85)
+                .IsRequired();
             modelBuilder.Entity<GroupPermission>()
                 .HasIndex(gp => gp.Name)
                 .IsUnique();
-            modelBuilder.Entity<GroupPermission>()
-                .Property(gp => gp.Name)
-                .IsRequired();
             //</GroupPermission>
             //<GroupRole>
             modelBuilder.Entity<GroupRole>()
@@ -110,13 +121,11 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
                 .HasDefaultValueSql("gen_random_uuid()");
             modelBuilder.Entity<GroupRole>()
                 .Property(gr => gr.Name)
-                .HasMaxLength(35);
+                .HasMaxLength(35)
+                .IsRequired();
             modelBuilder.Entity<GroupRole>()
                 .HasIndex(gr => gr.Name)
                 .IsUnique();
-            modelBuilder.Entity<GroupRole>()
-                .Property(gr => gr.Name)
-                .IsRequired();
             //</GroupRole>
             //</GroupRolePermission>
             modelBuilder.Entity<GroupRolePermission>()
@@ -128,13 +137,11 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
                 .HasDefaultValueSql("gen_random_uuid()");
             modelBuilder.Entity<GlobalPermission>()
                 .Property(gp => gp.Name)
-                .HasMaxLength(85);
+                .HasMaxLength(85)
+                .IsRequired();
             modelBuilder.Entity<GlobalPermission>()
                 .HasIndex(gp => gp.Name)
                 .IsUnique();
-            modelBuilder.Entity<GlobalPermission>()
-                .Property(gp => gp.Name)
-                .IsRequired();
             modelBuilder.Entity<GlobalPermission>()
                 .Property(gp => gp.Description)
                 .HasMaxLength(250);
@@ -145,16 +152,14 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
                 .HasDefaultValueSql("gen_random_uuid()");
             modelBuilder.Entity<GlobalRole>()
                 .Property(gr => gr.Name)
-                .HasMaxLength(35);
+                .HasMaxLength(35)
+                .IsRequired();
             modelBuilder.Entity<GlobalRole>()
                 .Property(gr => gr.Description)
                 .HasMaxLength(250);
             modelBuilder.Entity<GlobalRole>()
                 .HasIndex(gr => gr.Name)
                 .IsUnique();
-            modelBuilder.Entity<GlobalRole>()
-                .Property(gr => gr.Name)
-                .IsRequired();
             //</GlobalRole>
             //<GlobalRolePermission>
             modelBuilder.Entity<GlobalRolePermission>()
@@ -181,16 +186,14 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
                 .HasForeignKey(g => g.CreatedById);
             modelBuilder.Entity<Group>()
                 .Property(g => g.Name)
-                .HasMaxLength(50);
+                .HasMaxLength(50)
+                .IsRequired();
             modelBuilder.Entity<Group>()
                 .Property(g => g.Description)
                 .HasMaxLength(200);
             modelBuilder.Entity<Group>()
                 .HasIndex(g => g.Name)
                 .IsUnique();
-            modelBuilder.Entity<Group>()
-                .Property(g => g.Name)
-                .IsRequired();
             //</Group>
             //<Friendship>
             modelBuilder.Entity<Friendship>()
@@ -206,6 +209,9 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<Friendship>()
                 .Property(f => f.Status)
                 .HasConversion<string>();
+            modelBuilder.Entity<Friendship>()
+                .Property(f => f.FormedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
             //</Friendship>
             //<ConversationMember>
             modelBuilder.Entity<ConversationMember>()
@@ -225,7 +231,16 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
                 .HasDefaultValueSql("gen_random_uuid()");
             modelBuilder.Entity<Chat>()
                 .Property(c => c.Type)
-                .HasConversion<string>();
+                .HasConversion<string>()
+                .IsRequired();
+            modelBuilder.Entity<Chat>()
+                .Property(c => c.PrivacyType)
+                .HasConversion<string>()
+                .HasDefaultValue(ChatPrivacyType.Public)
+                .IsRequired();
+            modelBuilder.Entity<Chat>()
+                .Property(c => c.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
             //</Chat>
             //<ChannelSubscriber>
             modelBuilder.Entity<ChannelSubscriber>()

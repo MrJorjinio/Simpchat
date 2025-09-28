@@ -6,7 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using SimpchatWeb.Services.Auth;
 using SimpchatWeb.Services.DataInserter;
 using SimpchatWeb.Services.Db.Contexts.Default;
-using SimpchatWeb.Services.Interfaces;
+using SimpchatWeb.Services.Interfaces.Auth;
+using SimpchatWeb.Services.Interfaces.DataInserter;
 using SimpchatWeb.Services.Settings;
 using System.Text;
 
@@ -21,7 +22,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddScoped<IDataInserter, DataInserter>();
+builder.Services.AddScoped<IGroupDataInserter, DataInserter>();
+builder.Services.AddScoped<IGroupDataInserter, DataInserter>();
 builder.Services.AddSingleton(sp =>
     sp.GetRequiredService<IOptions<AppSettings>>().Value
 );
@@ -58,6 +60,11 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+using (var scope = app.Services.CreateAsyncScope()){
+    var dataInserter = scope.ServiceProvider.GetRequiredService<IGroupDataInserter>();
+    dataInserter.InsertSysGroupPermissions();
 }
 
 app.UseHttpsRedirection();

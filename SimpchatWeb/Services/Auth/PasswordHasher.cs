@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using SimpchatWeb.Services.Interfaces;
+using SimpchatWeb.Services.Interfaces.Auth;
 using System.Security.Cryptography;
 using System.Text;
 

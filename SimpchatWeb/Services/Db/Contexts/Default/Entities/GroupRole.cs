@@ -4,6 +4,8 @@
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public Guid GroupId { get; set; }
+        public Group Group { get; set; }
         public ICollection<GroupUserRole> UsersAppliedTo { get; set; }
         public ICollection<GroupRolePermission> Permissions { get; set; }
     }

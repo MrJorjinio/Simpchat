@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos;
-using SimpchatWeb.Services.Interfaces;
+using SimpchatWeb.Services.Interfaces.Auth;
 
 namespace SimpchatWeb.Controllers
 {

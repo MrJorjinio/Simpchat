@@ -1,12 +1,12 @@
 ﻿using SimpchatWeb.Services.Db.Contexts.Default.Models;
 
-namespace SimpchatWeb.Services.Interfaces
+namespace SimpchatWeb.Services.Interfaces.DataInserter
 {
-    public interface IDataInserter
+    public interface IGlobalDataInserter
     {
         void UpsertPermission(GlobalPermissionDto permission);
         void AddPermissionToRole(string roleName, string permissionName);
-        void InsertAllSystemPermissions();
-        void InsertAllSystemRoles();
+        void InsertSysPermissions();
+        void InsertSysRoles();
     }
 }
