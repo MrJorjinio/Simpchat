@@ -1,6 +1,6 @@
 ﻿using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos;
 
-namespace SimpchatWeb.Services.Interfaces
+namespace SimpchatWeb.Services.Interfaces.Auth
 {
     public interface IAuthService
     {
