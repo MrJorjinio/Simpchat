@@ -46,7 +46,8 @@
         PinAnyMessage,
         BlockAnyFriendship,
         IgnoreGroupRestrictions,
-        IgnoreChannelRestrictions
+        IgnoreChannelRestrictions,
+        GetAllUsers
         //<Admin>
     }
 }
