@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SimpchatWeb.Services.Db.Contexts.Default;
@@ -26,8 +27,34 @@ namespace SimpchatWeb.Controllers
             _passwordHasher = passwordHasher;
         }
 
-        [HttpPut("info")]
-        public IActionResult UpdateUser(UserUpdateDto request)
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public IActionResult GetAllUsers()
+        {
+            var users = _dbContext.Users.ToList();
+            var response = _mapper.Map<List<UserResponseDto>>(users);
+            return Ok(response);
+        }
+
+        [HttpGet("{id:guid}")]
+        [Authorize(Roles = "Admin")]
+        public IActionResult GetUserById(Guid id)
+        {
+            var user = _dbContext.Users.Find(id);
+
+            if (user is null)
+            {
+                return NotFound();
+            }
+
+            var response = _mapper.Map<UserResponseDto>(user);
+            return Ok(response);
+        }
+
+
+        [HttpPut("me")]
+        [Authorize]
+        public IActionResult UpdateMyProfile(UserUpdateDto request)
         {
             var userId = _tokenService.GetUserId(User);
 
@@ -40,7 +67,7 @@ namespace SimpchatWeb.Controllers
 
             if (dbUser is null)
             {
-                return Unauthorized();
+                return NotFound();
             }
 
             dbUser = _mapper.Map(request, dbUser);
@@ -51,8 +78,9 @@ namespace SimpchatWeb.Controllers
             return Ok(response);
         }
 
-        [HttpPut("password")]
-        public IActionResult UpdatePassword(UserUpdatePasswordDto request)
+        [HttpPut("me/password")]
+        [Authorize]
+        public IActionResult UpdateMyPassword(UserUpdatePasswordDto request)
         {
             var userId = _tokenService.GetUserId(User);
 
@@ -65,7 +93,7 @@ namespace SimpchatWeb.Controllers
 
             if (dbUser is null)
             {
-                return Unauthorized();
+                return NotFound();
             }
 
             if (_passwordHasher.Verify(request.CurrentPassword, dbUser.Salt, dbUser.PasswordHash) is false)
