@@ -12,6 +12,7 @@ namespace SimpchatWeb.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly SimpchatDbContext _dbContext;
@@ -53,7 +54,6 @@ namespace SimpchatWeb.Controllers
 
 
         [HttpPut("me")]
-        [Authorize]
         public IActionResult UpdateMyProfile(UserUpdateDto request)
         {
             var userId = _tokenService.GetUserId(User);
@@ -79,7 +79,6 @@ namespace SimpchatWeb.Controllers
         }
 
         [HttpPut("me/password")]
-        [Authorize]
         public IActionResult UpdateMyPassword(UserUpdatePasswordDto request)
         {
             var userId = _tokenService.GetUserId(User);
