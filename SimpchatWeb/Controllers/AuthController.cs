@@ -14,6 +14,7 @@ namespace SimpchatWeb.Controllers
         {
             _authService = authService;
         }
+
         [HttpPost("register")]
         public IActionResult Register(UserRegisterDto request)
         {
