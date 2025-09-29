@@ -191,9 +191,6 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<Group>()
                 .Property(g => g.Description)
                 .HasMaxLength(200);
-            modelBuilder.Entity<Group>()
-                .HasIndex(g => g.Name)
-                .IsUnique();
             //</Group>
             //<Friendship>
             modelBuilder.Entity<Friendship>()
@@ -263,9 +260,6 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<Channel>()
                 .Property(c => c.Description)
                 .HasMaxLength(200);
-            modelBuilder.Entity<Channel>()
-                .HasIndex(c => c.Name)
-                .IsUnique();
             modelBuilder.Entity<Channel>()
                 .Property(c => c.Name)
                 .IsRequired();
