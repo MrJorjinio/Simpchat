@@ -18,7 +18,11 @@ namespace SimpchatWeb.Services.Auth
         private readonly SimpchatDbContext _dbContext;
         private readonly IPasswordHasher _passwordHasher;
         private readonly AppSettings _appSettings;
-        public AuthService(SimpchatDbContext dbContext, IPasswordHasher passwordHasher, IOptions<AppSettings> options)
+        public AuthService(
+            SimpchatDbContext dbContext, 
+            IPasswordHasher passwordHasher, 
+            IOptions<AppSettings> options
+            )
         {
             _dbContext = dbContext;
             _passwordHasher = passwordHasher;
