@@ -10,8 +10,14 @@ namespace SimpchatWeb.Services.AutoMapper.Profiles
         {
             CreateMap<GroupCreateDto, Group>();
             CreateMap<GroupResponseDto, Group>();
+            CreateMap<GroupGetDto, Group>();
+            CreateMap<Group, GroupGetDto>();
             CreateMap<Group, GroupCreateDto>();
             CreateMap<Group, GroupResponseDto>();
+            CreateMap<GroupRoleDto, GroupRole>();
+            CreateMap<GroupCreateRoleDto, GroupRole>();
+            CreateMap<GroupRole, GroupRoleDto>();
+            CreateMap<GroupRole, GroupCreateRoleDto>();
         }
     }
 }
