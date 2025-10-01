@@ -1,11 +1,13 @@
 ﻿using SimpchatWeb.Services.Interfaces.Token;
 using System.Security.Claims;
 
-namespace SimpchatWeb.Services.Token
+namespace SimpchatWeb.Services.Auth
 {
     public class TokenService : ITokenService
     {
-        public Guid GetUserId(ClaimsPrincipal user)
+        public Guid GetUserId(
+            ClaimsPrincipal user
+            )
         {
             if (user is null)
             {
@@ -18,7 +20,6 @@ namespace SimpchatWeb.Services.Token
             {
                 return Guid.Empty;
             }
-
             if (string.IsNullOrWhiteSpace(id))
                 return Guid.Empty;
 

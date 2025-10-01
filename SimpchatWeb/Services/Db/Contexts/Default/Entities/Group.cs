@@ -11,6 +11,7 @@ namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
         public Chat Chat { get; set; }
         public User UserCreated { get; set; }
         public ICollection<GroupParticipant> Participants { get; set; }
+        public ICollection<GroupRole> GroupRoles { get; set; }
         public ICollection<GroupUserRole> ParticipantsRoles { get; set; }
         public ICollection<GroupUserPermission> ParticipantsPermissions { get; set; }
     }

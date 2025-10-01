@@ -12,7 +12,10 @@ namespace SimpchatWeb.Services.DataInserter
     {
         private readonly SimpchatDbContext _dbContext;
         private readonly IMapper _mapper;
-        public DataInserter(SimpchatDbContext dbContext, IMapper mapper)
+        public DataInserter(
+            SimpchatDbContext dbContext, 
+            IMapper mapper
+            )
         {
             _dbContext = dbContext;
             _mapper = mapper;

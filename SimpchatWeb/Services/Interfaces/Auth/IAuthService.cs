@@ -4,7 +4,11 @@ namespace SimpchatWeb.Services.Interfaces.Auth
 {
     public interface IAuthService
     {
-        UserResponseDto Register(UserRegisterDto user);
-        string Login(UserLoginDto user);
+        UserResponseDto Register(
+            UserRegisterDto user
+            );
+        string Login(
+            UserLoginDto user
+            );
     }
 }
