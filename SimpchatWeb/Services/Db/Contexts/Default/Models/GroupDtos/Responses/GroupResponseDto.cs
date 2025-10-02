@@ -1,4 +1,4 @@
-﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos
+﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Responses
 {
     public class GroupResponseDto
     {

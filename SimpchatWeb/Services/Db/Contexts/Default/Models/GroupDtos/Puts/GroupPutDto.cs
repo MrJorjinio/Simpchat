@@ -1,6 +1,6 @@
-﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models
+﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Puts
 {
-    public class GlobalPermissionDto
+    public class GroupPutDto
     {
         public string Name { get; set; }
         public string Description { get; set; }

@@ -1,6 +1,6 @@
-﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos
+﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Puts
 {
-    public class UserUpdatePasswordDto
+    public class UserPutPasswordDto
     {
         public string CurrentPassword { get; set; }
         public string NewPassword { get; set; }

@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Creates;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Gets;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Posts;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Responses;
 
 namespace SimpchatWeb.Services.AutoMapper.Profiles
 {
@@ -8,9 +11,11 @@ namespace SimpchatWeb.Services.AutoMapper.Profiles
     {
         public GroupProfile()
         {
-            CreateMap<GroupCreateDto, Group>();
+            CreateMap<GroupPostDto, Group>();
             CreateMap<GroupResponseDto, Group>();
-            CreateMap<Group, GroupCreateDto>();
+            CreateMap<GroupGetDto, Group>();
+            CreateMap<Group, GroupGetDto>();
+            CreateMap<Group, GroupPostDto>();
             CreateMap<Group, GroupResponseDto>();
         }
     }

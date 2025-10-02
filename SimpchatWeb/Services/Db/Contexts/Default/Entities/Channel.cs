@@ -6,8 +6,7 @@
         public string Name { get; set; }
         public string Description { get; set; }
         public Guid CreatedById { get; set; }
-        public User User { get; set; }
         public Chat Chat { get; set; }
-        public ICollection<ChannelSubscriber> Subscribers { get; set; }
+        public User UserCreated { get; set; }
     }
 }

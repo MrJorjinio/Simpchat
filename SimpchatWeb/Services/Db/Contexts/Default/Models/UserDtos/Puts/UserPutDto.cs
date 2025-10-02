@@ -1,6 +1,6 @@
-﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos
+﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Puts
 {
-    public class UserUpdateDto
+    public class UserPutDto
     {
         public string Username { get; set; }
         public string Description { get; set; }

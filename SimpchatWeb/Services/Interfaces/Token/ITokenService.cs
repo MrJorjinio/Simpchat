@@ -4,6 +4,8 @@ namespace SimpchatWeb.Services.Interfaces.Token
 {
     public interface ITokenService
     {
-        Guid GetUserId(ClaimsPrincipal user);
+        Guid GetUserId(
+            ClaimsPrincipal user
+            );
     }
 }

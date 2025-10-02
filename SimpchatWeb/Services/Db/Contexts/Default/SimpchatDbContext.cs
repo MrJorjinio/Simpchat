@@ -10,23 +10,19 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
         public DbSet<Reaction> Reactions { get; set; }
         public DbSet<MessageReaction> MessagesReactions { get; set; }
         public DbSet<Message> Messages { get; set; }
-        public DbSet<GroupUserRole> GroupsUsersRoles { get; set; }
-        public DbSet<GroupUserPermission> GroupsUsersPermissions { get; set; }
-        public DbSet<GroupRolePermission> GroupRolesPermissions { get; set; }
-        public DbSet<GroupRole> GroupRoles { get; set; }
-        public DbSet<GroupPermission> GroupPermissions { get; set; }
-        public DbSet<GroupParticipant> GroupsParticipants { get; set; }
+        public DbSet<ChatUserPermission> ChatsUsersPermissions { get; set; }
+        public DbSet<ChatPermission> ChatPermissions { get; set; }
+        public DbSet<ChatParticipant> ChatsParticipants { get; set; }
         public DbSet<Group> Groups { get; set; }
-        public DbSet<Friendship> Friendships { get; set; }
-        public DbSet<ConversationMember> ConversationsMembers { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<Chat> Chats { get; set; }
-        public DbSet<ChannelSubscriber> ChannelsSubscribers { get; set; }
         public DbSet<Channel> Channels { get; set; }
         public DbSet<GlobalRole> GlobalRoles { get; set; }
         public DbSet<GlobalPermission> GlobalPermissions { get; set; }
         public DbSet<GlobalRolePermission> GlobalRolesPermissions { get; set; }
-        public DbSet<GlobalRoleUser> GlobalRolesUsers { get; set; }
+        public DbSet<GlobalRoleUser> UsersGlobalRoles { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<ChatBan> ChatsBans { get; set; }
 
         public SimpchatDbContext(DbContextOptions<SimpchatDbContext> options)
         : base(options)
@@ -38,9 +34,6 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             //<Enums>
             modelBuilder.HasPostgresEnum<ChatTypes>();
             modelBuilder.HasPostgresEnum<ChatPrivacyType>();
-            modelBuilder.HasPostgresEnum<ChatParticipantStatus>();
-            modelBuilder.HasPostgresEnum<FriendshipsStatus>();
-            modelBuilder.HasPostgresEnum<UserStatus>();
             //<Enums>
             //<User>
             modelBuilder.Entity<User>()
@@ -57,11 +50,6 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
-            modelBuilder.Entity<User>()
-                .Property(u => u.Status)
-                .HasConversion<string>()
-                .HasDefaultValue(UserStatus.Active)
-                .IsRequired();
             modelBuilder.Entity<User>()
                 .Property(u => u.RegisteredAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'")
@@ -90,47 +78,34 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<Message>()
                 .Property(m => m.Content)
                 .HasMaxLength(1000);
+            modelBuilder.Entity<Message>()
+                .Property(m => m.SentAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.ReplyTo)
+                .WithMany(r => r.Replies)
+                .HasForeignKey(m => m.ReplyId);
             //</Message>
-            //<GroupUserRole>
-            modelBuilder.Entity<GroupUserRole>()
-                .HasKey(gur => new { gur.GroupId, gur.RoleId, gur.UserId });
-            //</GroupUserRole>
-            //<GroupUserPermission>
-            modelBuilder.Entity<GroupUserPermission>()
-                .HasKey(gup => new { gup.UserId, gup.GroupId, gup.PermissionId });
-            modelBuilder.Entity<GroupUserPermission>()
-                .HasOne(gup => gup.Permission)
+            //<ChatUserPermission>
+            modelBuilder.Entity<ChatUserPermission>()
+                .HasKey(cup => new { cup.UserId, cup.ChatId, cup.PermissionId });
+            modelBuilder.Entity<ChatUserPermission>()
+                .HasOne(cup => cup.Permission)
                 .WithMany(p => p.UsersAppliedTo)
-                .HasForeignKey(gup => gup.PermissionId);
-            //</GroupUserPermission>
-            //<GroupPermission>
-            modelBuilder.Entity<GroupPermission>()
-                .Property(grp => grp.Id)
+                .HasForeignKey(cup => cup.PermissionId);
+            //</ChatUserPermission>
+            //<ChatPermission>
+            modelBuilder.Entity<ChatPermission>()
+                .Property(cp => cp.Id)
                 .HasDefaultValueSql("gen_random_uuid()");
-            modelBuilder.Entity<GroupPermission>()
-                .Property(grp => grp.Name)
+            modelBuilder.Entity<ChatPermission>()
+                .Property(cp => cp.Name)
                 .HasMaxLength(85)
                 .IsRequired();
-            modelBuilder.Entity<GroupPermission>()
-                .HasIndex(gp => gp.Name)
+            modelBuilder.Entity<ChatPermission>()
+                .HasIndex(cp => cp.Name)
                 .IsUnique();
-            //</GroupPermission>
-            //<GroupRole>
-            modelBuilder.Entity<GroupRole>()
-                .Property(gr => gr.Id)
-                .HasDefaultValueSql("gen_random_uuid()");
-            modelBuilder.Entity<GroupRole>()
-                .Property(gr => gr.Name)
-                .HasMaxLength(35)
-                .IsRequired();
-            modelBuilder.Entity<GroupRole>()
-                .HasIndex(gr => gr.Name)
-                .IsUnique();
-            //</GroupRole>
-            //</GroupRolePermission>
-            modelBuilder.Entity<GroupRolePermission>()
-                .HasKey(grp => new { grp.RoleId, grp.PermissionId });
-            //</GroupRolePermission>
+            //</ChatPermission>
             //<GlobalPermission>
             modelBuilder.Entity<GlobalPermission>()
                 .Property(gp => gp.Id)
@@ -169,10 +144,6 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<GlobalRoleUser>()
                 .HasKey(gru => new { gru.UserId, gru.RoleId });
             //</GlobalRoleUser>
-            //<GroupParticipant>
-            modelBuilder.Entity<GroupParticipant>()
-                .HasKey(gp => new { gp.GroupId, gp.UserId });
-            //</GroupParticipant>
             //<Group>
             modelBuilder.Entity<Group>()
                 .HasOne(g => g.Chat)
@@ -192,28 +163,6 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
                 .Property(g => g.Description)
                 .HasMaxLength(200);
             //</Group>
-            //<Friendship>
-            modelBuilder.Entity<Friendship>()
-                .HasKey(f => new { f.UserId, f.FriendId });
-            modelBuilder.Entity<Friendship>()
-                .HasOne(f => f.User)
-                .WithMany(u => u.ReceivedFriendships)
-                .HasForeignKey(u => u.UserId);
-            modelBuilder.Entity<Friendship>()
-                .HasOne(f => f.Friend)
-                .WithMany(u => u.SentFriendships)
-                .HasForeignKey(u => u.FriendId);
-            modelBuilder.Entity<Friendship>()
-                .Property(f => f.Status)
-                .HasConversion<string>();
-            modelBuilder.Entity<Friendship>()
-                .Property(f => f.FormedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
-            //</Friendship>
-            //<ConversationMember>
-            modelBuilder.Entity<ConversationMember>()
-                .HasKey(cm => new { cm.ConversationId, cm.UserId });
-            //</ConversationMember>
             //<Conversation>
             modelBuilder.Entity<Conversation>()
                 .HasOne(c => c.Chat)
@@ -239,10 +188,10 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
                 .Property(c => c.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
             //</Chat>
-            //<ChannelSubscriber>
-            modelBuilder.Entity<ChannelSubscriber>()
-                .HasKey(cs => new { cs.UserId, cs.ChannelId });
-            //</ChannelSubscriber>
+            //<ChatParticipant>
+            modelBuilder.Entity<ChatParticipant>()
+                .HasKey(cp => new { cp.UserId, cp.ChatId });
+            //</ChatParticipant>
             //<Channel>
             modelBuilder.Entity<Channel>()
                 .HasOne(c => c.Chat)
@@ -251,7 +200,7 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<Channel>()
                 .HasKey(c => c.Id);
             modelBuilder.Entity<Channel>()
-                .HasOne(c => c.User)
+                .HasOne(c => c.UserCreated)
                 .WithMany(c => c.Channels)
                 .HasForeignKey(c => c.CreatedById);
             modelBuilder.Entity<Channel>()
@@ -264,6 +213,19 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
                 .Property(c => c.Name)
                 .IsRequired();
             //</Channel>
+            //<Notifications>
+            modelBuilder.Entity<Notification>()
+                .Property(n => n.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
+            //</Notifications>
+            //<ChatsBans>
+            modelBuilder.Entity<ChatBan>()
+                .Property(cp => cp.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity<ChatBan>()
+                .Property(cp => cp.From)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+            //</ChatBans>
         }
     }
 }

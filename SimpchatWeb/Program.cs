@@ -11,7 +11,6 @@ using SimpchatWeb.Services.Interfaces.Auth;
 using SimpchatWeb.Services.Interfaces.DataInserter;
 using SimpchatWeb.Services.Interfaces.Token;
 using SimpchatWeb.Services.Settings;
-using SimpchatWeb.Services.Token;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);

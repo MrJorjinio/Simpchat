@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Posts;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Puts;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Responses;
 
 namespace SimpchatWeb.Services.AutoMapper.Profiles
 {
@@ -8,14 +10,14 @@ namespace SimpchatWeb.Services.AutoMapper.Profiles
     {
         public UserProfile()
         {
-            CreateMap<User, UserLoginDto>();
-            CreateMap<User, UserRegisterDto>();
+            CreateMap<User, UserLoginPostDto>();
+            CreateMap<User, UserRegisterPostDto>();
             CreateMap<User, UserResponseDto>();
-            CreateMap<User, UserUpdateDto>();
-            CreateMap<UserLoginDto, User>();
-            CreateMap<UserRegisterDto, User>();
+            CreateMap<User, UserPutDto>();
+            CreateMap<UserLoginPostDto, User>();
+            CreateMap<UserRegisterPostDto, User>();
             CreateMap<UserResponseDto, User>();
-            CreateMap<UserUpdateDto, User>();
+            CreateMap<UserPutDto, User>();
         }
     }
 }

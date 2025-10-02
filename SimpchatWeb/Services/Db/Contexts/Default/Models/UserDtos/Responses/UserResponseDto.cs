@@ -1,4 +1,4 @@
-﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos
+﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Responses
 {
     public class UserResponseDto
     {

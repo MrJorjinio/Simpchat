@@ -1,4 +1,4 @@
-﻿namespace SimpchatWeb.Services.GlobalEnums
+﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Enums
 {
     public enum GlobalRoles
     {
