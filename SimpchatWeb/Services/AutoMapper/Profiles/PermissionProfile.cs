@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using SimpchatWeb.Services.Db.Contexts.Default.Models;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.GlobalPermissions;
 
 namespace SimpchatWeb.Services.AutoMapper.Profiles
 {

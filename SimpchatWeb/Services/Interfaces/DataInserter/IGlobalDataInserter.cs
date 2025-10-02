@@ -1,4 +1,4 @@
-﻿using SimpchatWeb.Services.Db.Contexts.Default.Models;
+﻿using SimpchatWeb.Services.Db.Contexts.Default.Models.GlobalPermissions;
 
 namespace SimpchatWeb.Services.Interfaces.DataInserter
 {
