@@ -6,7 +6,7 @@ namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
     {
         public Guid Id { get; set; }
         public string Content { get; set; }
-        public string MediaUrl { get; set; }
+        public string? MediaUrl { get; set; }
         public DateTimeOffset SentAt { get; set; } = DateTimeOffset.UtcNow;
         public Guid? ReplyId { get; set; }
         public Guid SenderId { get; set; }

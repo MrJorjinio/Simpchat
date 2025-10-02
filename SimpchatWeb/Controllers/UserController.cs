@@ -17,7 +17,6 @@ namespace SimpchatWeb.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly SimpchatDbContext _dbContext;
@@ -38,32 +37,32 @@ namespace SimpchatWeb.Controllers
             _passwordHasher = passwordHasher;
         }
 
-        [HttpGet]
-        [Authorize(Roles = "Admin")]
-        public IActionResult Get()
-        {
-            var users = _dbContext.Users.ToList();
-            var response = _mapper.Map<List<UserResponseDto>>(users);
-            return Ok(response);
-        }
-
-        [HttpGet("{id:guid}")]
-        [Authorize(Roles = "Admin")]
+        [HttpGet("{username}")]
         public IActionResult GetUserById(
-            Guid id
+            string username
             )
         {
-            var user = _dbContext.Users.Find(id);
+            var user = _dbContext.Users.FirstOrDefault(u => u.Username == username);
 
             if (user is null)
             {
                 return NotFound();
             }
 
-            var response = _mapper.Map<UserResponseDto>(user);
+            var response = _mapper.Map<UserProfileGetResponseDto>(user);
             return Ok(response);
         }
 
+        [HttpGet("search/{username}")]
+        public IActionResult SearchByUsername(string username)
+        {
+            var similarUsers = _dbContext.Users
+                .Where(u => EF.Functions.Like(u.Username, $"%{username}%"))
+                .ToList();
+            var response = _mapper.Map<ICollection<UserSearchResponseDto>>(similarUsers);
+
+            return Ok(response);
+        }
 
         [HttpPut("me")]
         public IActionResult UpdateMyProfile(
@@ -120,8 +119,30 @@ namespace SimpchatWeb.Controllers
             dbUser.PasswordHash = newPasswordHash;
             _dbContext.SaveChanges();
 
-            var response = _mapper.Map<UserResponseDto>(dbUser);
-            return Ok(response);
+            return Ok();
+        }
+
+        [HttpDelete("me")]
+        public IActionResult DeleteMe()
+        {
+            var userId = _tokenService.GetUserId(User);
+
+            if (userId == Guid.Empty)
+            {
+                return Unauthorized();
+            }
+
+            var dbUser = _dbContext.Users.Find(userId);
+
+            if (dbUser is null)
+            {
+                return NotFound();
+            }
+
+            _dbContext.Users.Remove(dbUser);
+            _dbContext.SaveChanges();
+
+            return Ok();
         }
 
         [HttpPut("give-role")]
@@ -161,6 +182,45 @@ namespace SimpchatWeb.Controllers
 
             var response = _mapper.Map<UserResponseDto>(user);
             return Ok(response);
+        }
+
+        [HttpPut("{username}")]
+        public IActionResult UpdateUser(
+            string username, 
+            UserPutDto request
+            )
+        {
+            var user = _dbContext.Users.FirstOrDefault(u => u.Username == username);
+
+            if (user is null)
+            {
+                return BadRequest();
+            }
+
+            user = _mapper.Map(request, user);
+            _dbContext.Update(user);
+            _dbContext.SaveChanges();
+
+            var response = _mapper.Map<UserResponseDto>(user);
+            return Ok(response);
+        }
+
+        [HttpDelete("{userId:guid}")]
+        public IActionResult DeleteUser(
+            Guid userId
+            )
+        {
+            var user = _dbContext.Users.Find(userId);
+
+            if (user is null)
+            {
+                return BadRequest();
+            }
+
+            _dbContext.Users.Remove(user);
+            _dbContext.SaveChanges();
+
+            return Ok();
         }
     }
 }
