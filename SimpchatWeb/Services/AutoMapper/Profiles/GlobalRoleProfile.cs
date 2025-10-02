@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using SimpchatWeb.Services.Db.Contexts.Default.Models.GlobalRolesDtos;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Posts;
 
 namespace SimpchatWeb.Services.AutoMapper.Profiles
 {
@@ -8,8 +8,8 @@ namespace SimpchatWeb.Services.AutoMapper.Profiles
     {
         public GlobalRoleProfile()
         {
-            CreateMap<GlobalRoleDto, GlobalRole>();
-            CreateMap<GlobalRole, GlobalRoleDto>();
+            CreateMap<UserGlobalRolesPostDto, GlobalRole>();
+            CreateMap<GlobalRole, UserGlobalRolesPostDto>();
         }
     }
 }

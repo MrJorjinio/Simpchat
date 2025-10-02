@@ -11,19 +11,16 @@ namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
         public string Description { get; set; }
         public string PasswordHash { get; set; }
         public string Salt { get; set; }
-        public UserStatus Status { get; set; } = UserStatus.Active;
         public DateTimeOffset RegisteredAt { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset LastSeen { get; set; } = DateTimeOffset.UtcNow;
-        public ICollection<Friendship> SentFriendships { get; set; }
-        public ICollection<Friendship> ReceivedFriendships { get; set; }
-        public ICollection<GroupParticipant> GroupsParticipated { get; set; }
+        public ICollection<ChatParticipant> ChatsParticipated { get; set; }
         public ICollection<MessageReaction> MessageReactions { get; set; }
         public ICollection<Message> Messages { get; set; }
         public ICollection<Channel> Channels { get; set; }
         public ICollection<Group> Groups { get; set; }
-        public ICollection<ChannelSubscriber> ChannelsSubscribedTo { get; set; }
-        public ICollection<GroupUserRole> GroupsRoles { get; set; }
-        public ICollection<GroupUserPermission> GroupPermissions { get; set; }
+        public ICollection<ChatUserPermission> ChatPermissions { get; set; }
         public ICollection<GlobalRoleUser> GlobalRoles { get; set; }
+        public ICollection<Notification> Notifications { get; set; }
+        public ICollection<ChatBan> ChatBans { get; set; }
     }   
 }

@@ -5,8 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using SimpchatWeb.Services.Db.Contexts.Default.Models.GlobalRolesDtos;
-using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Posts;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Puts;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Responses;
 using SimpchatWeb.Services.Interfaces.Auth;
 using SimpchatWeb.Services.Interfaces.Token;
 using System.Linq;
@@ -66,7 +67,7 @@ namespace SimpchatWeb.Controllers
 
         [HttpPut("me")]
         public IActionResult UpdateMyProfile(
-            UserUpdateDto request
+            UserPutDto request
             )
         {
             var userId = _tokenService.GetUserId(User);
@@ -93,7 +94,7 @@ namespace SimpchatWeb.Controllers
 
         [HttpPut("me/password")]
         public IActionResult UpdateMyPassword(
-            UserUpdatePasswordDto request
+            UserPutPasswordDto request
             )
         {
             var userId = _tokenService.GetUserId(User);
@@ -125,7 +126,7 @@ namespace SimpchatWeb.Controllers
 
         [HttpPut("give-role")]
         public IActionResult GiveRoles(
-            GlobalRoleUserDto request
+            UserGlobalRolesPostDto request
             )
         {
             var user = _dbContext.Users
@@ -140,7 +141,7 @@ namespace SimpchatWeb.Controllers
             var dbGlobalRole = _dbContext.GlobalRoles
                 .ToHashSet();
 
-            var globalRoles = _mapper.Map<ICollection<GlobalRole>>(request.Roles);
+            var globalRoles = _mapper.Map<ICollection<GlobalRole>>(request.RoleNames);
 
             var existingRoles = dbGlobalRole
                 .Where(dgr => globalRoles.Any(gr =>

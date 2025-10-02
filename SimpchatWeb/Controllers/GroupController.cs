@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos;
-using SimpchatWeb.Services.GlobalEnums;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Creates;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Gets;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Posts;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Responses;
 using SimpchatWeb.Services.Interfaces.Token;
 
 namespace SimpchatWeb.Controllers
@@ -67,7 +69,7 @@ namespace SimpchatWeb.Controllers
 
         [HttpPost("me")]
         public IActionResult CreateMyGroup(
-            GroupCreateDto request
+            GroupPostDto request
             )
         {
             var userId = _tokenService.GetUserId(User);
@@ -97,46 +99,6 @@ namespace SimpchatWeb.Controllers
             var user = _dbContext.Users.Find(userId);
             response.CreatedBy = user.Username;
 
-            return Ok(response);
-        }
-
-        [HttpPost("create-role")]
-        public IActionResult CreateRole(
-            GroupCreateRoleDto request
-            )
-        {
-            var group = _dbContext.Groups
-                .Include(g => g.GroupRoles)
-                .FirstOrDefault(g => g.Id == request.Id);
-
-            if (group is null)
-            {
-                return BadRequest();
-            }
-
-            var groupRoles = _mapper.Map<ICollection<GroupRole>>(request.Roles);
-
-            var dbGroupRoles = _dbContext.GroupRoles
-                .Select(dgr => dgr.Name)
-                .ToHashSet();
-
-            var newRoles = groupRoles
-                .Where(gr => !dbGroupRoles.Any(dgr => 
-                        string.Equals(
-                            gr.Name,
-                            dgr, 
-                            StringComparison.OrdinalIgnoreCase
-                            )));
-
-            foreach (var newRole in newRoles)
-            {
-                group.GroupRoles.Add(newRole);
-            }
-
-            _dbContext.Groups.Update(group);
-            _dbContext.SaveChanges();
-
-            var response = _mapper.Map<GroupResponseDto>(group);
             return Ok(response);
         }
     }

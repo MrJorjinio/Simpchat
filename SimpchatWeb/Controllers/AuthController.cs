@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Posts;
 using SimpchatWeb.Services.Interfaces.Auth;
 
 namespace SimpchatWeb.Controllers
@@ -19,7 +19,7 @@ namespace SimpchatWeb.Controllers
 
         [HttpPost("register")]
         public IActionResult Register(
-            UserRegisterDto request
+            UserRegisterPostDto request
             )
         {
             var user = _authService.Register(request);
@@ -31,9 +31,10 @@ namespace SimpchatWeb.Controllers
 
             return Ok();
         }
+
         [HttpPost("login")]
         public IActionResult Login(
-            UserLoginDto request
+            UserLoginPostDto request
             )
         {
             var token = _authService.Login(request);
