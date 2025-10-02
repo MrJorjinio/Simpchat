@@ -2,8 +2,7 @@
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using SimpchatWeb.Services.Db.Contexts.Default.Enums;
-using SimpchatWeb.Services.Db.Contexts.Default.Models;
-using SimpchatWeb.Services.GlobalEnums;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.GlobalPermissions;
 using SimpchatWeb.Services.Interfaces.DataInserter;
 
 namespace SimpchatWeb.Services.DataInserter
@@ -52,20 +51,20 @@ namespace SimpchatWeb.Services.DataInserter
 
         public void InsertSysGroupPermissions()
         {
-            var sysGroupPermissions = Enum.GetNames<GroupPermissions>();
+            var sysChatPermissions = Enum.GetNames<ChatPermissions>();
 
-            var dbGroupPermissions = _dbContext.GroupPermissions
+            var dbChatPermissions = _dbContext.ChatPermissions
                 .Select(x => x.Name)
                 .ToHashSet();
 
-            var newPermissions = sysGroupPermissions
-                .Where(p => !dbGroupPermissions.Contains(p))
-                .Select(p => new GroupPermission { Name = p })
+            var newPermissions = sysChatPermissions
+                .Where(p => !dbChatPermissions.Contains(p))
+                .Select(p => new ChatPermission { Name = p })
                 .ToList();
 
             if (newPermissions.Count > 0)
             {
-                _dbContext.GroupPermissions.AddRange(newPermissions);
+                _dbContext.ChatPermissions.AddRange(newPermissions);
                 _dbContext.SaveChanges();
             }
         }

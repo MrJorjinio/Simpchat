@@ -1,14 +1,15 @@
-﻿using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos;
+﻿using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Posts;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Responses;
 
 namespace SimpchatWeb.Services.Interfaces.Auth
 {
     public interface IAuthService
     {
         UserResponseDto Register(
-            UserRegisterDto user
+            UserRegisterPostDto user
             );
         string Login(
-            UserLoginDto user
+            UserLoginPostDto user
             );
     }
 }

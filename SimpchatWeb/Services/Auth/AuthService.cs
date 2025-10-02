@@ -3,7 +3,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Posts;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Responses;
 using SimpchatWeb.Services.Interfaces.Auth;
 using SimpchatWeb.Services.Settings;
 using System.Collections.ObjectModel;
@@ -28,7 +29,7 @@ namespace SimpchatWeb.Services.Auth
             _passwordHasher = passwordHasher;
             _appSettings = options.Value;
         }
-        public UserResponseDto Register(UserRegisterDto user)
+        public UserResponseDto Register(UserRegisterPostDto user)
         {
             if (_dbContext.Users.Any(u => u.Username == user.Username))
             {
@@ -49,7 +50,7 @@ namespace SimpchatWeb.Services.Auth
             var defaultRole = _dbContext.GlobalRoles.FirstOrDefault(gr => gr.Name == "User");
             if (defaultRole is not null)
             {
-                _dbContext.GlobalRolesUsers.Add(new GlobalRoleUser { UserId = dbUser.Id, RoleId = defaultRole.Id });
+                _dbContext.UsersGlobalRoles.Add(new GlobalRoleUser { UserId = dbUser.Id, RoleId = defaultRole.Id });
             }
             _dbContext.SaveChanges();
             var response = new UserResponseDto()
@@ -58,7 +59,7 @@ namespace SimpchatWeb.Services.Auth
             };
             return response;
         }
-        public string Login(UserLoginDto user)
+        public string Login(UserLoginPostDto user)
         {
             var dbUser = _dbContext.Users
                 .Include(u => u.GlobalRoles)
@@ -87,7 +88,7 @@ namespace SimpchatWeb.Services.Auth
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
-            var roles = _dbContext.GlobalRolesUsers
+            var roles = _dbContext.UsersGlobalRoles
                 .Where(gru => gru.UserId == user.Id)
                 .Include(gru => gru.Role)
                 .Select(gru => gru.Role.Name)
