@@ -11,6 +11,7 @@ namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
         public string Description { get; set; }
         public string PasswordHash { get; set; }
         public string Salt { get; set; }
+        public ChatMemberAddPermissionType ChatMemberAddPermissionType { get; set; }
         public DateTimeOffset RegisteredAt { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset LastSeen { get; set; } = DateTimeOffset.UtcNow;
         public ICollection<ChatParticipant> ChatsParticipated { get; set; }

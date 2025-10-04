@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SimpchatWeb.Services.Db.Contexts.Default;
@@ -11,16 +12,18 @@ using SimpchatWeb.Services.Db.Contexts.Default;
 namespace SimpchatWeb.Migrations
 {
     [DbContext(typeof(SimpchatDbContext))]
-    partial class SimpchatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251004131804_AddEnumsNamesEndingsPrefixType")]
+    partial class AddEnumsNamesEndingsPrefixType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "chat_member_add_permission_type", new[] { "everyone", "with_conversations", "nobody" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "chat_member_add_permision_type", new[] { "everyone", "with_conversations", "nobody" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "chat_privacy_type", new[] { "public", "private" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "chat_type", new[] { "conversation", "group", "channel" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -404,7 +407,7 @@ namespace SimpchatWeb.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("ChatMemberAddPermissionType")
+                    b.Property<string>("ChatMemberAddPermision")
                         .IsRequired()
                         .HasColumnType("text");
 

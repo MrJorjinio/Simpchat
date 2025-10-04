@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SimpchatWeb.Services.Db.Contexts.Default;
@@ -11,9 +12,11 @@ using SimpchatWeb.Services.Db.Contexts.Default;
 namespace SimpchatWeb.Migrations
 {
     [DbContext(typeof(SimpchatDbContext))]
-    partial class SimpchatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251004143326_RenameTypoAtEnumTypePermisionToPermission")]
+    partial class RenameTypoAtEnumTypePermisionToPermission
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -404,7 +407,7 @@ namespace SimpchatWeb.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("ChatMemberAddPermissionType")
+                    b.Property<string>("ChatMemberAddPermission")
                         .IsRequired()
                         .HasColumnType("text");
 
