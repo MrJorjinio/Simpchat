@@ -7,17 +7,23 @@ using Microsoft.OpenApi.Models;
 using SimpchatWeb.Services.Auth;
 using SimpchatWeb.Services.DataInserter;
 using SimpchatWeb.Services.Db.Contexts.Default;
+using SimpchatWeb.Services.Db.Contexts.Default.Entities;
+using SimpchatWeb.Services.Db.Contexts.Default.Enums;
 using SimpchatWeb.Services.Interfaces.Auth;
 using SimpchatWeb.Services.Interfaces.DataInserter;
 using SimpchatWeb.Services.Interfaces.Token;
 using SimpchatWeb.Services.Settings;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
-builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -48,8 +54,7 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
-builder.Services.AddScoped<IGroupDataInserter, DataInserter>();
-builder.Services.AddScoped<IGroupDataInserter, DataInserter>();
+builder.Services.AddScoped<IChatDataInserter, DataInserter>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddSingleton(sp =>
     sp.GetRequiredService<IOptions<AppSettings>>().Value
@@ -90,7 +95,7 @@ if (app.Environment.IsDevelopment())
 }
 
 using (var scope = app.Services.CreateAsyncScope()){
-    var dataInserter = scope.ServiceProvider.GetRequiredService<IGroupDataInserter>();
+    var dataInserter = scope.ServiceProvider.GetRequiredService<IChatDataInserter>();
     dataInserter.InsertSysGroupPermissions();
 }
 
