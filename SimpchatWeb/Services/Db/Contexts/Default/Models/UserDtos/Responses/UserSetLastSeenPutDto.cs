@@ -1,8 +1,8 @@
 ﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Responses
 {
-    public class UserSearchResponseDto
+    public class UserSetLastSeenPutDto
     {
-        public Guid UserId { get; set; }
         public string Username { get; set; }
+        public DateTimeOffset LastSeen { get; set; }
     }
 }

@@ -8,12 +8,14 @@ using SimpchatWeb.Services.Db.Contexts.Default.Models.ChatDtos;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.ChatDtos.Posts;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.ChatDtos.Responses;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.ChatDtos.Temps;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Posts;
+using SimpchatWeb.Services.Filters;
 using SimpchatWeb.Services.Interfaces.Token;
 using System.Collections.ObjectModel;
 
 namespace SimpchatWeb.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/chats")]
     [ApiController]
     public class ChatController : ControllerBase
     {
@@ -32,192 +34,225 @@ namespace SimpchatWeb.Controllers
             _tokenService = tokenService;
         }
 
-        [HttpGet("{chatId:guid}/messages")]
-        public IActionResult GetMessages(Guid chatId)
-        {
-            var chats = _dbContext.Chats
-                .Where(c => c.Id == chatId)
-                .Include(c => c.Messages)
-                .ToList();
-            var notfications = _dbContext.Notifications
-                .ToList();
-
-            var temp = new Collection<ChatMessageTempDto>();
-
-            foreach (var chat in chats)
-            {
-                foreach (var message in chat.Messages)
-                {
-                    var dto = new ChatMessageTempDto
-                    {
-                        ChatId = chat.Id,
-                        MessageId = message.Id,
-                        Content = message.Content,
-                        IsSeen = notfications.Any(n => n.MessageId == message.Id && n.IsSeen)
-                    };
-
-                    temp.Add(dto);
-                }
-            }
-
-            var response = _mapper.Map<ICollection<ChatMessageResponseDto>>(temp);
-            return Ok(response);
-        }
-
-        [HttpPost("{chatId:guid}/send-message")]
-        public IActionResult SendMessage(Guid chatId, [FromBody]ChatMessagePostDto request)
+        [HttpGet("{chatId:guid}")]
+        [EnsureEntityExistsFilter(typeof(Chat), "chatId")]
+        [EnsureChatPrivacyTypeNotFilter(ChatPrivacyType.Private)]
+        public IActionResult GetChatById(Guid chatId)
         {
             var chat = _dbContext.Chats.Find(chatId);
 
-            if (chat is null)
-            {
-                return BadRequest();
-            }
+            var response = _mapper.Map<ChatGetByIdGetResponseDto>(chat);
+            var members = _dbContext.ChatsParticipants
+                .Include(cp => cp.User)
+                .Where(cp => cp.ChatId == chat.Id);
+            var membersOnlineCount = members.Where(moc => moc.User.LastSeen.AddSeconds(4) > DateTimeOffset.UtcNow)
+                .Count();
+            response.MembersCount = members.Count();
+            response.MembersOnline = membersOnlineCount;
 
-            if (chat.Type == ChatTypes.Conversation)
-            {
-                return BadRequest();
-            }
-
-            var userId = _tokenService.GetUserId(User);
-
-            if (userId == Guid.Empty)
-            {
-                return BadRequest();
-            }
-            var user = _dbContext.Users.Find(userId);
-
-            if (user is null)
-            {
-                return BadRequest();
-            }
-
-            var message = _mapper.Map<Message>(request);
-
-            var replyId = request.ReplyId;
-            if (replyId is not null)
-            {
-                var reply = _dbContext.Messages.Find(replyId);
-                if (reply is not null)
-                {
-                    message.ReplyId = null;
-                }
-            }
-
-            message.ChatId = chatId;
-            message.SenderId = userId;
-            _dbContext.Messages.Add(message);
-            _dbContext.SaveChanges();
-
-            var notification = new Notification { MessageId = message.Id, UserId = user.Id };
-            _dbContext.Notifications.Add(notification);
-            _dbContext.SaveChanges();
-
-            var response = _mapper.Map<ChatMessageResponseDto>(message);
             return Ok(response);
         }
 
-        [HttpPost("send-message/conversation")]
-        public IActionResult SendMessageToConversation(Guid chatId, [FromBody]ChatMessageConversationPostDto request)
+        [HttpGet("search/{name}")]
+        public IActionResult SearchChats(string name)
+        {
+            var results = new List<ChatSearchGetResponseDto>();
+
+            var similarGroups = _dbContext.Groups
+                .Where(g => EF.Functions.Like(g.Name, $"%{name}%"))
+                .ToList();
+            results.AddRange(similarGroups.Select(sg => new ChatSearchGetResponseDto
+            {
+                Id = sg.Id,
+                Name = sg.Name,
+                Type = ChatType.Group
+            }));
+
+            var similarChannels = _dbContext.Channels
+                .Where(c => EF.Functions.Like(c.Name, $"%{name}%"))
+                .ToList();
+            results.AddRange(similarChannels.Select(sg => new ChatSearchGetResponseDto
+            {
+                Id = sg.Id,
+                Name = sg.Name,
+                Type = ChatType.Channel
+            }));
+
+            var similarUsers = _dbContext.Users
+                .Where(u => EF.Functions.Like(u.Username, $"%{name}%"))
+                .ToList();
+            results.AddRange(similarUsers.Select(sg => new ChatSearchGetResponseDto
+            {
+                Id = sg.Id,
+                Name = sg.Username,
+                Type = ChatType.Conversation
+            }));
+
+            return Ok(results);
+        }
+
+        [HttpPost("{chatId:guid}/join")]
+        [EnsureEntityExistsFilter(typeof(User), "userId")]
+        [EnsureChatTypeNotFilter(ChatType.Conversation, "chatId")]
+        public IActionResult JoinChat(Guid chatId)
         {
             var userId = _tokenService.GetUserId(User);
-
-            if (userId == Guid.Empty)
-            {
-                return BadRequest();
-            }
-
             var user = _dbContext.Users.Find(userId);
-
-            if (user is null)
-            {
-                return BadRequest();
-            }
-
             var chat = _dbContext.Chats.Find(chatId);
 
-            if (chat is null)
+            var userChat = new ChatParticipant
             {
-                chat = new Chat { Type = ChatTypes.Conversation };
-                _dbContext.Chats.Add(chat);
-                _dbContext.SaveChanges();
-                var chatParticipant = new ChatParticipant { ChatId = chat.Id, UserId = userId };
+                UserId = user.Id,
+                ChatId = chat.Id,
+            };
 
-                var withUser = _dbContext.Users.Find(request.ReceiverId);
-
-                if (withUser is null)
-                {
-                    return BadRequest();
-                }
-
-                var chatParticipantWith = new ChatParticipant { ChatId = chat.Id, UserId = withUser.Id };
-
-                _dbContext.ChatsParticipants.Add(chatParticipant);
-                _dbContext.ChatsParticipants.Add(chatParticipantWith);
-                _dbContext.SaveChanges();
-
-                var conversation = new Conversation { Id = chat.Id };
-                _dbContext.Conversations.Add(conversation);
-                _dbContext.SaveChanges();
-            }
-            else
-            {
-                if (chat.Type != ChatTypes.Conversation)
-                {
-                    return BadRequest();
-                }
-            }
-
-            var message = _mapper.Map<Message>(request);
-
-            var replyId = request.ReplyId;
-            if (replyId is not null)
-            {
-                var reply = _dbContext.Messages.Find(replyId);
-                if (reply is not null)
-                {
-                    message.ReplyId = null;
-                }
-            }
-
-            message.ChatId = chat.Id;
-            message.SenderId = userId;
-            _dbContext.Messages.Add(message);
+            _dbContext.ChatsParticipants.Add(userChat);
             _dbContext.SaveChanges();
 
-            var notification = new Notification { MessageId = message.Id, UserId = user.Id };
-            _dbContext.Notifications.Add(notification);
+            var userDefaultPermissions = new Collection<ChatUserPermission>();
+
+            if (chat.Type == ChatType.Group)
+            {
+                var sendMessagePermission = _dbContext.ChatPermissions.FirstOrDefault(cp => cp.Name == ChatPermissionType.SendMessage.ToString());
+
+                if (sendMessagePermission is not null)
+                {
+                    userDefaultPermissions.Add(new ChatUserPermission { UserId = user.Id, ChatId = chat.Id, PermissionId = sendMessagePermission.Id });
+                }
+            }
+
+            var reactToMessagePermission = _dbContext.ChatPermissions.FirstOrDefault(cp => cp.Name == ChatPermissionType.ReactToMessage.ToString());
+            if (reactToMessagePermission is not null)
+            {
+                userDefaultPermissions.Add(new ChatUserPermission { UserId = user.Id, ChatId = chat.Id, PermissionId = reactToMessagePermission.Id });
+            }
+
+            _dbContext.AddRange(userDefaultPermissions);
             _dbContext.SaveChanges();
 
-            var response = _mapper.Map<ChatMessageResponseDto>(message);
+            var response = _mapper.Map<UserJoinChatResponseDto>(user);
+            response.ChatId = chat.Id;
             return Ok(response);
         }
 
-        [HttpPut("mark-as-seen/{messageId:guid}")]
-        public IActionResult MarkAsSeen(Guid messageId)
+        [HttpPut("{chatId:guid}/update-privacy")]
+        [EnsureEntityExistsFilter(typeof(User), "userId")]
+        [EnsureEntityExistsFilter(typeof(Chat), "chatId")]
+        [EnsureEntityExistsFilter(typeof(ChatParticipant), "chatId")]
+        [EnsureChatPermissionExistsFilter(ChatPermissionType.ManageGroupBasics, "chatId")]
+        public IActionResult UpdatePrivacyType(Guid chatId, ChatPrivacyTypePutResponseDto request)
         {
-            var notification = _dbContext.Notifications
-                .FirstOrDefault(n => n.MessageId == messageId);
-
-            if (notification is null)
-            {
-                return BadRequest();
-            }
-
-            notification.IsSeen = true;
+            var chat = _dbContext.Chats.Find(chatId);
+            chat.PrivacyType = request.PrivacyType;
             _dbContext.SaveChanges();
 
-            var message = _dbContext.Messages.Find(messageId);
+            var response = _mapper.Map<ChatPrivacyTypePutResponseDto>(chat);
+            return Ok(response);
+        }
 
-            if (message is null)
+        [HttpPost("{chatId:guid}/add-user/{userId:guid}")]
+        [EnsureEntityExistsFilter(typeof(User))]
+        [EnsureEntityExistsFilter(typeof(User), "userId")]
+        [EnsureEntityExistsFilter(typeof(Chat), "chatId")]
+        [EnsureChatPermissionExistsFilter(ChatPermissionType.ManageUsers)]
+        public IActionResult AddUserToChat(Guid chatId, Guid userId)
+        {
+            var addingUserId = _tokenService.GetUserId(User);
+            var comingUser = _dbContext.Users.Find(userId);
+
+            if (comingUser.ChatMemberAddPermissionType == ChatMemberAddPermissionType.Everyone)
             {
-                return BadRequest();
+                var userChat = new ChatParticipant { UserId = userId, ChatId = chatId };
+                _dbContext.ChatsParticipants.Add(userChat);
+                _dbContext.SaveChanges();
+            }
+            else if (comingUser.ChatMemberAddPermissionType == ChatMemberAddPermissionType.WithConversations)
+            {
+                var addingUserConversations = _dbContext.ChatsParticipants
+                    .Include(cp => cp.Chat)
+                    .Where(cp => cp.UserId == addingUserId && cp.Chat.Type == ChatType.Conversation)
+                    .ToList();
+                var comingUserConversations = _dbContext.ChatsParticipants
+                    .Where(cp => cp.UserId == addingUserId && cp.Chat.Type == ChatType.Conversation)
+                    .ToList();
+                var isConversationBetweenExists = addingUserConversations.Any(auc => comingUserConversations.Any(cup => cup.ChatId == auc.ChatId));
+
+                if (isConversationBetweenExists is true)
+                {
+                    var userChat = new ChatParticipant { UserId = userId, ChatId = chatId };
+                    _dbContext.ChatsParticipants.Add(userChat);
+                    _dbContext.SaveChanges();
+                }
+                else
+                {
+                    return BadRequest();
+                }
             }
 
-            var response = _mapper.Map<ChatMessageResponseDto>(message);
-            response.IsSeen = notification.IsSeen;
+            return BadRequest();
+        }
 
-            return Ok(response);
+        [HttpGet]
+        [EnsureEntityExistsFilter(typeof(User))]
+        public IActionResult GetMyChats()
+        {
+            var userId = _tokenService.GetUserId(User);
+
+            var chats = _dbContext.ChatsParticipants
+                .Include(cp => cp.Chat)
+                    .ThenInclude(c => c.Messages)
+                        .ThenInclude(m => m.Sender)
+                .Include(cp => cp.Chat.Messages)
+                    .ThenInclude(m => m.Notifications)
+                .Include(cp => cp.Chat.Participants)
+                    .ThenInclude(cp => cp.User)
+                .Include(cp => cp.Chat.Group)
+                .Include(cp => cp.Chat.Channel)
+                .Where(cp => cp.UserId == userId)
+                .Select(cp => cp.Chat)
+                .ToList();
+
+            var orderedChats = chats
+                .Select(c => new
+                {
+                    ChatId = c.Id,
+                    ChatType = c.Type.ToString(),
+
+                    ChatName = c.Type == ChatType.Conversation
+                        ? c.Participants
+                            .Where(cp => cp.UserId != userId)
+                            .Select(cp => cp.User.Username)
+                            .FirstOrDefault()
+                        : c.Type == ChatType.Group
+                        ? c.Group.Name
+                        : c.Type == ChatType.Channel
+                        ? c.Channel.Name
+                        : "Unknown Chat",
+
+                    LastMessage = c.Messages
+                        .OrderByDescending(m => m.SentAt)
+                        .Select(m => new
+                        {
+                            m.Id,
+                            m.Content,
+                            m.SentAt,
+                            Sender = m.Sender.Username
+                        })
+                        .FirstOrDefault(),
+
+                    LastMessageTime = c.Messages
+                        .OrderByDescending(m => m.SentAt)
+                        .Select(m => m.SentAt)
+                        .FirstOrDefault(),
+
+                    UnreadCount = c.Messages
+                        .SelectMany(m => m.Notifications)
+                        .Count(n => n.UserId == userId && !n.IsSeen)
+                })
+                .OrderByDescending(c => c.LastMessageTime)
+                .ToList();
+
+            return Ok(orderedChats);
         }
     }
 }

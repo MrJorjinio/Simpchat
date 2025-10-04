@@ -3,7 +3,6 @@
     public enum ChatPrivacyType
     {
         Public,
-        Private,
-        FriendsOnly
+        Private
     }
 }

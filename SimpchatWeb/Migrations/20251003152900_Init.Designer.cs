@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SimpchatWeb.Services.Db.Contexts.Default;
@@ -11,18 +12,20 @@ using SimpchatWeb.Services.Db.Contexts.Default;
 namespace SimpchatWeb.Migrations
 {
     [DbContext(typeof(SimpchatDbContext))]
-    partial class SimpchatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251003152900_Init")]
+    partial class Init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "chat_member_add_permission_type", new[] { "everyone", "with_conversations", "nobody" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "chat_member_add_permision", new[] { "everyone", "with_conversations", "nobody" });
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "chat_privacy_type", new[] { "public", "private" });
-            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "chat_type", new[] { "conversation", "group", "channel" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "chat_types", new[] { "conversation", "group", "channel" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("SimpchatWeb.Services.Db.Contexts.Default.Entities.Channel", b =>
@@ -404,7 +407,7 @@ namespace SimpchatWeb.Migrations
                         .HasColumnType("uuid")
                         .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("ChatMemberAddPermissionType")
+                    b.Property<string>("ChatMemberAddPermision")
                         .IsRequired()
                         .HasColumnType("text");
 

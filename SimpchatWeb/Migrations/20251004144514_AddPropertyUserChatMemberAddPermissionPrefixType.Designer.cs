@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SimpchatWeb.Services.Db.Contexts.Default;
@@ -11,9 +12,11 @@ using SimpchatWeb.Services.Db.Contexts.Default;
 namespace SimpchatWeb.Migrations
 {
     [DbContext(typeof(SimpchatDbContext))]
-    partial class SimpchatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251004144514_AddPropertyUserChatMemberAddPermissionPrefixType")]
+    partial class AddPropertyUserChatMemberAddPermissionPrefixType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

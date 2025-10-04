@@ -7,7 +7,7 @@ using SimpchatWeb.Services.Interfaces.DataInserter;
 
 namespace SimpchatWeb.Services.DataInserter
 {
-    public class DataInserter : IGlobalDataInserter, IGroupDataInserter
+    public class DataInserter : IGlobalDataInserter, IChatDataInserter
     {
         private readonly SimpchatDbContext _dbContext;
         private readonly IMapper _mapper;
@@ -19,7 +19,10 @@ namespace SimpchatWeb.Services.DataInserter
             _dbContext = dbContext;
             _mapper = mapper;
         }
-        public void AddPermissionToRole(string roleName, string permissionName)
+        public void AddPermissionToRole(
+            string roleName, 
+            string permissionName
+            )
         {
             var role = _dbContext.GlobalRoles.FirstOrDefault(gr => gr.Name == roleName);
             if (role is null)
@@ -51,7 +54,7 @@ namespace SimpchatWeb.Services.DataInserter
 
         public void InsertSysGroupPermissions()
         {
-            var sysChatPermissions = Enum.GetNames<ChatPermissions>();
+            var sysChatPermissions = Enum.GetNames<Db.Contexts.Default.Enums.ChatPermissionType>();
 
             var dbChatPermissions = _dbContext.ChatPermissions
                 .Select(x => x.Name)
@@ -71,7 +74,7 @@ namespace SimpchatWeb.Services.DataInserter
 
         public void InsertSysPermissions()
         {
-            var sysGlobalPermissions = Enum.GetNames<GlobalPermissions>();
+            var sysGlobalPermissions = Enum.GetNames<Db.Contexts.Default.Enums.GlobalPermissionType>();
 
             var dbGlobalPermissions = _dbContext.GlobalPermissions
                 .Select(x => x.Name)
@@ -91,7 +94,7 @@ namespace SimpchatWeb.Services.DataInserter
 
         public void InsertSysRoles()
         {
-            var sysGlobalRoles = Enum.GetNames<GlobalRoles>();
+            var sysGlobalRoles = Enum.GetNames<Db.Contexts.Default.Enums.GlobalRoleType>();
 
             var dbGlobalRoles = _dbContext.GlobalRoles
                 .Select(x => x.Name)
@@ -109,7 +112,9 @@ namespace SimpchatWeb.Services.DataInserter
             }
         }
 
-        public void UpsertPermission(GlobalPermissionDto permission)
+        public void UpsertPermission(
+            GlobalPermissionDto permission
+            )
         {
             var globalDbPermission = _dbContext.GlobalPermissions
                 .FirstOrDefault(p => p.Name == permission.Name);
@@ -118,7 +123,7 @@ namespace SimpchatWeb.Services.DataInserter
 
             if (globalDbPermission is null)
             {
-                var _permission = new GlobalPermission()
+                var _permission = new Db.Contexts.Default.Entities.GlobalPermission()
                 {
                     Name = $"{permission.Name}"
                 };

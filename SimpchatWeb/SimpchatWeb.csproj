@@ -26,7 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\Db\Contexts\Default\Models\GroupDtos\Deletes\" />
     <Folder Include="Services\Db\Contexts\Default\Models\UserDtos\Gets\" />
     <Folder Include="Services\Db\Contexts\Default\Models\UserDtos\Deletes\" />
   </ItemGroup>

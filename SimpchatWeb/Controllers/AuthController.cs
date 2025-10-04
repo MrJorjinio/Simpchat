@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Posts;
 using SimpchatWeb.Services.Interfaces.Auth;
 
 namespace SimpchatWeb.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -24,7 +25,7 @@ namespace SimpchatWeb.Controllers
         {
             var user = _authService.Register(request);
 
-            if (user is null)
+            if (user is false)
             {
                 return BadRequest();
             }
