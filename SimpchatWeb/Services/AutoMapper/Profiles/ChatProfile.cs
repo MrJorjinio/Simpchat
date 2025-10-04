@@ -10,6 +10,7 @@ namespace SimpchatWeb.Services.AutoMapper.Profiles
     {
         public ChatProfile()
         {
+            CreateMap<ChatPrivacyTypePutResponseDto, Chat>();
             CreateMap<ChatMessageResponseDto, ChatMessagePostDto>();
             CreateMap<ChatMessagePostDto, ChatMessageResponseDto>();        
             CreateMap<ChatMessageTempDto, ChatMessageResponseDto>();
@@ -24,6 +25,8 @@ namespace SimpchatWeb.Services.AutoMapper.Profiles
             CreateMap<Message, ChatMessagePostDto>();
             CreateMap<Message, ChatMessageTempDto>();
             CreateMap<Message, ChatMessageConversationPostDto>();
+            CreateMap<Chat, ChatPrivacyTypeUpdatePutDto>()
+                .ForMember(dest => dest.ChatId, opt => opt.MapFrom(src => src.Id));
         }
     }
 }

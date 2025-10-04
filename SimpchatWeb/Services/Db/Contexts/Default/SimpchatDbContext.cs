@@ -32,8 +32,9 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             //<Enums>
-            modelBuilder.HasPostgresEnum<ChatTypes>();
+            modelBuilder.HasPostgresEnum<ChatType>();
             modelBuilder.HasPostgresEnum<ChatPrivacyType>();
+            modelBuilder.HasPostgresEnum<ChatMemberAddPermissionType>();
             //<Enums>
             //<User>
             modelBuilder.Entity<User>()
@@ -57,6 +58,9 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<User>()
                 .Property(u => u.LastSeen)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+            modelBuilder.Entity<User>()
+                .Property(u => u.ChatMemberAddPermissionType)
+                .HasConversion<string>();
             //</User>
             //<Reaction>
             modelBuilder.Entity<Reaction>()

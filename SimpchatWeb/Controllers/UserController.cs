@@ -5,9 +5,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
+using SimpchatWeb.Services.Db.Contexts.Default.Enums;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Posts;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Puts;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Responses;
+using SimpchatWeb.Services.Filters;
 using SimpchatWeb.Services.Interfaces.Auth;
 using SimpchatWeb.Services.Interfaces.Token;
 using System.Linq;
@@ -15,7 +17,7 @@ using System.Security.Claims;
 
 namespace SimpchatWeb.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/users")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -25,9 +27,9 @@ namespace SimpchatWeb.Controllers
         private readonly IPasswordHasher _passwordHasher;
 
         public UserController(
-            SimpchatDbContext dbContext, 
-            IMapper mapper, 
-            ITokenService tokenService, 
+            SimpchatDbContext dbContext,
+            IMapper mapper,
+            ITokenService tokenService,
             IPasswordHasher passwordHasher
             )
         {
@@ -37,17 +39,13 @@ namespace SimpchatWeb.Controllers
             _passwordHasher = passwordHasher;
         }
 
-        [HttpGet("{username}")]
-        public IActionResult GetUserById(
-            string username
+        [HttpGet("{userId:guid}")]
+        [EnsureEntityExistsFilter(typeof(User), "userId")]
+        public IActionResult GetUserByUserId(
+            Guid userId
             )
         {
-            var user = _dbContext.Users.FirstOrDefault(u => u.Username == username);
-
-            if (user is null)
-            {
-                return NotFound();
-            }
+            var user = _dbContext.Users.Find(userId);
 
             var response = _mapper.Map<UserProfileGetResponseDto>(user);
             return Ok(response);
@@ -65,23 +63,13 @@ namespace SimpchatWeb.Controllers
         }
 
         [HttpPut("me")]
+        [EnsureEntityExistsFilter(typeof(User), "userId")]
         public IActionResult UpdateMyProfile(
             UserPutDto request
             )
         {
             var userId = _tokenService.GetUserId(User);
-
-            if (userId == Guid.Empty)
-            {
-                return Unauthorized();
-            }
-
             var dbUser = _dbContext.Users.Find(userId);
-
-            if (dbUser is null)
-            {
-                return NotFound();
-            }
 
             dbUser = _mapper.Map(request, dbUser);
             _dbContext.SaveChanges();
@@ -91,24 +79,29 @@ namespace SimpchatWeb.Controllers
             return Ok(response);
         }
 
+        [HttpPut("me/set-last-seen")]
+        [EnsureEntityExistsFilter(typeof(User), "userId")]
+        public IActionResult SetLastSeen()
+        {
+            var userId = _tokenService.GetUserId(User);
+            var dbUser = _dbContext.Users.Find(userId);
+
+            dbUser.LastSeen = DateTimeOffset.Now;
+            _dbContext.SaveChanges();
+
+            var response = _mapper.Map<UserSetLastSeenPutDto>(dbUser);
+
+            return Ok(response);
+        }
+
         [HttpPut("me/password")]
+        [EnsureEntityExistsFilter(typeof(User), "userId")]
         public IActionResult UpdateMyPassword(
             UserPutPasswordDto request
             )
         {
             var userId = _tokenService.GetUserId(User);
-
-            if (userId == Guid.Empty)
-            {
-                return Unauthorized();
-            }
-
             var dbUser = _dbContext.Users.Find(userId);
-
-            if (dbUser is null)
-            {
-                return NotFound();
-            }
 
             if (_passwordHasher.Verify(request.CurrentPassword, dbUser.Salt, dbUser.PasswordHash) is false)
             {
@@ -123,101 +116,13 @@ namespace SimpchatWeb.Controllers
         }
 
         [HttpDelete("me")]
+        [EnsureEntityExistsFilter(typeof(User), "userId")]
         public IActionResult DeleteMe()
         {
             var userId = _tokenService.GetUserId(User);
-
-            if (userId == Guid.Empty)
-            {
-                return Unauthorized();
-            }
-
             var dbUser = _dbContext.Users.Find(userId);
 
-            if (dbUser is null)
-            {
-                return NotFound();
-            }
-
             _dbContext.Users.Remove(dbUser);
-            _dbContext.SaveChanges();
-
-            return Ok();
-        }
-
-        [HttpPut("give-role")]
-        public IActionResult GiveRoles(
-            UserGlobalRolesPostDto request
-            )
-        {
-            var user = _dbContext.Users
-                .Include(u => u.GlobalRoles)
-                .FirstOrDefault(u => u.Username == request.Username);
-
-            if (user is null)
-            {
-                return BadRequest();
-            }
-
-            var dbGlobalRole = _dbContext.GlobalRoles
-                .ToHashSet();
-
-            var globalRoles = _mapper.Map<ICollection<GlobalRole>>(request.RoleNames);
-
-            var existingRoles = dbGlobalRole
-                .Where(dgr => globalRoles.Any(gr =>
-                            string.Equals(
-                                gr.Name, 
-                                dgr.Name, 
-                                StringComparison.OrdinalIgnoreCase
-                                )));
-
-            foreach (var existingRole in existingRoles)
-            {
-                var globalRoleUser = new GlobalRoleUser() { UserId = user.Id, RoleId = existingRole.Id };
-                user.GlobalRoles.Add(globalRoleUser);
-                _dbContext.Users.Update(user);
-                _dbContext.SaveChanges();
-            }
-
-            var response = _mapper.Map<UserResponseDto>(user);
-            return Ok(response);
-        }
-
-        [HttpPut("{username}")]
-        public IActionResult UpdateUser(
-            string username, 
-            UserPutDto request
-            )
-        {
-            var user = _dbContext.Users.FirstOrDefault(u => u.Username == username);
-
-            if (user is null)
-            {
-                return BadRequest();
-            }
-
-            user = _mapper.Map(request, user);
-            _dbContext.Update(user);
-            _dbContext.SaveChanges();
-
-            var response = _mapper.Map<UserResponseDto>(user);
-            return Ok(response);
-        }
-
-        [HttpDelete("{userId:guid}")]
-        public IActionResult DeleteUser(
-            Guid userId
-            )
-        {
-            var user = _dbContext.Users.Find(userId);
-
-            if (user is null)
-            {
-                return BadRequest();
-            }
-
-            _dbContext.Users.Remove(user);
             _dbContext.SaveChanges();
 
             return Ok();

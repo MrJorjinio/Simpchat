@@ -7,7 +7,10 @@ namespace SimpchatWeb.Services.Auth
 {
     public class PasswordHasher : IPasswordHasher
     {
-        public string Encrypt(string password, string salt)
+        public string Encrypt(
+            string password, 
+            string salt
+            )
         {
             using var algorithm = new Rfc2898DeriveBytes(
 password: password,
@@ -17,7 +20,11 @@ hashAlgorithm: HashAlgorithmName.SHA256);
             return Convert.ToBase64String(algorithm.GetBytes(64));
         }
 
-        public bool Verify(string password, string salt, string passwordHash)
+        public bool Verify(
+            string password,
+            string salt, 
+            string passwordHash
+            )
         {
             var requestHash = Encrypt(password, salt);
             if (requestHash != passwordHash)
