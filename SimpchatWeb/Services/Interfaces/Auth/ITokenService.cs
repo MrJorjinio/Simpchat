@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace SimpchatWeb.Services.Interfaces.Token
+namespace SimpchatWeb.Services.Interfaces.Auth
 {
     public interface ITokenService
     {

@@ -8,10 +8,11 @@ using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Posts;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Responses;
 using SimpchatWeb.Services.Interfaces.Auth;
 using SimpchatWeb.Services.Settings;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SimpchatWeb.Services.Auth
 {
@@ -21,8 +22,8 @@ namespace SimpchatWeb.Services.Auth
         private readonly IPasswordHasher _passwordHasher;
         private readonly AppSettings _appSettings;
         public AuthService(
-            SimpchatDbContext dbContext, 
-            IPasswordHasher passwordHasher, 
+            SimpchatDbContext dbContext,
+            IPasswordHasher passwordHasher,
             IOptions<AppSettings> options
             )
         {
@@ -31,11 +32,9 @@ namespace SimpchatWeb.Services.Auth
             _appSettings = options.Value;
         }
 
-        public bool Register(
-            UserRegisterPostDto user
-            )
+        public async Task<bool> RegisterAsync(UserRegisterPostDto user)
         {
-            if (_dbContext.Users.Any(u => u.Username == user.Username))
+            if (await _dbContext.Users.AnyAsync(u => u.Username == user.Username))
             {
                 return false;
             }
@@ -48,64 +47,51 @@ namespace SimpchatWeb.Services.Auth
                 Username = user.Username,
                 PasswordHash = passwordHash,
                 Salt = salt,
-                Description = string.Empty
+                Description = string.Empty,
+                ChatMemberAddPermissionType = ChatMemberAddPermissionType.WithConversations
             };
 
-            _user.ChatMemberAddPermissionType = ChatMemberAddPermissionType.WithConversations;
+            await _dbContext.AddAsync(_user);
+            await _dbContext.SaveChangesAsync();
 
-            _dbContext.Add(_user);
-            _dbContext.SaveChanges();
-
-            var defaultRole = _dbContext.GlobalRoles.FirstOrDefault(gr => gr.Name == "User");
+            var defaultRole = await _dbContext.GlobalRoles.FirstOrDefaultAsync(gr => gr.Name == "User");
             if (defaultRole is not null)
             {
-                _dbContext.UsersGlobalRoles.Add(new GlobalRoleUser { UserId = _user.Id, RoleId = defaultRole.Id });
+                await _dbContext.UsersGlobalRoles.AddAsync(new GlobalRoleUser { UserId = _user.Id, RoleId = defaultRole.Id });
             }
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
 
             return true;
         }
-        public string Login(
-            UserLoginPostDto user
-            )
+
+        public async Task<string> LoginAsync(UserLoginPostDto user)
         {
-            var dbUser = _dbContext.Users
-                .FirstOrDefault(u => u.Username == user.Username);
+            var dbUser = await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.Username == user.Username);
 
             if (dbUser is null)
-            {
                 return null;
-            }
 
             if (_passwordHasher.Verify(user.Password, dbUser.Salt, dbUser.PasswordHash) is false)
-            {
                 return null;
-            }
 
-            string token = CreateToken(dbUser);
+            string token = await CreateTokenAsync(dbUser);
 
-            if (token is null)
-            {
-                return null;
-            }
             return token;
         }
 
-
-        private string CreateToken(
-            User user
-            )
+        private async Task<string> CreateTokenAsync(User user)
         {
             List<Claim> claims = new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
             };
 
-            var roles = _dbContext.UsersGlobalRoles
+            var roles = await _dbContext.UsersGlobalRoles
                 .Where(gru => gru.UserId == user.Id)
                 .Include(gru => gru.Role)
                 .Select(gru => gru.Role.Name)
-                .ToList();
+                .ToListAsync();
 
             if (roles is not null)
             {
@@ -117,7 +103,7 @@ namespace SimpchatWeb.Services.Auth
 
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_appSettings.JwtSettings.Key)
-                );
+            );
 
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
 
@@ -127,10 +113,11 @@ namespace SimpchatWeb.Services.Auth
                 claims: claims,
                 expires: DateTime.Now.AddHours(2),
                 signingCredentials: credentials
-                );
+            );
 
             var token = new JwtSecurityTokenHandler()
                 .WriteToken(tokenDescriptor);
+
             return token;
         }
     }

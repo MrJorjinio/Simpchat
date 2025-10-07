@@ -221,6 +221,10 @@ namespace SimpchatWeb.Services.Db.Contexts.Default
             modelBuilder.Entity<Notification>()
                 .Property(n => n.Id)
                 .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.Receiver)
+                .WithMany(r => r.Notifications)
+                .HasForeignKey(n => n.ReceiverId);
             //</Notifications>
             //<ChatsBans>
             modelBuilder.Entity<ChatBan>()
