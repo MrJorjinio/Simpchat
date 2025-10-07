@@ -6,8 +6,9 @@ using SimpchatWeb.Services.Db.Contexts.Default.Enums;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Posts;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Responses;
 using SimpchatWeb.Services.Filters;
-using SimpchatWeb.Services.Interfaces.Token;
+using SimpchatWeb.Services.Interfaces.Auth;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace SimpchatWeb.Controllers
 {
@@ -30,37 +31,39 @@ namespace SimpchatWeb.Controllers
             _tokenService = tokenService;
         }
 
-        [HttpPost]
+        [HttpPatch]
         [EnsureEntityExistsFilter(typeof(User))]
-        public IActionResult CreateGroup(GroupPostDto request)
+        public async Task<IActionResult> CreateGroupAsync(GroupPostDto request)
         {
-            var userId = _tokenService.GetUserId(User);      
+            var user = HttpContext.Items["RequestData/User"] as User;
 
-            var chat = new Chat { };
-            chat.Type = ChatType.Group;
-            chat.PrivacyType = ChatPrivacyType.Public;
+            var chat = new Chat
+            {
+                Type = ChatType.Group,
+                PrivacyType = ChatPrivacyType.Public
+            };
 
-            _dbContext.Chats.Add(chat);
-            _dbContext.SaveChanges();
-    
-            _dbContext.ChatsParticipants.Add(new ChatParticipant { UserId = userId, ChatId = chat.Id });
+            await _dbContext.Chats.AddAsync(chat);
+            await _dbContext.SaveChangesAsync();
+
+            await _dbContext.ChatsParticipants.AddAsync(new ChatParticipant { UserId = user.Id, ChatId = chat.Id });
 
             var _dbChatPermissions = _dbContext.ChatPermissions;
             var permissionsToInsert = new Collection<ChatUserPermission>();
             foreach (var dbChatPermission in _dbChatPermissions)
             {
-                permissionsToInsert.Add(new ChatUserPermission { ChatId = chat.Id, UserId = userId, PermissionId = dbChatPermission.Id });
+                permissionsToInsert.Add(new ChatUserPermission { ChatId = chat.Id, UserId = user.Id, PermissionId = dbChatPermission.Id });
             }
 
-            _dbContext.ChatsUsersPermissions.AddRange(permissionsToInsert);
-            _dbContext.SaveChanges();
+            await _dbContext.ChatsUsersPermissions.AddRangeAsync(permissionsToInsert);
+            await _dbContext.SaveChangesAsync();
 
             var group = _mapper.Map<Group>(request);
             group.Id = chat.Id;
-            group.CreatedById = userId;
+            group.CreatedById = user.Id;
 
-            _dbContext.Groups.Add(group);
-            _dbContext.SaveChanges();
+            await _dbContext.Groups.AddAsync(group);
+            await _dbContext.SaveChangesAsync();
 
             var response = _mapper.Map<GroupResponseDto>(group);
             return Ok(response);

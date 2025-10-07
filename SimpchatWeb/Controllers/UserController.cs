@@ -11,9 +11,11 @@ using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Puts;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Responses;
 using SimpchatWeb.Services.Filters;
 using SimpchatWeb.Services.Interfaces.Auth;
-using SimpchatWeb.Services.Interfaces.Token;
+using SimpchatWeb.Services.Interfaces.Entity;
+using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace SimpchatWeb.Controllers
 {
@@ -21,111 +23,70 @@ namespace SimpchatWeb.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly SimpchatDbContext _dbContext;
-        private readonly IMapper _mapper;
-        private readonly ITokenService _tokenService;
-        private readonly IPasswordHasher _passwordHasher;
+        private readonly IUserService _userService;
 
         public UserController(
-            SimpchatDbContext dbContext,
-            IMapper mapper,
-            ITokenService tokenService,
-            IPasswordHasher passwordHasher
+            IUserService userService
             )
         {
-            _dbContext = dbContext;
-            _mapper = mapper;
-            _tokenService = tokenService;
-            _passwordHasher = passwordHasher;
+            _userService = userService;
         }
 
         [HttpGet("{userId:guid}")]
-        [EnsureEntityExistsFilter(typeof(User), "userId")]
-        public IActionResult GetUserByUserId(
-            Guid userId
-            )
+        [EnsureEntityExistsFilter(typeof(User))]
+        public async Task<IActionResult> GetUserByUserIdAsync(Guid userId)
         {
-            var user = _dbContext.Users.Find(userId);
+            var user = HttpContext.Items["RequestData/User"] as User;
 
-            var response = _mapper.Map<UserProfileGetResponseDto>(user);
-            return Ok(response);
+            var response = await _userService.GetUserByIdAsync(user);
+            return response;
         }
 
         [HttpGet("search/{username}")]
-        public IActionResult SearchByUsername(string username)
+        public async Task<IActionResult> SearchByUsernameAsync(string username)
         {
-            var similarUsers = _dbContext.Users
-                .Where(u => EF.Functions.Like(u.Username, $"%{username}%"))
-                .ToList();
-            var response = _mapper.Map<ICollection<UserSearchResponseDto>>(similarUsers);
-
-            return Ok(response);
+            var response = await _userService.SearchByUsernameAsync(username);
+            return response;
         }
 
-        [HttpPut("me")]
-        [EnsureEntityExistsFilter(typeof(User), "userId")]
-        public IActionResult UpdateMyProfile(
-            UserPutDto request
-            )
+        [HttpPatch("me")]
+        [EnsureEntityExistsFilter(typeof(User))]
+        public async Task<IActionResult> UpdateMyProfileAsync(UserPutDto request)
         {
-            var userId = _tokenService.GetUserId(User);
-            var dbUser = _dbContext.Users.Find(userId);
+            var user = HttpContext.Items["RequestData/User"] as User;
 
-            dbUser = _mapper.Map(request, dbUser);
-            _dbContext.SaveChanges();
-
-            var response = _mapper.Map<UserResponseDto>(dbUser);
-
-            return Ok(response);
+            var response = await _userService.UpdateMyProfileAsync(user, request);
+            return response;
         }
 
         [HttpPut("me/set-last-seen")]
-        [EnsureEntityExistsFilter(typeof(User), "userId")]
-        public IActionResult SetLastSeen()
+        [EnsureEntityExistsFilter(typeof(User))]
+        public async Task<IActionResult> SetLastSeenAsync()
         {
-            var userId = _tokenService.GetUserId(User);
-            var dbUser = _dbContext.Users.Find(userId);
+            var user = HttpContext.Items["RequestData/User"] as User;
 
-            dbUser.LastSeen = DateTimeOffset.Now;
-            _dbContext.SaveChanges();
-
-            var response = _mapper.Map<UserSetLastSeenPutDto>(dbUser);
-
-            return Ok(response);
+            var response = await _userService.SetLastSeenAsync(user);
+            return response;
         }
 
-        [HttpPut("me/password")]
-        [EnsureEntityExistsFilter(typeof(User), "userId")]
-        public IActionResult UpdateMyPassword(
-            UserPutPasswordDto request
-            )
+        [HttpPatch("me/password")]
+        [EnsureEntityExistsFilter(typeof(User))]
+        public async Task<IActionResult> UpdateMyPasswordAsync(UserPutPasswordDto request)
         {
-            var userId = _tokenService.GetUserId(User);
-            var dbUser = _dbContext.Users.Find(userId);
+            var user = HttpContext.Items["RequestData/User"] as User;
 
-            if (_passwordHasher.Verify(request.CurrentPassword, dbUser.Salt, dbUser.PasswordHash) is false)
-            {
-                return BadRequest();
-            }
-
-            var newPasswordHash = _passwordHasher.Encrypt(request.NewPassword, dbUser.Salt);
-            dbUser.PasswordHash = newPasswordHash;
-            _dbContext.SaveChanges();
-
-            return Ok();
+            var response = await _userService.UpdateMyPasswordAsync(user, request);
+            return response;
         }
 
         [HttpDelete("me")]
-        [EnsureEntityExistsFilter(typeof(User), "userId")]
-        public IActionResult DeleteMe()
+        [EnsureEntityExistsFilter(typeof(User))]
+        public async Task<IActionResult> DeleteMeAsync()
         {
-            var userId = _tokenService.GetUserId(User);
-            var dbUser = _dbContext.Users.Find(userId);
+            var user = HttpContext.Items["RequestData/User"] as User;
 
-            _dbContext.Users.Remove(dbUser);
-            _dbContext.SaveChanges();
-
-            return Ok();
+            var response = await _userService.DeleteMeAsync(user);
+            return response;
         }
     }
 }

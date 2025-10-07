@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Posts;
 using SimpchatWeb.Services.Interfaces.Auth;
+using System.Threading.Tasks;
 
 namespace SimpchatWeb.Controllers
 {
@@ -19,11 +20,11 @@ namespace SimpchatWeb.Controllers
         }
 
         [HttpPost("register")]
-        public IActionResult Register(
+        public async Task<IActionResult> RegisterAsync(
             UserRegisterPostDto request
             )
         {
-            var user = _authService.Register(request);
+            var user = await _authService.RegisterAsync(request);
 
             if (user is false)
             {
@@ -34,11 +35,11 @@ namespace SimpchatWeb.Controllers
         }
 
         [HttpPost("login")]
-        public IActionResult Login(
+        public async Task<IActionResult> LoginAsync(
             UserLoginPostDto request
             )
         {
-            var token = _authService.Login(request);
+            var token = await _authService.LoginAsync(request);
 
             if (token is null)
             {

@@ -1,26 +1,24 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore;
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Db.Contexts.Default.Enums;
 
 namespace SimpchatWeb.Services.Filters
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
-    public class EnsureChatTypeNotFilterAttribute : Attribute, IActionFilter
+    public class EnsureChatTypeNotFilterAttribute : Attribute, IAsyncActionFilter
     {
         private readonly ChatType _chatType;
         private readonly string _idParameterName;
 
-        public EnsureChatTypeNotFilterAttribute(ChatType chatType, string idParameterName = "id")
+        public EnsureChatTypeNotFilterAttribute(ChatType chatType, string idParameterName = "chatId")
         {
             _chatType = chatType;
             _idParameterName = idParameterName;
         }
 
-        public void OnActionExecuted(ActionExecutedContext context)
-        { }
-
-        public void OnActionExecuting(ActionExecutingContext context)
+        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             var db = context.HttpContext.RequestServices.GetRequiredService<SimpchatDbContext>();
 
@@ -36,18 +34,22 @@ namespace SimpchatWeb.Services.Filters
                 return;
             }
 
-            var chat = db.Chats.Find(id);
+            var chat = await db.Chats.FindAsync(id);
 
             if (chat is null)
             {
-                context.Result = new BadRequestObjectResult($"ID '{_idParameterName}' not found.");
+                context.Result = new BadRequestObjectResult($"Chat with ID '{id}' not found.");
                 return;
             }
 
             if (chat.Type == _chatType)
             {
-                context.Result = new BadRequestObjectResult($"Chat type '{_chatType}' is not valid.");
+                context.Result = new BadRequestObjectResult($"Chat type '{_chatType}' is not allowed.");
+                return;
             }
+
+            context.HttpContext.Items["RequestData/Chat"] = chat;
+            await next();
         }
     }
 }
