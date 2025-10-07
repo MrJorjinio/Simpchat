@@ -20,14 +20,24 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.14.0" />
+    <PackageReference Include="Minio" Version="6.0.5" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Services\Db\Contexts\Default\Models\ChatDtos\Patchs\" />
+    <Folder Include="Services\Db\Contexts\Default\Models\ChatDtos\Posts\" />
+    <Folder Include="Services\Db\Contexts\Default\Models\ChatMessageDtos\Gets\" />
+    <Folder Include="Services\Db\Contexts\Default\Models\ChatMessageDtos\Deletes\" />
+    <Folder Include="Services\Db\Contexts\Default\Models\ChatMessageDtos\Patchs\" />
     <Folder Include="Services\Db\Contexts\Default\Models\UserDtos\Gets\" />
     <Folder Include="Services\Db\Contexts\Default\Models\UserDtos\Deletes\" />
+    <Folder Include="Services\Db\Contexts\Default\Models\UserNotificationDtos\Deletes\" />
+    <Folder Include="Services\Db\Contexts\Default\Models\UserNotificationDtos\Gets\" />
+    <Folder Include="Services\Db\Contexts\Default\Models\UserNotificationDtos\Patchs\" />
+    <Folder Include="Services\Db\Contexts\Default\Models\UserNotificationDtos\Posts\" />
   </ItemGroup>
 
 </Project>

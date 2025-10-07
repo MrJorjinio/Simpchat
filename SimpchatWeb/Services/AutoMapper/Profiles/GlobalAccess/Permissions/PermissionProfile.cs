@@ -2,7 +2,7 @@
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.GlobalPermissions;
 
-namespace SimpchatWeb.Services.AutoMapper.Profiles
+namespace SimpchatWeb.Services.AutoMapper.Profiles.GlobalAccess.Permissions
 {
     public class PermissionProfile : Profile
     {

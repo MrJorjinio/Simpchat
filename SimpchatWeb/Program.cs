@@ -4,14 +4,18 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Minio;
 using SimpchatWeb.Services.Auth;
 using SimpchatWeb.Services.DataInserter;
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using SimpchatWeb.Services.Db.Contexts.Default.Enums;
+using SimpchatWeb.Services.Entity;
 using SimpchatWeb.Services.Interfaces.Auth;
 using SimpchatWeb.Services.Interfaces.DataInserter;
-using SimpchatWeb.Services.Interfaces.Token;
+using SimpchatWeb.Services.Interfaces.Entity;
+using SimpchatWeb.Services.Interfaces.Minio;
+using SimpchatWeb.Services.Minio;
 using SimpchatWeb.Services.Settings;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -56,9 +60,32 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IChatDataInserter, DataInserter>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSingleton(sp =>
     sp.GetRequiredService<IOptions<AppSettings>>().Value
 );
+builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>(); 
+builder.Services.AddSingleton<IMinioClient>(sp =>
+{
+    var minioSettings = builder.Configuration.Get<AppSettings>().MinioSettings;
+
+
+    // MinioClient obyektini yaratish
+    var client = new MinioClient()
+        .WithEndpoint(minioSettings.Endpoint)
+        .WithCredentials(minioSettings.AccessKey, minioSettings.SecretKey);
+
+    // Agar SSL yoqilgan bo'lsa
+    if (minioSettings.UseSsl)
+    {
+        client = client.WithSSL();
+    }
+
+    return client.Build(); // MinioClient ni qurish
+});
+
 
 builder.Services.Configure<AppSettings>(builder.Configuration);
 
@@ -92,11 +119,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
-
-using (var scope = app.Services.CreateAsyncScope()){
-    var dataInserter = scope.ServiceProvider.GetRequiredService<IChatDataInserter>();
-    dataInserter.InsertSysGroupPermissions();
 }
 
 app.UseHttpsRedirection();

@@ -3,7 +3,7 @@ using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Posts;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.GroupDtos.Responses;
 
-namespace SimpchatWeb.Services.AutoMapper.Profiles
+namespace SimpchatWeb.Services.AutoMapper.Profiles.Groups
 {
     public class GroupProfile : Profile
     {

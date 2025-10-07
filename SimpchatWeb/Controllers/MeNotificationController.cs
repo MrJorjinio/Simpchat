@@ -4,9 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Responses;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.ChatMessageDtos.Responses;
+using SimpchatWeb.Services.Db.Contexts.Default.Models.UserNotificationDtos.Responses;
 using SimpchatWeb.Services.Filters;
-using SimpchatWeb.Services.Interfaces.Token;
+using SimpchatWeb.Services.Interfaces.Auth;
+using SimpchatWeb.Services.Interfaces.Entity;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace SimpchatWeb.Controllers
 {
@@ -14,35 +18,43 @@ namespace SimpchatWeb.Controllers
     [ApiController]
     public class MeNotificationController : ControllerBase
     {
-        private readonly ITokenService _tokenService;
-        private readonly IMapper _mapper;
-        private readonly SimpchatDbContext _dbContext;
+        private readonly INotificationService _notificationService;
         public MeNotificationController(
-            ITokenService tokenService,
-            IMapper mapper,
-            SimpchatDbContext dbContext
+            INotificationService notificationService
             )
         {
-            _tokenService = tokenService;
-            _mapper = mapper;
-            _dbContext = dbContext;
+            _notificationService = notificationService;
         }
 
         [HttpGet]
         [EnsureEntityExistsFilter(typeof(User))]
-        public IActionResult GetMyNotifications()
+        public async Task<IActionResult> GetMyNotificationsAsync()
         {
-            var userId = _tokenService.GetUserId(User);
-            var dbUser = _dbContext.Users
-                .Find(userId);
+            var user = HttpContext.Items["RequestData/User"] as User;
 
-            var userNotifications = _dbContext.Notifications
-                .Where(un => un.UserId == userId && un.IsSeen == false)
-                .Include(un => un.Message)
-                .ToList();
+            var response = await _notificationService.GetMyNotificationsAsync(user);
+            return response;
+        }
 
-            var response = _mapper.Map<ICollection<UserNotificationsResponseDto>>(userNotifications);
-            return Ok(response);
+        [HttpPatch("mark-as-seen")]
+        [EnsureEntityExistsFilter(typeof(User))]
+        [EnsureEntityExistsFilter(typeof(Notification))]
+        public async Task<IActionResult> MarkAsSeenAsync(Guid messageId)
+        {
+            var user = HttpContext.Items["RequestData/User"] as User;
+
+            var response = await _notificationService.MarkAsSeenAsync(user, messageId);
+            return response;
+        }
+
+        [HttpDelete]
+        [EnsureEntityExistsFilter(typeof(User))]
+        public async Task<IActionResult> DeleteNotificationAsync(Guid messageId)
+        {
+            var user = HttpContext.Items["RequestData/User"] as User;
+
+            var response = await _notificationService.DeleteNotificationAsync(user, messageId);
+            return response;
         }
     }
 }
