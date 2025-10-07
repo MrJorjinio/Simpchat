@@ -3,26 +3,36 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using SimpchatWeb.Services.Interfaces.Token;
+using SimpchatWeb.Services.Interfaces.Auth;
 
 namespace SimpchatWeb.Services.Filters
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
-    public class EnsureEntityExistsFilterAttribute : Attribute, IActionFilter
+    public class EnsureEntityExistsFilterAttribute : Attribute, IAsyncActionFilter
     {
         private readonly Type _entityType;
         private readonly string _idParameterName;
 
-        public EnsureEntityExistsFilterAttribute(Type entityType, string idParameterName = "id")
+        public EnsureEntityExistsFilterAttribute(Type entityType, string idParameterName = "")
         {
             _entityType = entityType;
-            _idParameterName = idParameterName;
+
+            if (string.IsNullOrEmpty(idParameterName))
+            {
+                if (_entityType == typeof(Notification))
+                    _idParameterName = "messageId";
+                else if (_entityType == typeof(ChatParticipant))
+                    _idParameterName = "chatId";
+                else
+                    _idParameterName = $"{_entityType.Name.ToLower()}Id";
+            }
+            else
+            {
+                _idParameterName = idParameterName;
+            }
         }
 
-        public void OnActionExecuted(ActionExecutedContext context)
-        { }
-
-        public void OnActionExecuting(ActionExecutingContext context)
+        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             var db = context.HttpContext.RequestServices.GetRequiredService<SimpchatDbContext>();
             var tokenService = context.HttpContext.RequestServices.GetRequiredService<ITokenService>();
@@ -46,19 +56,24 @@ namespace SimpchatWeb.Services.Filters
 
             object entity = _entityType switch
             {
-                Type t when t == typeof(Chat) => db.Chats.Find(id),
-                Type t when t == typeof(User) => db.Users.Find(id),
-                Type t when t == typeof(Message) => db.Messages.Find(id),
-                Type t when t == typeof(ChatParticipant) => db.ChatsParticipants.FirstOrDefault(cp => cp.UserId == userId && cp.ChatId == id),
-                Type t when t == typeof(Notification) => db.Notifications.FirstOrDefault(n => n.MessageId == id),
+                Type t when t == typeof(Chat) => await db.Chats.FindAsync(id),
+                Type t when t == typeof(User) => await db.Users.FindAsync(id),
+                Type t when t == typeof(Message) => await db.Messages.FindAsync(id),
+                Type t when t == typeof(ChatParticipant) =>
+                    await db.ChatsParticipants.FirstOrDefaultAsync(cp => cp.UserId == userId && cp.ChatId == id),
+                Type t when t == typeof(Notification) =>
+                    await db.Notifications.Where(n => n.MessageId == id).ToListAsync(),
                 _ => null
             };
 
             if (entity is null)
             {
                 context.Result = new BadRequestObjectResult($"{_entityType.Name} with ID '{id}' not found.");
+                return;
             }
-        }
 
+            context.HttpContext.Items[$"RequestData/{_entityType.Name}"] = entity;
+            await next();
+        }
     }
 }

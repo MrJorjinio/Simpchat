@@ -1,4 +1,4 @@
-﻿using SimpchatWeb.Services.Interfaces.Token;
+﻿using SimpchatWeb.Services.Interfaces.Auth;
 using System.Security.Claims;
 
 namespace SimpchatWeb.Services.Auth

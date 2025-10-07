@@ -1,7 +1,9 @@
-﻿namespace SimpchatWeb.Services.Interfaces.DataInserter
+﻿using System.Threading.Tasks;
+
+namespace SimpchatWeb.Services.Interfaces.DataInserter
 {
-    public  interface IChatDataInserter
+    public interface IChatDataInserter
     {
-        void InsertSysGroupPermissions();
+        Task InsertSysGroupPermissionsAsync();
     }
 }

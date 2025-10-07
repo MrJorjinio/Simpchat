@@ -1,9 +1,14 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using SimpchatWeb.Services.Db.Contexts.Default;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using SimpchatWeb.Services.Db.Contexts.Default.Enums;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.GlobalPermissions;
 using SimpchatWeb.Services.Interfaces.DataInserter;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace SimpchatWeb.Services.DataInserter
 {
@@ -12,35 +17,25 @@ namespace SimpchatWeb.Services.DataInserter
         private readonly SimpchatDbContext _dbContext;
         private readonly IMapper _mapper;
         public DataInserter(
-            SimpchatDbContext dbContext, 
+            SimpchatDbContext dbContext,
             IMapper mapper
             )
         {
             _dbContext = dbContext;
             _mapper = mapper;
         }
-        public void AddPermissionToRole(
-            string roleName, 
-            string permissionName
-            )
+
+        public async Task AddPermissionToRoleAsync(string roleName, string permissionName)
         {
-            var role = _dbContext.GlobalRoles.FirstOrDefault(gr => gr.Name == roleName);
-            if (role is null)
-            {
-                return;
-            }
+            var role = await _dbContext.GlobalRoles.FirstOrDefaultAsync(gr => gr.Name == roleName);
+            if (role is null) return;
 
-            var permission = _dbContext.GlobalPermissions.FirstOrDefault(gp => gp.Name == permissionName);
-            if (permission is null)
-            {
-                return;
-            }
+            var permission = await _dbContext.GlobalPermissions.FirstOrDefaultAsync(gp => gp.Name == permissionName);
+            if (permission is null) return;
 
-            var dbRolePermission = _dbContext.GlobalRolesPermissions.Where(grp => grp.RoleId == role.Id && grp.PermissionId == permission.Id);
-            if (dbRolePermission is not null)
-            {
-                return;
-            }
+            var dbRolePermission = await _dbContext.GlobalRolesPermissions
+                .FirstOrDefaultAsync(grp => grp.RoleId == role.Id && grp.PermissionId == permission.Id);
+            if (dbRolePermission is not null) return;
 
             var rolePermission = new GlobalRolePermission()
             {
@@ -48,17 +43,17 @@ namespace SimpchatWeb.Services.DataInserter
                 PermissionId = permission.Id
             };
 
-            _dbContext.GlobalRolesPermissions.Add(rolePermission);
-            _dbContext.SaveChanges();
+            await _dbContext.GlobalRolesPermissions.AddAsync(rolePermission);
+            await _dbContext.SaveChangesAsync();
         }
 
-        public void InsertSysGroupPermissions()
+        public async Task InsertSysGroupPermissionsAsync()
         {
-            var sysChatPermissions = Enum.GetNames<Db.Contexts.Default.Enums.ChatPermissionType>();
+            var sysChatPermissions = Enum.GetNames<ChatPermissionType>();
 
-            var dbChatPermissions = _dbContext.ChatPermissions
+            var dbChatPermissions = await _dbContext.ChatPermissions
                 .Select(x => x.Name)
-                .ToHashSet();
+                .ToListAsync();
 
             var newPermissions = sysChatPermissions
                 .Where(p => !dbChatPermissions.Contains(p))
@@ -67,18 +62,18 @@ namespace SimpchatWeb.Services.DataInserter
 
             if (newPermissions.Count > 0)
             {
-                _dbContext.ChatPermissions.AddRange(newPermissions);
-                _dbContext.SaveChanges();
+                await _dbContext.ChatPermissions.AddRangeAsync(newPermissions);
+                await _dbContext.SaveChangesAsync();
             }
         }
 
-        public void InsertSysPermissions()
+        public async Task InsertSysPermissionsAsync()
         {
-            var sysGlobalPermissions = Enum.GetNames<Db.Contexts.Default.Enums.GlobalPermissionType>();
+            var sysGlobalPermissions = Enum.GetNames<GlobalPermissionType>();
 
-            var dbGlobalPermissions = _dbContext.GlobalPermissions
+            var dbGlobalPermissions = await _dbContext.GlobalPermissions
                 .Select(x => x.Name)
-                .ToHashSet();
+                .ToListAsync();
 
             var newPermissions = sysGlobalPermissions
                 .Where(p => !dbGlobalPermissions.Contains(p))
@@ -87,18 +82,18 @@ namespace SimpchatWeb.Services.DataInserter
 
             if (newPermissions.Count > 0)
             {
-                _dbContext.GlobalPermissions.AddRange(newPermissions);
-                _dbContext.SaveChanges();
+                await _dbContext.GlobalPermissions.AddRangeAsync(newPermissions);
+                await _dbContext.SaveChangesAsync();
             }
         }
 
-        public void InsertSysRoles()
+        public async Task InsertSysRolesAsync()
         {
-            var sysGlobalRoles = Enum.GetNames<Db.Contexts.Default.Enums.GlobalRoleType>();
+            var sysGlobalRoles = Enum.GetNames<GlobalRoleType>();
 
-            var dbGlobalRoles = _dbContext.GlobalRoles
+            var dbGlobalRoles = await _dbContext.GlobalRoles
                 .Select(x => x.Name)
-                .ToHashSet();
+                .ToListAsync();
 
             var newRoles = sysGlobalRoles
                 .Where(r => !dbGlobalRoles.Contains(r))
@@ -107,46 +102,33 @@ namespace SimpchatWeb.Services.DataInserter
 
             if (newRoles.Count > 0)
             {
-                _dbContext.GlobalRoles.AddRange(newRoles);
-                _dbContext.SaveChanges();
+                await _dbContext.GlobalRoles.AddRangeAsync(newRoles);
+                await _dbContext.SaveChangesAsync();
             }
         }
 
-        public void UpsertPermission(
-            GlobalPermissionDto permission
-            )
+        public async Task UpsertPermissionAsync(GlobalPermissionDto permission)
         {
-            var globalDbPermission = _dbContext.GlobalPermissions
-                .FirstOrDefault(p => p.Name == permission.Name);
+            var globalDbPermission = await _dbContext.GlobalPermissions
+                .FirstOrDefaultAsync(p => p.Name == permission.Name);
 
-            bool isDescriptionGiven = permission.Description != string.Empty;
+            bool isDescriptionGiven = !string.IsNullOrEmpty(permission.Description);
 
             if (globalDbPermission is null)
             {
-                var _permission = new Db.Contexts.Default.Entities.GlobalPermission()
+                var _permission = new GlobalPermission()
                 {
-                    Name = $"{permission.Name}"
+                    Name = permission.Name,
+                    Description = isDescriptionGiven ? permission.Description : $"for {permission.Name}"
                 };
-                if (isDescriptionGiven is true)
-                {
-                    _permission.Description = permission.Description;
-                }
-                _permission.Description = $"{permission.Description}";
-                _dbContext.GlobalPermissions.Add(_permission);
-                _dbContext.SaveChanges();
+                await _dbContext.GlobalPermissions.AddAsync(_permission);
+                await _dbContext.SaveChangesAsync();
             }
             else
             {
                 globalDbPermission = _mapper.Map(permission, globalDbPermission);
-                if (isDescriptionGiven is true)
-                {
-                    globalDbPermission.Description = permission.Description;
-                }
-                else
-                {
-                    globalDbPermission.Description = $"for {permission.Name}";
-                }
-                _dbContext.SaveChanges();
+                globalDbPermission.Description = isDescriptionGiven ? permission.Description : $"for {permission.Name}";
+                await _dbContext.SaveChangesAsync();
             }
         }
     }
