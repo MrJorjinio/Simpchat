@@ -1,6 +1,6 @@
-﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models.ChatDtos.Posts
+﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Models.ChatMessageDtos.Posts
 {
-    public class ChatMessageConversationPostDto
+    public class ChatMessagePostDto
     {
         public Guid? ReceiverId { get; set; } = null;
         public string Content { get; set; }

@@ -2,10 +2,12 @@
 
 namespace SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Responses
 {
-    public class UserResponseDto
+    public class UserGetByIdGetResponseDto
     {
+        public Guid Id { get; set; }
         public string Username { get; set; }
         public string Description { get; set; }
-        public ChatMemberAddPermissionType ChatMemberAddPermissionType { get; set; }
+        public bool IsOnline { get; set; }
+        public DateTimeOffset? LastSeen { get; set; }
     }
 }

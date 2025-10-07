@@ -5,8 +5,8 @@
         public Guid Id { get; set; }
         public bool IsSeen { get; set; }
         public Guid MessageId { get; set; }
-        public Guid UserId { get; set; }
+        public Guid ReceiverId { get; set; }
         public Message Message { get; set; }
-        public User User { get; set; }
+        public User Receiver { get; set; }
     }
 }
