@@ -37,7 +37,7 @@ namespace SimpchatWeb.Controllers
 
         [HttpPost]
         [EnsureEntityExistsFilter(typeof(User))]
-        public async Task<IActionResult> SendMessageAsync(Guid? chatId, [FromBody] ChatMessagePostDto model)
+        public async Task<IActionResult> SendMessageAsync(Guid? chatId, ChatMessagePostDto model)
         {
             var user = HttpContext.Items["RequestData/User"] as User;
             var response = await _chatService.SendMessageAsync(user, chatId, model);

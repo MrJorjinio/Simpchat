@@ -68,7 +68,8 @@ namespace SimpchatWeb.Services.Entity
                 Content = un.Message.Content,
                 SenderName = un.Message.Sender.Username,
                 SentAt = un.Message.SentAt,
-                ChatType = un.Message.Chat.Type
+                ChatType = un.Message.Chat.Type,
+                FileUrl = un.Message.FileUrl
             }).ToList();
 
             return new ApiResult<ICollection<UserNotificationGetResponseDto>>(true, 200, "Success", response);

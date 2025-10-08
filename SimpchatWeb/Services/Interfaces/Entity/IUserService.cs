@@ -9,7 +9,7 @@ namespace SimpchatWeb.Services.Interfaces.Entity
     {
         Task<ApiResult<UserGetByIdGetResponseDto>> GetUserByIdAsync(User user);
         Task<ApiResult<ICollection<UserSearchResponseDto>>> SearchByUsernameAsync(string username);
-        Task<ApiResult<UserGetByIdGetResponseDto>> UpdateMyProfileAsync(User user, UserPutDto model);
+        Task<ApiResult<UserGetByIdGetResponseDto>> UpdateMyProfileAsync(User user, UserProfilePutDto model);
         Task<ApiResult<UserGetByIdGetResponseDto>> SetLastSeenAsync(User user);
         Task<ApiResult> UpdateMyPasswordAsync(User user, UserPutPasswordDto model);
         Task<ApiResult> DeleteMeAsync(User user);
