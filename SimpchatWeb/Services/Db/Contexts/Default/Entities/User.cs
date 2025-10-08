@@ -9,6 +9,7 @@ namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
         public Guid Id { get; set; }
         public string Username { get; set; }
         public string Description { get; set; }
+        public string ProfilePictureUrl { get; set; }
         public string PasswordHash { get; set; }
         public string Salt { get; set; }
         public ChatMemberAddPermissionType ChatMemberAddPermissionType { get; set; }

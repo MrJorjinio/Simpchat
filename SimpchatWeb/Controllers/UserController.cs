@@ -51,7 +51,7 @@ namespace SimpchatWeb.Controllers
 
         [HttpPatch("me")]
         [EnsureEntityExistsFilter(typeof(User))]
-        public async Task<IActionResult> UpdateMyProfileAsync(UserPutDto request)
+        public async Task<IActionResult> UpdateMyProfileAsync(UserProfilePutDto request)
         {
             var user = HttpContext.Items["RequestData/User"] as User;
 

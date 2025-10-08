@@ -6,6 +6,9 @@ using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Puts;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Responses;
 using SimpchatWeb.Services.Interfaces.Auth;
 using SimpchatWeb.Services.Interfaces.Entity;
+using SimpchatWeb.Services.Interfaces.Minio;
+using System.Net.Mime;
+using System.Security.AccessControl;
 
 namespace SimpchatWeb.Services.Entity
 {
@@ -15,18 +18,22 @@ namespace SimpchatWeb.Services.Entity
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly IFileStorageService _fileStorageService;
+        private const string BucketName = "profile-pics";
 
         public UserService(
             SimpchatDbContext dbContext,
             IMapper mapper,
             ITokenService tokenService,
-            IPasswordHasher passwordHasher
+            IPasswordHasher passwordHasher,
+            IFileStorageService fileStorageService
             )
         {
             _dbContext = dbContext;
             _mapper = mapper;
             _tokenService = tokenService;
             _passwordHasher = passwordHasher;
+            _fileStorageService = fileStorageService;
         }
         public async Task<ApiResult> DeleteMeAsync(User user)
         {
@@ -78,7 +85,7 @@ namespace SimpchatWeb.Services.Entity
             return new ApiResult(true, 200, "Success");
         }
 
-        public async Task<ApiResult<UserGetByIdGetResponseDto>> UpdateMyProfileAsync(User user, UserPutDto model)
+        public async Task<ApiResult<UserGetByIdGetResponseDto>> UpdateMyProfileAsync(User user, UserProfilePutDto model)
         {
             user = _mapper.Map(model, user);
             await _dbContext.SaveChangesAsync();
