@@ -9,9 +9,11 @@ using SimpchatWeb.Services.Db.Contexts.Default.Models.ChatMessageDtos.Posts;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.ChatMessageDtos.Responses;
 using SimpchatWeb.Services.Interfaces.Auth;
 using SimpchatWeb.Services.Interfaces.Entity;
+using SimpchatWeb.Services.Interfaces.Minio;
 using System;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Runtime.Serialization;
 
 namespace SimpchatWeb.Services.Entity
 {
@@ -20,16 +22,20 @@ namespace SimpchatWeb.Services.Entity
         private readonly SimpchatDbContext _dbContext;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
+        private readonly IFileStorageService _fileStorageService;
+        private const string BucketName = "messages-files";
 
         public ChatService(
             SimpchatDbContext dbContext,
             IMapper mapper,
-            ITokenService tokenService
+            ITokenService tokenService,
+            IFileStorageService fileStorageService
             )
         {
             _dbContext = dbContext;
             _mapper = mapper;
             _tokenService = tokenService;
+            _fileStorageService = fileStorageService;
         }
 
         public async Task<ApiResult<UserJoinChatResponseDto>> AddUserToChatAsync(User fromUser, Guid chatId, Guid joiningUserId)
@@ -124,7 +130,12 @@ namespace SimpchatWeb.Services.Entity
                     IsSeen = m.Notifications.Where(n => n.IsSeen == true).Any()
                 })
                 .OrderBy(m => m.SentAt)
-                .ToList()
+                .ToList(),
+                ProfilePictureUrl = chat.Type == ChatType.Channel
+                ? chat.Channel.ProfilePictureUrl
+                : chat.Type == ChatType.Group
+                    ? chat.Group.UserCreated.ProfilePictureUrl
+                    : "",
             };
 
             return new ApiResult<ChatGetByIdGetResponseDto>(true, 200, "Success", response);
@@ -155,8 +166,11 @@ namespace SimpchatWeb.Services.Entity
                     Messages = chat.Messages.Select(m => new ChatMessageGetByIdGetResponseDto
                     {
                         IsSeen = m.Notifications != null && m.Notifications.Any()
-                    }).ToList()
-                };
+                    })
+                    .ToList(),
+                    ProfilePictureUrl = chat.Participants
+                    .FirstOrDefault(p => p.UserId != currentUser.Id).User.ProfilePictureUrl
+                 };
                 return new ApiResult<ChatConversationGetByIdGetResponse>(true, 200, "Success", response);
             }
 
@@ -173,6 +187,7 @@ namespace SimpchatWeb.Services.Entity
                     .ThenInclude(m => m.Notifications)
                 .Include(cp => cp.Chat.Participants)
                     .ThenInclude(cp => cp.User)
+                .Include(cp => cp.Chat.Conversation)
                 .Include(cp => cp.Chat.Group)
                 .Include(cp => cp.Chat.Channel)
                 .Where(cp => cp.UserId == currentUser.Id)
@@ -184,18 +199,13 @@ namespace SimpchatWeb.Services.Entity
                 {
                     Id = c.Id,
                     Type = c.Type,
-
                     Name = c.Type == ChatType.Conversation
-                        ? c.Participants
-                            .Where(cp => cp.UserId != currentUser.Id)
-                            .Select(cp => cp.User.Username)
-                            .FirstOrDefault()
+                        ? c.Participants.FirstOrDefault(p => p.UserId != currentUser.Id)?.User?.Username ?? "Unknown User"
                         : c.Type == ChatType.Group
-                        ? c.Group.Name
-                        : c.Type == ChatType.Channel
-                        ? c.Channel.Name
-                        : "Unknown Chat",
-
+                            ? c.Group?.Name ?? "Unknown Group"
+                            : c.Type == ChatType.Channel
+                                ? c.Channel?.Name ?? "Unknown Channel"
+                                : "Unknown Chat",
                     LastMessage = c.Messages
                         .OrderByDescending(m => m.SentAt)
                         .Select(m => new ChatMessageGetByIdGetResponseDto
@@ -203,18 +213,24 @@ namespace SimpchatWeb.Services.Entity
                             MessageId = m.Id,
                             Content = m.Content,
                             SentAt = m.SentAt,
-                            SenderName = m.Sender.Username
+                            SenderName = m.Sender?.Username ?? "Unknown Sender",
+                            FileUrl = m.FileUrl
                         })
                         .FirstOrDefault(),
-
                     LastMessageTime = c.Messages
                         .OrderByDescending(m => m.SentAt)
                         .Select(m => m.SentAt)
                         .FirstOrDefault(),
-
                     UnreadCount = c.Messages
-                        .SelectMany(m => m.Notifications)
-                        .Count(n => n.ReceiverId == currentUser.Id && !n.IsSeen)
+                        .SelectMany(m => m.Notifications ?? new List<Notification>())
+                        .Count(n => n.ReceiverId == currentUser.Id && !n.IsSeen),
+                    ProfilePictureUrl = c.Type == ChatType.Channel
+                        ? c.Channel?.ProfilePictureUrl ?? ""
+                        : c.Type == ChatType.Group
+                            ? c.Group?.ProfilePictureUrl ?? ""
+                            : c.Type == ChatType.Conversation
+                                ? c.Participants.FirstOrDefault(p => p.UserId != currentUser.Id)?.User?.ProfilePictureUrl ?? ""
+                                : ""
                 })
                 .OrderByDescending(c => c.LastMessageTime)
                 .ToList();
@@ -271,27 +287,30 @@ namespace SimpchatWeb.Services.Entity
             {
                 Id = sg.Id,
                 Name = sg.Name,
-                Type = ChatType.Group
+                Type = ChatType.Group,
+                ProfilePictureUrl = sg.ProfilePictureUrl
             }));
 
             var similarChannels = await _dbContext.Channels
                 .Where(c => EF.Functions.Like(c.Name, $"%{name}%"))
                 .ToListAsync();
-            results.AddRange(similarChannels.Select(sg => new ChatSearchGetResponseDto
+            results.AddRange(similarChannels.Select(sc => new ChatSearchGetResponseDto
             {
-                Id = sg.Id,
-                Name = sg.Name,
-                Type = ChatType.Channel
+                Id = sc.Id,
+                Name = sc.Name,
+                Type = ChatType.Channel,
+                ProfilePictureUrl = sc.ProfilePictureUrl
             }));
 
             var similarUsers = await _dbContext.Users
                 .Where(u => EF.Functions.Like(u.Username, $"%{name}%"))
                 .ToListAsync();
-            results.AddRange(similarUsers.Select(sg => new ChatSearchGetResponseDto
+            results.AddRange(similarUsers.Select(su => new ChatSearchGetResponseDto
             {
-                Id = sg.Id,
-                Name = sg.Username,
-                Type = ChatType.Conversation
+                Id = su.Id,
+                Name = su.Username,
+                Type = ChatType.Conversation,
+                ProfilePictureUrl = su.ProfilePictureUrl
             }));
 
             return new ApiResult<IEnumerable<ChatSearchGetResponseDto>>(true, 200, "Success", results);
@@ -342,6 +361,18 @@ namespace SimpchatWeb.Services.Entity
             var message = _mapper.Map<Message>(model);
             message.ChatId = chat.Id;
             message.SenderId = currentUser.Id;
+
+            if (model.File != null && model.File.Length != 0)
+            {
+                var fileExtention = Path.GetExtension(model.File.FileName);
+                var objectName = $"{Guid.NewGuid()}{fileExtention}";
+
+                using (var stream = model.File.OpenReadStream())
+                {
+                    var fileUrl = await _fileStorageService.UploadFileAsync(BucketName, objectName, stream, fileExtention);
+                    message.FileUrl = fileUrl;
+                }
+            }
 
             if (model.ReplyId.HasValue)
             {

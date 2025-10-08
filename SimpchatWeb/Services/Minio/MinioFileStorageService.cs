@@ -12,7 +12,6 @@ namespace SimpchatWeb.Services.Minio
         private readonly IMinioClient _minioClient;
         private readonly MinioSettings _minioSettings;
 
-        // Dependency Injection orqali IMinioClient va MinioSettings ni qabul qiladi
         public MinioFileStorageService(IMinioClient minioClient, IOptions<MinioSettings> minioSettings)
         {
             _minioClient = minioClient;
@@ -23,7 +22,6 @@ namespace SimpchatWeb.Services.Minio
         {
             try
             {
-                // Agar bucket (saqlash joyi) mavjud bo'lmasa, uni yaratamiz
                 bool found = await _minioClient.BucketExistsAsync(
                     new BucketExistsArgs().WithBucket(bucketName)
                 ).ConfigureAwait(false);
@@ -35,34 +33,30 @@ namespace SimpchatWeb.Services.Minio
                     ).ConfigureAwait(false);
                 }
 
-                // Faylni Minio'ga yuklash
                 await _minioClient.PutObjectAsync(
                     new PutObjectArgs()
                         .WithBucket(bucketName)
                         .WithObject(objectName)
-                        .WithStreamData(data) // Yuklanayotgan fayl stream'i
-                        .WithObjectSize(data.Length) // Faylning hajmi
-                        .WithContentType(contentType) // Faylning turi (masalan, "image/jpeg")
+                        .WithStreamData(data)
+                        .WithObjectSize(data.Length)
+                        .WithContentType(contentType)
                 ).ConfigureAwait(false);
 
-                // Yuklangan faylga to'g'ridan-to'g'ri kirish URL'ini qaytarish
-                // Bu URL Minio serverining manzili va bucket/object nomini o'z ichiga oladi.
-                // Masalan: http://localhost:9000/my-bucket/my-image.jpg
                 return $"http://{_minioSettings.Endpoint}/{bucketName}/{objectName}";
             }
-            catch (MinioException e) // Minio'dan kelgan xatoliklarni qayd etish
+            catch (MinioException e)
             {
                 Console.WriteLine($"[Minio] Upload Error: {e.Message}");
-                throw; // Xatolikni yuqoriga uzatamiz
+                throw;
             }
-            catch (Exception e) // Boshqa umumiy xatoliklarni qayd etish
+            catch (Exception e)
             {
                 Console.WriteLine($"[General] Error during upload: {e.Message}");
                 throw;
             }
         }
 
-        public async Task<Stream> DownloadFileAsync(string bucketName, string objectName)
+        public async Task<MemoryStream> DownloadFileAsync(string bucketName, string objectName)
         {
             try
             {
@@ -71,13 +65,13 @@ namespace SimpchatWeb.Services.Minio
                     new GetObjectArgs()
                         .WithBucket(bucketName)
                         .WithObject(objectName)
-                        .WithCallbackStream(async (stream) => // Fayl streamini memoryStream ga nusxalash
+                        .WithCallbackStream(async (stream) =>
                         {
                             await stream.CopyToAsync(memoryStream);
                         })
                 ).ConfigureAwait(false);
 
-                memoryStream.Position = 0; // Streamni boshiga qaytarish, chunki undan o'qish mumkin bo'lishi uchun
+                memoryStream.Position = 0;
                 return memoryStream;
             }
             catch (MinioException e)
@@ -91,19 +85,18 @@ namespace SimpchatWeb.Services.Minio
         {
             try
             {
-                // StatObjectAsync fayl haqida ma'lumotni oladi, agar mavjud bo'lmasa xato tashlaydi
                 await _minioClient.StatObjectAsync(
                     new StatObjectArgs()
                         .WithBucket(bucketName)
                         .WithObject(objectName)
                 ).ConfigureAwait(false);
-                return true; // Fayl mavjud
+                return true;
             }
-            catch (MinioException e) when (e.Message.Contains("Object does not exist")) // Fayl topilmaganligini aniqlash
+            catch (MinioException e) when (e.Message.Contains("Object does not exist"))
             {
-                return false; // Fayl mavjud emas
+                return false;
             }
-            catch (Exception) // Boshqa har qanday xato
+            catch (Exception)
             {
                 throw;
             }

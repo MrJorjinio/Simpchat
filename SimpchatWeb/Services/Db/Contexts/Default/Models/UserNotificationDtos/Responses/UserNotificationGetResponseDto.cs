@@ -10,6 +10,7 @@ namespace SimpchatWeb.Services.Db.Contexts.Default.Models.UserNotificationDtos.R
         public string Content { get; set; }
         public string ChatName { get; set; }
         public string SenderName { get; set; }
+        public string? FileUrl { get; set; }
         public ChatType ChatType { get; set; }
     }
 }
