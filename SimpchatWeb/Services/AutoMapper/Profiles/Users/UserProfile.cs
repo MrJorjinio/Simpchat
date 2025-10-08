@@ -23,8 +23,8 @@ namespace SimpchatWeb.Services.AutoMapper.Profiles.Users
             CreateMap<UserGlobalRolesPostDto, User>();
 
             // --- PATCH ---
-            CreateMap<User, UserPutDto>();
-            CreateMap<UserPutDto, User>();
+            CreateMap<User, UserProfilePutDto>();
+            CreateMap<UserProfilePutDto, User>();
 
             CreateMap<User, UserPutPasswordDto>();
             CreateMap<UserPutPasswordDto, User>();
@@ -40,14 +40,12 @@ namespace SimpchatWeb.Services.AutoMapper.Profiles.Users
 
             CreateMap<User, UserGetByIdGetResponseDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.IsOnline, opt => opt.MapFrom(src => (DateTimeOffset.UtcNow - src.LastSeen).TotalSeconds < 5));
-            CreateMap<UserGetByIdGetResponseDto, User>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
+                .ForMember(dest => dest.IsOnline, opt => opt.MapFrom(src => (DateTimeOffset.UtcNow - src.LastSeen).TotalSeconds < 5))
+                .ReverseMap();
 
             CreateMap<User, UserJoinChatResponseDto>()
-                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.Id));
-            CreateMap<UserJoinChatResponseDto, User>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.UserId));
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.Id))
+                .ReverseMap();
         }
     }
 }

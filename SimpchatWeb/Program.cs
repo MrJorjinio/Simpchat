@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Minio;
+using Minio.ApiEndpoints;
+using Minio.DataModel.Args;
 using SimpchatWeb.Services.Auth;
 using SimpchatWeb.Services.DataInserter;
 using SimpchatWeb.Services.Db.Contexts.Default;
@@ -71,19 +73,16 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
 {
     var minioSettings = builder.Configuration.Get<AppSettings>().MinioSettings;
 
-
-    // MinioClient obyektini yaratish
     var client = new MinioClient()
         .WithEndpoint(minioSettings.Endpoint)
         .WithCredentials(minioSettings.AccessKey, minioSettings.SecretKey);
 
-    // Agar SSL yoqilgan bo'lsa
     if (minioSettings.UseSsl)
     {
         client = client.WithSSL();
     }
 
-    return client.Build(); // MinioClient ni qurish
+    return client.Build();
 });
 
 

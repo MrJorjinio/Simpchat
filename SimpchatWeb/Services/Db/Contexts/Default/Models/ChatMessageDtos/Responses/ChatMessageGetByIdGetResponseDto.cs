@@ -6,6 +6,8 @@
         public Guid MessageId { get; set; }
         public string SenderName { get; set; }
         public string Content { get; set; }
+        public Guid? ReplyId { get; set; }
+        public string? FileUrl { get; set; }
         public DateTimeOffset SentAt { get; set; }
         public bool IsSeen { get; set; }
     }

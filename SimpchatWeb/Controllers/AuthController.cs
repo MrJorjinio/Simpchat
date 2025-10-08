@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SimpchatWeb.Services.Db.Contexts.Default.Models.UserDtos.Posts;
 using SimpchatWeb.Services.Interfaces.Auth;
+using SimpchatWeb.Services.Interfaces.Minio;
 using System.Threading.Tasks;
 
 namespace SimpchatWeb.Controllers

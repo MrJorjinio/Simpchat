@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SimpchatWeb.Services.Db.Contexts.Default;
@@ -11,9 +12,11 @@ using SimpchatWeb.Services.Db.Contexts.Default;
 namespace SimpchatWeb.Migrations
 {
     [DbContext(typeof(SimpchatDbContext))]
-    partial class SimpchatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251008103159_RenameColumnUserProfileUrlToProfilePictureUrl")]
+    partial class RenameColumnUserProfileUrlToProfilePictureUrl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,7 +46,7 @@ namespace SimpchatWeb.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("ProfilePictureUrl")
+                    b.Property<string>("ProfileUrl")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -286,7 +289,7 @@ namespace SimpchatWeb.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<string>("ProfilePictureUrl")
+                    b.Property<string>("ProfileUrl")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -312,7 +315,7 @@ namespace SimpchatWeb.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<string>("FileUrl")
+                    b.Property<string>("MediaUrl")
                         .HasColumnType("text");
 
                     b.Property<Guid?>("ReplyId")
