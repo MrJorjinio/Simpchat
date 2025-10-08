@@ -9,6 +9,12 @@ namespace SimpchatWeb.Services.AutoMapper.Profiles.Chats
     {
         public ChatMessageProfile()
         {
+            // --- GET ---
+            CreateMap<Message, ChatMessageGetByIdGetResponseDto>()
+                .ForMember(dest => dest.MessageId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.SenderName, opt => opt.MapFrom(src => src.Sender.Username))
+                .ReverseMap();
+
             // --- RESPONSE ---
             CreateMap<ChatMessageGetByIdGetResponseDto, Message>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.MessageId))
