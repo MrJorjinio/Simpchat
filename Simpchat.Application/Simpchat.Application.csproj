@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Common\Interfaces\" />
+    <Folder Include="Messages\" />
+    <Folder Include="Groups\" />
+    <Folder Include="Channels\" />
+    <Folder Include="Conversations\" />
+    <Folder Include="Chats\" />
+    <Folder Include="Common\" />
+    <Folder Include="Notifications\" />
+    <Folder Include="Users\" />
+  </ItemGroup>
+
+</Project>
