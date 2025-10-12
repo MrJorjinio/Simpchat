@@ -28,6 +28,8 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs
                 .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
             builder.Property(u => u.ChatMemberAddPermissionType)
                 .HasConversion<string>();
+            builder.Property(u => u.ProfilePictureUrl)
+                .IsRequired(false);
         }
     }
 }

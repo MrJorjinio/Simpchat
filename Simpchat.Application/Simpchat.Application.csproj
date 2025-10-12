@@ -7,15 +7,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Common\Interfaces\" />
-    <Folder Include="Messages\" />
-    <Folder Include="Groups\" />
+    <Folder Include="Features\Messages\" />
+    <Folder Include="Features\Groups\" />
     <Folder Include="Channels\" />
-    <Folder Include="Conversations\" />
+    <Folder Include="Features\Conversations\" />
     <Folder Include="Chats\" />
-    <Folder Include="Common\" />
-    <Folder Include="Notifications\" />
-    <Folder Include="Users\" />
+    <Folder Include="Features\Notifications\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Simpchat.Domain\Simpchat.Domain.csproj" />
+    <ProjectReference Include="..\Simpchat.Shared\Simpchat.Shared.csproj" />
   </ItemGroup>
 
 </Project>
