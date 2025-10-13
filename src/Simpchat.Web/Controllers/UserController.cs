@@ -24,7 +24,7 @@ namespace Simpchat.Web.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetByIdAsync(Guid id)
         {
             var response = await _userService.GetByIdAsync(id);

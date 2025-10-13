@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Minio;
 using Simpchat.Application.Common.Interfaces.Auth;
-using Simpchat.Application.Common.Interfaces.FileStorage;
+using Simpchat.Application.Common.Interfaces.External.FileStorage;
 using Simpchat.Application.Common.Interfaces.Repositories;
 using Simpchat.Infrastructure.ExternalServices.FileStorage;
 using Simpchat.Infrastructure.Persistence;
@@ -46,6 +46,7 @@ namespace Simpchat.Infrastructure
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IGlobalRoleRepository, GlobalRoleRepository>();
             services.AddScoped<IGlobalPermissionRepository, GlobalPermissionRepository>();
+            services.AddScoped<IChatRepository, ChatRepository>();
 
             return services;
         }

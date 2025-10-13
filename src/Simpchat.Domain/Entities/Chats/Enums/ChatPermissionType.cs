@@ -1,4 +1,4 @@
-﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Enums
+﻿namespace Simpchat.Domain.Entities
 {
     public enum ChatPermissionType
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simpchat.Application.Common.Interfaces.FileStorage
+namespace Simpchat.Application.Common.Interfaces.External.FileStorage
 {
     public interface IFileStorageService
     {

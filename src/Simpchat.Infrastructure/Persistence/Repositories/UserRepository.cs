@@ -34,18 +34,22 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
 
         public async Task DeleteAsync(User user)
         {
-            _dbContext.Remove(user);
+            _dbContext.Users.Remove(user);
             await _dbContext.SaveChangesAsync();
         }
 
         public async Task<User?> GetByIdAsync(Guid id)
         {
-            return await _dbContext.Users.FindAsync(id);
+            return _dbContext.Users
+                .Include(u => u.GlobalRoles)
+                .FirstOrDefault(u => u.Id == id);
         }
 
         public async Task<User?> GetByUsernameAsync(string username)
         {
-            return await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+            return await _dbContext.Users
+                .Include(u => u.GlobalRoles)
+                .FirstOrDefaultAsync(u => u.Username == username);
         }
 
         public async Task<ICollection<User>?> SearchByUsernameAsync(string searchTerm)

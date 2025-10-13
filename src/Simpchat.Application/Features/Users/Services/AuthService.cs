@@ -1,5 +1,4 @@
 ﻿using Simpchat.Application.Common.Interfaces.Auth;
-using Simpchat.Application.Common.Interfaces.FileStorage;
 using Simpchat.Application.Common.Interfaces.Repositories;
 using Simpchat.Application.Common.Models.ApiResults;
 using Simpchat.Application.Common.Models.ApiResults.Enums;

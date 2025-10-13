@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Simpchat.Application.Common.Interfaces.FileStorage;
+using Simpchat.Application.Common.Interfaces.External.FileStorage;
 using Simpchat.Application.Common.Interfaces.Repositories;
 using Simpchat.Application.Common.Interfaces.Services;
 using Simpchat.Application.Common.Models.ApiResults;
