@@ -4,6 +4,7 @@ using Simpchat.Application.Common.Interfaces.Repositories;
 using Simpchat.Application.Common.Interfaces.Services;
 using Simpchat.Application.Common.Models.ApiResults;
 using Simpchat.Application.Common.Models.ApiResults.Enums;
+using Simpchat.Application.Common.Models.Chats.Search;
 using Simpchat.Application.Common.Models.Files;
 using Simpchat.Application.Common.Models.Users;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
@@ -30,7 +31,7 @@ namespace Simpchat.Application.Features.Users.Services
         public async Task<ApiResult<UserResponseDto>> GetByIdAsync(Guid id)
         {
             var user = await _userRepository.GetByIdAsync(id);
-            
+
             if (user is null)
             {
                 return ApiResult<UserResponseDto>.FailureResult($"User with id[{id}] not found", ResultStatus.NotFound);
@@ -39,15 +40,10 @@ namespace Simpchat.Application.Features.Users.Services
             return ApiResult<UserResponseDto>.SuccessResult(UserResponseDto.ConvertFromDomainObject(user));
         }
 
-        public async Task<ApiResult<ICollection<UserResponseDto>>?> SearchByUsernameAsync(string searchTerm)
+        public async Task<ApiResult<ICollection<ChatSearchResponseDto>>?> SearchByUsernameAsync(string searchTerm, Guid currentUserId)
         {
-            var users = await _userRepository.SearchByUsernameAsync(searchTerm);
-
-            var dtos = users?
-                .Select(u => UserResponseDto.ConvertFromDomainObject(u))
-                .ToList();
-
-            return ApiResult<ICollection<UserResponseDto>>.SuccessResult(dtos);
+            var users = await _userRepository.SearchByUsernameAsync(searchTerm, currentUserId);
+            return ApiResult<ICollection<ChatSearchResponseDto>>.SuccessResult(users);
         }
 
         public async Task<ApiResult<UserResponseDto>> SetLastSeenAsync(Guid userId)
@@ -64,13 +60,13 @@ namespace Simpchat.Application.Features.Users.Services
             return ApiResult<UserResponseDto>.SuccessResult(UserResponseDto.ConvertFromDomainObject(user));
         }
 
-        public async Task<ApiResult<UserResponseDto>> UpdateProfileAsync(Guid userId, FileUploadRequest fileUploadRequest)
+        public async Task<ApiResult<UserResponseDto>> UpdateProfileAsync(Guid currentUserId, FileUploadRequest fileUploadRequest)
         {
-            var user = await _userRepository.GetByIdAsync(userId);
+            var user = await _userRepository.GetByIdAsync(currentUserId);
 
             if (user is null)
             {
-                return ApiResult<UserResponseDto>.FailureResult($"User with id[{userId}] not found", ResultStatus.NotFound);
+                return ApiResult<UserResponseDto>.FailureResult($"User with id[{currentUserId}] not found", ResultStatus.NotFound);
             }
 
             var profilePicUrl = await _fileStorageService.UploadFileAsync(BucketName, fileUploadRequest.FileName, fileUploadRequest.Content, fileUploadRequest.ContentType);

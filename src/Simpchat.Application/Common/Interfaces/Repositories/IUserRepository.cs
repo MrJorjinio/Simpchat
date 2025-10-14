@@ -1,4 +1,5 @@
-﻿using SimpchatWeb.Services.Db.Contexts.Default.Entities;
+﻿using Simpchat.Application.Common.Models.Chats.Search;
+using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace Simpchat.Application.Common.Interfaces.Repositories
         Task DeleteAsync(User user);
         Task<User?> GetByIdAsync(Guid id);
         Task<User?> GetByUsernameAsync(string username);
-        Task<ICollection<User>?> SearchByUsernameAsync(string searchTerm);
+        Task<ICollection<ChatSearchResponseDto>?> SearchByUsernameAsync(string searchTerm, Guid currentUserId);
         Task AssignRoleAsync(Guid userId, Guid roleId);
     }
 }

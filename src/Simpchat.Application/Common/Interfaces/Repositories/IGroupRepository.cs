@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Common.Interfaces.Repositories
 {
-    public interface IChatRepository
+    public interface IGroupRepository
     {
-        Task<ICollection<ChatSearchResponseDto>?> SearchByNameAsync(string searchTerm, Guid currentUserId);
+        Task<ICollection<ChatSearchResponseDto>?> SearchByNameAsync(string searchTerm);
     }
 }

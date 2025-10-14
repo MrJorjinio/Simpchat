@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Notification = SimpchatWeb.Services.Db.Contexts.Default.Entities.Notification;
 
-namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs
+namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs.Notifications
 {
     internal class NotificationConfiguration : IEntityTypeConfiguration<Notification>
     {

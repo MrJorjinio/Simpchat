@@ -8,6 +8,7 @@ using Simpchat.Application.Common.Models.ApiResults;
 using Simpchat.Application.Common.Models.ApiResults.Enums;
 using Simpchat.Application.Common.Models.Files;
 using Simpchat.Web.ViewModels.Users;
+using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
 {
@@ -39,9 +40,12 @@ namespace Simpchat.Web.Controllers
         }
 
         [HttpGet("search/{username}")]
+        [Authorize]
         public async Task<IActionResult> SearchAsync(string username)
         {
-            var users = await _userService.SearchByUsernameAsync(username);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var users = await _userService.SearchByUsernameAsync(username, userId);
             return Ok(users);
         }
 

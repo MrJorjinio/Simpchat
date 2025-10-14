@@ -1,10 +1,13 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Simpchat.Application.Common.Interfaces.Repositories;
+using Simpchat.Application.Common.Models.Chats.Search;
+using Simpchat.Domain.Entities;
 using Simpchat.Infrastructure.Identity;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -52,11 +55,28 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(u => u.Username == username);
         }
 
-        public async Task<ICollection<User>?> SearchByUsernameAsync(string searchTerm)
+        public async Task<ICollection<ChatSearchResponseDto>?> SearchByUsernameAsync(string searchTerm, Guid currentUserId)
         {
-            return await _dbContext.Users
-                .Where(u => EF.Functions.Like(u.Username, $"%{searchTerm}%"))
-                .ToListAsync();
+            var users = _dbContext.Users
+                .Where(u => EF.Functions.Like(u.Username, $"%{searchTerm}%"));
+
+            var chatId = _dbContext.Conversations
+                .FirstOrDefault(c => users.Any(u =>
+                (u.Id == c.UserId1 && c.UserId2 == currentUserId)
+                ||
+                (u.Id == currentUserId && c.UserId2 == u.Id)
+                ))?.Id;
+
+            var usersDtos = await users.Select(u => new ChatSearchResponseDto
+            {
+                ChatId = chatId,
+                DisplayName = u.Username,
+                ChatType = ChatType.Conversation,
+                EntityId = u.Id,
+                AvatarUrl = u.AvatarUrl
+            }).ToListAsync();
+
+            return usersDtos;
         }
 
         public async Task UpdateAsync(User user)

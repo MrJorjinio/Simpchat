@@ -9,7 +9,7 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs
+namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs.Chats
 {
     internal class ChatBanConfiguration : IEntityTypeConfiguration<ChatBan>
     {

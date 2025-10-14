@@ -1,4 +1,5 @@
 ﻿using Simpchat.Application.Common.Models.ApiResults;
+using Simpchat.Application.Common.Models.Chats.Search;
 using Simpchat.Application.Common.Models.Files;
 using Simpchat.Application.Common.Models.Users;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
@@ -13,8 +14,8 @@ namespace Simpchat.Application.Common.Interfaces.Services
     public interface IUserService
     {
         Task<ApiResult<UserResponseDto>> GetByIdAsync(Guid id);
-        Task<ApiResult<ICollection<UserResponseDto>?>> SearchByUsernameAsync(string searchTerm);
+        Task<ApiResult<ICollection<ChatSearchResponseDto>?>> SearchByUsernameAsync(string searchTerm, Guid userId);
         Task<ApiResult<UserResponseDto>> SetLastSeenAsync(Guid id);
-        Task<ApiResult<UserResponseDto>> UpdateProfileAsync(Guid id, FileUploadRequest fileUploadRequest);
+        Task<ApiResult<UserResponseDto>> UpdateProfileAsync(Guid currentUserId, FileUploadRequest fileUploadRequest);
     }
 }

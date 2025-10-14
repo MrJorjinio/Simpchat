@@ -9,7 +9,7 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs
+namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs.Channels
 {
     internal class ChannelConfiguration : IEntityTypeConfiguration<Channel>
     {
@@ -19,8 +19,8 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs
                 .WithOne(c => c.Channel)
                 .HasForeignKey<Channel>(c => c.Id);
             builder.HasKey(c => c.Id);
-            builder.HasOne(c => c.UserCreated)
-                .WithMany(c => c.Channels)
+            builder.HasOne(c => c.Owner)
+                .WithMany(c => c.CreatedChannels)
                 .HasForeignKey(c => c.CreatedById);
             builder.Property(c => c.Name)
                 .HasMaxLength(50);

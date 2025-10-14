@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Simpchat.Domain.Entities.Channels;
 using Simpchat.Domain.Entities.Chats;
+using Simpchat.Domain.Entities.Groups;
 using Simpchat.Infrastructure.Identity;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
@@ -10,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure.Persistence
 {
-    internal class SimpchatDbContext : DbContext
+    public class SimpchatDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
         public DbSet<Reaction> Reactions { get; set; }
@@ -18,7 +20,8 @@ namespace Simpchat.Infrastructure.Persistence
         public DbSet<Message> Messages { get; set; }
         public DbSet<ChatUserPermission> ChatsUsersPermissions { get; set; }
         public DbSet<ChatPermission> ChatPermissions { get; set; }
-        public DbSet<ChatParticipant> ChatsParticipants { get; set; }
+        public DbSet<GroupMember> GroupsMembers { get; set; }
+        public DbSet<ChannelSubscriber> ChannelsSubscribers { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<Chat> Chats { get; set; }

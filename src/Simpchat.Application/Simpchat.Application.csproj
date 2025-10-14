@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Features\Chats\" />
     <Folder Include="Features\Messages\" />
     <Folder Include="Features\Groups\" />
     <Folder Include="Channels\" />

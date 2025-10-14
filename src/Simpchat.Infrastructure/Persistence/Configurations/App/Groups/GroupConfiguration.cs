@@ -8,7 +8,7 @@ using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs
+namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs.Groups
 {
     internal class GroupConfiguration : IEntityTypeConfiguration<Group>
     {
@@ -18,8 +18,8 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs
                .WithOne(c => c.Group)
                .HasForeignKey<Group>(g => g.Id);
             builder.HasKey(g => g.Id);
-            builder.HasOne(g => g.UserCreated)
-                .WithMany(u => u.Groups)
+            builder.HasOne(g => g.Owner)
+                .WithMany(u => u.CreatedGroups)
                 .HasForeignKey(g => g.CreatedById);
             builder.Property(g => g.Name)
                 .HasMaxLength(50)
