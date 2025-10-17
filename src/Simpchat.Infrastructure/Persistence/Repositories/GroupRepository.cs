@@ -24,7 +24,8 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         {
             var metas = await _dbContext.GroupsMembers
                 .Where(gm => gm.UserId == currentUserId)
-                .Select(gm => new {
+                .Select(gm => new
+                {
                     GroupId = gm.GroupId,
                     ChatId = gm.Group.Chat.Id,
                     AvatarUrl = gm.Group.AvatarUrl,
@@ -34,71 +35,62 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                 .ToListAsync();
 
             var chatIds = metas.Select(m => m.ChatId).ToList();
-            if (!chatIds.Any()) return new List<UserChatResponseDto>();
+            if (!chatIds.Any())
+                return new List<UserChatResponseDto>();
 
-            var lastMessages = await _dbContext.Messages
-                .Where(m => chatIds.Contains(m.ChatId))
-                .GroupBy(m => m.ChatId)
-                .Select(g => g.OrderByDescending(x => x.SentAt).ThenByDescending(x => x.Id).FirstOrDefault())
-                .Where(m => m != null)
-                .Select(m => new {
-                    m.ChatId,
-                    MessageId = m.Id,
-                    m.Content,
-                    m.FileUrl,
-                    SenderUsername = m.Sender.Username,
-                    m.SentAt
-                })
-                .AsNoTracking()
-                .ToListAsync();
+            var result = new List<UserChatResponseDto>();
 
-            var notifications = await _dbContext.Notifications
-                .Where(n => chatIds.Contains(n.Message.ChatId) && n.ReceiverId == currentUserId && !n.IsSeen)
-                .GroupBy(n => n.Message.ChatId)
-                .Select(g => new { ChatId = g.Key, Count = g.Count() })
-                .ToListAsync();
-
-            var notificationsPerMessage = await _dbContext.Notifications
-                .Where(n => chatIds.Contains(n.Message.ChatId) && n.ReceiverId == currentUserId)
-                .GroupBy(n => n.MessageId)
-                .Select(g => new { MessageId = g.Key, SeenCount = g.Count(n => n.IsSeen) })
-                .ToListAsync();
-
-            var userLasts = await _dbContext.Messages
-                .Where(m => chatIds.Contains(m.ChatId) && m.SenderId == currentUserId)
-                .GroupBy(m => m.ChatId)
-                .Select(g => new { ChatId = g.Key, Last = (DateTimeOffset?)g.Max(m => m.SentAt) })
-                .ToListAsync();
-
-            var dtos = metas.Select(meta =>
+            foreach (var meta in metas)
             {
-                var lm = lastMessages.FirstOrDefault(x => x.ChatId == meta.ChatId);
-                var notif = notifications.FirstOrDefault(x => x.ChatId == meta.ChatId);
-                var userLast = userLasts.FirstOrDefault(x => x.ChatId == meta.ChatId);
+                var lastMsg = await _dbContext.Messages
+                    .Where(m => m.ChatId == meta.ChatId)
+                    .OrderByDescending(m => m.SentAt)
+                    .ThenByDescending(m => m.Id)
+                    .Select(m => new
+                    {
+                        m.Id,
+                        m.Content,
+                        m.FileUrl,
+                        SenderUsername = m.Sender.Username,
+                        m.SentAt
+                    })
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
 
-                var lastMessageDto = lm == null ? null : new LastMessageResponseDto
+                var notifCount = await _dbContext.Notifications
+                    .CountAsync(n => n.Message.ChatId == meta.ChatId
+                                     && n.ReceiverId == currentUserId
+                                     && !n.IsSeen);
+
+                var userLast = await _dbContext.Messages
+                    .Where(m => m.ChatId == meta.ChatId && m.SenderId == currentUserId)
+                    .OrderByDescending(m => m.SentAt)
+                    .Select(m => (DateTimeOffset?)m.SentAt)
+                    .FirstOrDefaultAsync();
+
+                var lastMessageDto = lastMsg == null ? null : new LastMessageResponseDto
                 {
-                    Content = lm.Content,
-                    FileUrl = lm.FileUrl,
-                    SenderUsername = lm.SenderUsername,
-                    SentAt = lm.SentAt
+                    Content = lastMsg.Content,
+                    FileUrl = lastMsg.FileUrl,
+                    SenderUsername = lastMsg.SenderUsername,
+                    SentAt = lastMsg.SentAt
                 };
 
-                return new UserChatResponseDto
+                result.Add(new UserChatResponseDto
                 {
                     Id = meta.GroupId,
                     AvatarUrl = meta.AvatarUrl,
                     Name = meta.Name,
                     Type = ChatType.Group,
                     LastMessage = lastMessageDto,
-                    NotificationsCount = notif?.Count ?? 0,
-                    UserLastMessage = userLast?.Last
-                };
-            })
-            .OrderByDescending(x => x.UserLastMessage ?? DateTimeOffset.MinValue)
-            .ToList();
+                    NotificationsCount = notifCount,
+                    UserLastMessage = userLast
+                });
+            }
 
-            return dtos;
+            return result
+                .OrderByDescending(x => x.UserLastMessage ?? DateTimeOffset.MinValue)
+                .ToList();
         }
 
 

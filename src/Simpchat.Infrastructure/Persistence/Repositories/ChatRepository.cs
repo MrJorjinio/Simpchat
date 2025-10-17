@@ -71,8 +71,8 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                 var receiverId = message.ReceiverId.Value;
 
                 var existingConversation = await _dbContext.Conversations
-                    .Include(c => c.UserId1)
-                    .Include(c => c.UserId2)
+                    .Include(c => c.User1)
+                    .Include(c => c.User2)
                     .FirstOrDefaultAsync(c =>
                         (c.UserId1 == currentUserId && c.UserId2 == receiverId)
                         ||
@@ -112,9 +112,11 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                     };
 
                     _dbContext.Chats.Add(newChat);
+                    _dbContext.Conversations.Add(newConversation);
                     _dbContext.Messages.Add(newMessage);
 
                     chatId = newChat.Id;
+                    message.ChatId = newConversation.Id;
                 }
             }
 

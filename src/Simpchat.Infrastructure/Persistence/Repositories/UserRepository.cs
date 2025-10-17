@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Simpchat.Application.Common.Interfaces.Repositories;
 using Simpchat.Application.Common.Models.Chats.Get.UserChat;
 using Simpchat.Application.Common.Models.Chats.Search;
+using Simpchat.Application.Common.Models.Users;
 using Simpchat.Domain.Entities;
 using Simpchat.Infrastructure.Identity;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
@@ -42,11 +43,29 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<User?> GetByIdAsync(Guid id)
+        public async Task<UserGetByIdDto?> GetByIdAsync(Guid id, Guid currentUserId)
+        {
+            var dto = _dbContext.Users
+                .Where(u => u.Id == id)
+                .Select(u => new UserGetByIdDto
+                {
+                    Description = u.Description,
+                    AvatarUrl = u.AvatarUrl,
+                    ChatId = _dbContext.Conversations.FirstOrDefault(c => (c.UserId1 == currentUserId && c.UserId2 == id) || (c.UserId1 == id && c.UserId2 == currentUserId)).Id,
+                    IsOnline = u.LastSeen.AddMinutes(5) > DateTimeOffset.UtcNow,
+                    LastSeen = u.LastSeen,
+                    UserId = u.Id,
+                    Username = u.Username
+                })
+                .FirstOrDefault();
+
+            return dto;
+        }
+
+        public async Task<User> GetByIdAsync(Guid id)
         {
             return _dbContext.Users
-                .Include(u => u.GlobalRoles)
-                .FirstOrDefault(u => u.Id == id);
+                .Find(id);
         }
 
         public async Task<User?> GetByUsernameAsync(string username)

@@ -28,16 +28,16 @@ namespace Simpchat.Application.Features.Users.Services
             _fileStorageService = fileStorageService;
         }
 
-        public async Task<ApiResult<UserResponseDto>> GetByIdAsync(Guid id)
+        public async Task<ApiResult<UserGetByIdDto>> GetByIdAsync(Guid id, Guid currentUserId)
         {
-            var user = await _userRepository.GetByIdAsync(id);
+            var user = await _userRepository.GetByIdAsync(id, currentUserId);
 
             if (user is null)
             {
-                return ApiResult<UserResponseDto>.FailureResult($"User with id[{id}] not found", ResultStatus.NotFound);
+                return ApiResult<UserGetByIdDto>.FailureResult($"User with id[{id}] not found", ResultStatus.NotFound);
             }
 
-            return ApiResult<UserResponseDto>.SuccessResult(UserResponseDto.ConvertFromDomainObject(user));
+            return ApiResult<UserGetByIdDto>.SuccessResult(user);
         }
 
         public async Task<ApiResult<ICollection<ChatSearchResponseDto>>?> SearchByUsernameAsync(string searchTerm, Guid currentUserId)

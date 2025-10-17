@@ -28,7 +28,8 @@ namespace Simpchat.Web.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetByIdAsync(Guid id)
         {
-            var response = await _userService.GetByIdAsync(id);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var response = await _userService.GetByIdAsync(id, userId);
             return response.Status switch
             {
                 ResultStatus.Success => Ok(response),
