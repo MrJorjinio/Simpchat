@@ -15,8 +15,9 @@ namespace Simpchat.Application.Common.Interfaces.Services
     public interface IUserService
     {
         Task<ApiResult<UserGetByIdDto>> GetByIdAsync(Guid id, Guid currentUserId);
+        Task<ApiResult> UpdateAvatarAsync(Guid userId, FileUploadRequest fileUploadRequest);
+        Task<ApiResult> UpdateInfoAsync(Guid userId, UserUpdateInfoDto dto);
         Task<ApiResult<ICollection<ChatSearchResponseDto>?>> SearchByUsernameAsync(string searchTerm, Guid userId);
         Task<ApiResult<UserResponseDto>> SetLastSeenAsync(Guid id);
-        Task<ApiResult<UserResponseDto>> UpdateProfileAsync(Guid currentUserId, FileUploadRequest fileUploadRequest);
     }
 }

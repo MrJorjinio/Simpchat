@@ -65,23 +65,56 @@ namespace Simpchat.Application.Features.Users.Services
             return ApiResult<UserResponseDto>.SuccessResult(UserResponseDto.ConvertFromDomainObject(user));
         }
 
-        public async Task<ApiResult<UserResponseDto>> UpdateProfileAsync(Guid currentUserId, FileUploadRequest fileUploadRequest)
+        public async Task<ApiResult> UpdateAvatarAsync(Guid currentUserId, FileUploadRequest fileUploadRequest)
         {
             var user = await _userRepository.GetByIdAsync(currentUserId);
 
             if (user is null)
             {
-                return ApiResult<UserResponseDto>.FailureResult($"User with id[{currentUserId}] not found", ResultStatus.NotFound);
+                return ApiResult.FailureResult($"User with id[{currentUserId}] not found", ResultStatus.NotFound);
             }
 
-            var profilePicUrl = await _fileStorageService.UploadFileAsync(BucketName, fileUploadRequest.FileName, fileUploadRequest.Content, fileUploadRequest.ContentType);
+            var avatarUrl = await _fileStorageService.UploadFileAsync(BucketName, fileUploadRequest.FileName, fileUploadRequest.Content, fileUploadRequest.ContentType);
 
-            if (profilePicUrl is null)
+            if (avatarUrl is null)
             {
-                return ApiResult<UserResponseDto>.FailureResult("Invalid file", ResultStatus.Failure);
+                return ApiResult.FailureResult("Invalid file", ResultStatus.Failure);
             }
 
-            return ApiResult<UserResponseDto>.SuccessResult(UserResponseDto.ConvertFromDomainObject(user));
+            user.AvatarUrl = avatarUrl;
+            await _userRepository.UpdateAsync(user);
+
+            return ApiResult.SuccessResult();
+        }
+
+        public async Task<ApiResult> UpdateInfoAsync(Guid userId, UserUpdateInfoDto dto)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            if (user is null)
+            {
+                return ApiResult.FailureResult($"User with id[{userId}] not found", ResultStatus.NotFound);
+            }
+
+            if (user.Username != dto.Username)
+            {
+                if(await _userRepository.GetByUsernameAsync(dto.Username) is null)
+                {
+                    user.Username = dto.Username;
+                }
+                else
+                {
+                    return ApiResult.FailureResult($"User with USERNAME[{dto.Username}] already exists", ResultStatus.Failure);
+                }
+            }
+            if (user.Description != dto.Description)
+            {
+                user.Description = dto.Description;
+            }
+
+            await _userRepository.UpdateAsync(user);
+
+            return ApiResult.SuccessResult();
         }
     }
 }

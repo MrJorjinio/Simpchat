@@ -7,6 +7,7 @@ using Simpchat.Application.Common.Interfaces.Services;
 using Simpchat.Application.Common.Models.ApiResults;
 using Simpchat.Application.Common.Models.ApiResults.Enums;
 using Simpchat.Application.Common.Models.Files;
+using Simpchat.Application.Common.Models.Users;
 using Simpchat.Web.ViewModels.Users;
 using System.Security.Claims;
 
@@ -26,6 +27,7 @@ namespace Simpchat.Web.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize]
         public async Task<IActionResult> GetByIdAsync(Guid id)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -50,9 +52,11 @@ namespace Simpchat.Web.Controllers
             return Ok(users);
         }
 
-        [HttpPut("last-seen/{userId}")]
-        public async Task<IActionResult> SetLastSeenAsync(Guid userId)
+        [HttpPut("last-seen")]
+        [Authorize]
+        public async Task<IActionResult> SetLastSeenAsync()
         {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var response = await _userService.SetLastSeenAsync(userId);
             return response.Status switch
             {
@@ -64,9 +68,11 @@ namespace Simpchat.Web.Controllers
             };
         }
 
-        [HttpPut("update-profile-pic/{userId}")]
-        public async Task<IActionResult> UpdateProfilePicAsync(Guid userId, IFormFile profilePic)
+        [HttpPut("update-profile-pic")]
+        [Authorize]
+        public async Task<IActionResult> UpdateAvatarAsync(IFormFile profilePic)
         {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var fileUploadRequest = new FileUploadRequest
             {
                 FileName = profilePic.FileName,
@@ -74,7 +80,23 @@ namespace Simpchat.Web.Controllers
                 Content = profilePic.OpenReadStream()
             };
 
-            var response = await _userService.UpdateProfileAsync(userId, fileUploadRequest);
+            var response = await _userService.UpdateAvatarAsync(userId, fileUploadRequest);
+            return response.Status switch
+            {
+                ResultStatus.Success => Ok(response),
+                ResultStatus.NotFound => NotFound(response),
+                ResultStatus.Failure => BadRequest(response),
+                ResultStatus.Unauthorized => Unauthorized(response),
+                _ => StatusCode(500, response)
+            };
+        }
+
+        [HttpPut("update-info")]
+        public async Task<IActionResult> UpdateInfoAsync(UserUpdateInfoDto dto)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var response = await _userService.UpdateInfoAsync(userId, dto);
+
             return response.Status switch
             {
                 ResultStatus.Success => Ok(response),
