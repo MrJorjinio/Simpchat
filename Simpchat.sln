@@ -1,9 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11109.219
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpchatWeb", "SimpchatWeb\SimpchatWeb.csproj", "{ACD22C62-0724-4DB5-8135-7638CDBC74BE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simpchat.Application", "src\Simpchat.Application\Simpchat.Application.csproj", "{43C2CA65-0C43-9967-81DF-E173758E20C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simpchat.Domain", "src\Simpchat.Domain\Simpchat.Domain.csproj", "{8EB54E81-988C-ED92-E2A9-AB8F94D4AE66}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simpchat.Infrastructure", "src\Simpchat.Infrastructure\Simpchat.Infrastructure.csproj", "{45BAAD50-902D-3032-DE9C-9A16FB88A7C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simpchat.OldWeb", "src\Simpchat.OldWeb\Simpchat.OldWeb.csproj", "{7D0DC569-EEAF-038A-CFA3-F428DBCAB2FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simpchat.Shared", "src\Simpchat.Shared\Simpchat.Shared.csproj", "{4EE88770-28A8-B541-AF72-B3B7FEF9DBE1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Simpchat.Web", "src\Simpchat.Web\Simpchat.Web.csproj", "{DF0BA3F9-E87F-006E-6CFD-3FBBEB528611}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,13 +23,41 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{ACD22C62-0724-4DB5-8135-7638CDBC74BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ACD22C62-0724-4DB5-8135-7638CDBC74BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ACD22C62-0724-4DB5-8135-7638CDBC74BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ACD22C62-0724-4DB5-8135-7638CDBC74BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43C2CA65-0C43-9967-81DF-E173758E20C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43C2CA65-0C43-9967-81DF-E173758E20C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43C2CA65-0C43-9967-81DF-E173758E20C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43C2CA65-0C43-9967-81DF-E173758E20C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EB54E81-988C-ED92-E2A9-AB8F94D4AE66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EB54E81-988C-ED92-E2A9-AB8F94D4AE66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EB54E81-988C-ED92-E2A9-AB8F94D4AE66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EB54E81-988C-ED92-E2A9-AB8F94D4AE66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45BAAD50-902D-3032-DE9C-9A16FB88A7C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45BAAD50-902D-3032-DE9C-9A16FB88A7C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45BAAD50-902D-3032-DE9C-9A16FB88A7C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45BAAD50-902D-3032-DE9C-9A16FB88A7C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7D0DC569-EEAF-038A-CFA3-F428DBCAB2FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D0DC569-EEAF-038A-CFA3-F428DBCAB2FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D0DC569-EEAF-038A-CFA3-F428DBCAB2FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D0DC569-EEAF-038A-CFA3-F428DBCAB2FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EE88770-28A8-B541-AF72-B3B7FEF9DBE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EE88770-28A8-B541-AF72-B3B7FEF9DBE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EE88770-28A8-B541-AF72-B3B7FEF9DBE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EE88770-28A8-B541-AF72-B3B7FEF9DBE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF0BA3F9-E87F-006E-6CFD-3FBBEB528611}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF0BA3F9-E87F-006E-6CFD-3FBBEB528611}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF0BA3F9-E87F-006E-6CFD-3FBBEB528611}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF0BA3F9-E87F-006E-6CFD-3FBBEB528611}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{43C2CA65-0C43-9967-81DF-E173758E20C9} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{8EB54E81-988C-ED92-E2A9-AB8F94D4AE66} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{45BAAD50-902D-3032-DE9C-9A16FB88A7C9} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{7D0DC569-EEAF-038A-CFA3-F428DBCAB2FD} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{4EE88770-28A8-B541-AF72-B3B7FEF9DBE1} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{DF0BA3F9-E87F-006E-6CFD-3FBBEB528611} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D6F069B5-E4F0-41C4-B37B-D7CD0AE5DBB2}
