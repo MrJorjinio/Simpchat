@@ -21,5 +21,6 @@ namespace Simpchat.Application.Common.Interfaces.Repositories
         Task<ChatGetByIdProfile> GetProfileByIdAsync(Guid chatId, Guid userId);
         Task AddMessageAsync(MessagePostDto message, Guid currentUserId);
         Task UpdateAsync(Chat chat);
+        Task<Chat> CreateAsync(Chat chat);
     }
 }

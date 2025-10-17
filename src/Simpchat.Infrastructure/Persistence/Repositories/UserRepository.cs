@@ -65,13 +65,16 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         public async Task<User> GetByIdAsync(Guid id)
         {
             return _dbContext.Users
-                .Find(id);
+                .Include(u => u.GlobalRoles)
+                    .ThenInclude(g => g.Role)
+                .FirstOrDefault(u => u.Id == id);
         }
 
         public async Task<User?> GetByUsernameAsync(string username)
         {
             return await _dbContext.Users
                 .Include(u => u.GlobalRoles)
+                    .ThenInclude(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Username == username);
         }
 

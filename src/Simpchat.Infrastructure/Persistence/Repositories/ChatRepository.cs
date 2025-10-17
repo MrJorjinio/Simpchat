@@ -34,8 +34,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             IGroupRepository groupRepository,
             IChannelRepository channelRepository,
             SimpchatDbContext dbContext,
-            IConversationRepository conversationRepository,
-            IFileStorageService fileStorageService
+            IConversationRepository conversationRepository
             )
         {
             _conversationRepository = conversationRepository;
@@ -43,7 +42,6 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             _groupRepository = groupRepository;
             _channelRepository = channelRepository;
             _dbContext = dbContext;
-            _fileStorageService = fileStorageService;
         }
 
         public async Task AddMessageAsync(MessagePostDto message, Guid currentUserId)
@@ -429,6 +427,13 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                 .Include(c => c.Channel)
                 .Include(c => c.Conversation)
                 .FirstOrDefaultAsync(c => c.Id == chatId);
+        }
+
+        public async Task<Chat> CreateAsync(Chat chat)
+        {
+            await _dbContext.AddAsync(chat);
+            await _dbContext.SaveChangesAsync();
+            return chat;
         }
     }
 }

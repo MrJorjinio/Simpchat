@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <Folder Include="Features\Messages\" />
-    <Folder Include="Features\Groups\" />
     <Folder Include="Features\Conversations\" />
     <Folder Include="Features\Notifications\" />
   </ItemGroup>

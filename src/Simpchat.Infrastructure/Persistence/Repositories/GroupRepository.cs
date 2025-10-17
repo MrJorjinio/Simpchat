@@ -3,6 +3,7 @@ using Simpchat.Application.Common.Interfaces.Repositories;
 using Simpchat.Application.Common.Models.Chats.Get.UserChat;
 using Simpchat.Application.Common.Models.Chats.Search;
 using Simpchat.Domain.Entities;
+using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,12 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         public GroupRepository(SimpchatDbContext dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public async Task CreateAsync(Group group)
+        {
+            await _dbContext.Groups.AddAsync(group);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<ICollection<UserChatResponseDto>?> GetUserParticipatedGroupsAsync(Guid currentUserId)
