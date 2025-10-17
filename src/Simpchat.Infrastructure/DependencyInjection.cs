@@ -46,6 +46,10 @@ namespace Simpchat.Infrastructure
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IGlobalRoleRepository, GlobalRoleRepository>();
             services.AddScoped<IGlobalPermissionRepository, GlobalPermissionRepository>();
+            services.AddScoped<IChannelRepository, ChannelRepository>();
+            services.AddScoped<IGroupRepository, GroupRepository>();
+            services.AddScoped<IChatRepository, ChatRepository>();
+            services.AddScoped<IConversationRepository, ConversationRepository>();
 
             return services;
         }

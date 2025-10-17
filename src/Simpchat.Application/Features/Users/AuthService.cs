@@ -12,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simpchat.Infrastructure.Security
+namespace Simpchat.Application.Features.Users
 {
     internal class AuthService : IAuthService
     {

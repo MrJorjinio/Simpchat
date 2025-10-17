@@ -1,6 +1,7 @@
 ﻿using Simpchat.Application.Common.Models.ApiResults;
 using Simpchat.Application.Common.Models.Chats.Search;
 using Simpchat.Application.Common.Models.Files;
+using Simpchat.Application.Common.Models.Pagination;
 using Simpchat.Application.Common.Models.Users;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;

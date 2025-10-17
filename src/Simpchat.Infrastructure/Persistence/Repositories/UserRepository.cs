@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Simpchat.Application.Common.Interfaces.Repositories;
+using Simpchat.Application.Common.Models.Chats.Get.UserChat;
 using Simpchat.Application.Common.Models.Chats.Search;
 using Simpchat.Domain.Entities;
 using Simpchat.Infrastructure.Identity;
@@ -54,6 +55,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                 .Include(u => u.GlobalRoles)
                 .FirstOrDefaultAsync(u => u.Username == username);
         }
+
 
         public async Task<ICollection<ChatSearchResponseDto>?> SearchByUsernameAsync(string searchTerm, Guid currentUserId)
         {

@@ -5,7 +5,7 @@ using Simpchat.Application.Common.Models.ApiResults.Enums;
 
 namespace Simpchat.Web.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {

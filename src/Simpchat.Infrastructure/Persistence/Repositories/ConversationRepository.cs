@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Simpchat.Application.Common.Interfaces.Repositories;
 using Simpchat.Application.Common.Models.Chats.Get.UserChat;
-using Simpchat.Application.Common.Models.Chats.Search;
 using Simpchat.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -11,30 +10,39 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories
 {
-    public class GroupRepository : IGroupRepository
+    internal class ConversationRepository : IConversationRepository
     {
         private readonly SimpchatDbContext _dbContext;
 
-        public GroupRepository(SimpchatDbContext dbContext)
+        public ConversationRepository(SimpchatDbContext dbContext)
         {
             _dbContext = dbContext;
         }
-
-        public async Task<ICollection<UserChatResponseDto>?> GetUserParticipatedGroupsAsync(Guid currentUserId)
+        public async Task<ICollection<UserChatResponseDto>?> GetUserConversationsAsync(Guid currentUserId)
         {
-            var metas = await _dbContext.GroupsMembers
-                .Where(gm => gm.UserId == currentUserId)
-                .Select(gm => new {
-                    GroupId = gm.GroupId,
-                    ChatId = gm.Group.Chat.Id,
-                    AvatarUrl = gm.Group.AvatarUrl,
-                    Name = gm.Group.Name
+            var metas = await _dbContext.Conversations
+                .Where(c => c.UserId1 == currentUserId || c.UserId2 == currentUserId)
+                .Select(c => new {
+                    ConversationId = c.Id,
+                    ChatId = c.Chat.Id,
+                    OtherUserId = c.UserId1 == currentUserId ? c.UserId2 : c.UserId1
                 })
                 .AsNoTracking()
                 .ToListAsync();
 
+            if (!metas.Any())
+                return new List<UserChatResponseDto>();
+
+            var otherUserIds = metas.Select(m => m.OtherUserId).Distinct().ToList();
+            var otherUsers = await _dbContext.Users
+                .Where(u => otherUserIds.Contains(u.Id))
+                .Select(u => new { u.Id, u.Username, u.AvatarUrl })
+                .AsNoTracking()
+                .ToListAsync();
+
+            var userDict = otherUsers.ToDictionary(u => u.Id);
+
             var chatIds = metas.Select(m => m.ChatId).ToList();
-            if (!chatIds.Any()) return new List<UserChatResponseDto>();
 
             var lastMessages = await _dbContext.Messages
                 .Where(m => chatIds.Contains(m.ChatId))
@@ -58,12 +66,6 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                 .Select(g => new { ChatId = g.Key, Count = g.Count() })
                 .ToListAsync();
 
-            var notificationsPerMessage = await _dbContext.Notifications
-                .Where(n => chatIds.Contains(n.Message.ChatId) && n.ReceiverId == currentUserId)
-                .GroupBy(n => n.MessageId)
-                .Select(g => new { MessageId = g.Key, SeenCount = g.Count(n => n.IsSeen) })
-                .ToListAsync();
-
             var userLasts = await _dbContext.Messages
                 .Where(m => chatIds.Contains(m.ChatId) && m.SenderId == currentUserId)
                 .GroupBy(m => m.ChatId)
@@ -72,6 +74,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
 
             var dtos = metas.Select(meta =>
             {
+                var otherUser = userDict.TryGetValue(meta.OtherUserId, out var u) ? u : null;
                 var lm = lastMessages.FirstOrDefault(x => x.ChatId == meta.ChatId);
                 var notif = notifications.FirstOrDefault(x => x.ChatId == meta.ChatId);
                 var userLast = userLasts.FirstOrDefault(x => x.ChatId == meta.ChatId);
@@ -81,15 +84,15 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                     Content = lm.Content,
                     FileUrl = lm.FileUrl,
                     SenderUsername = lm.SenderUsername,
-                    SentAt = lm.SentAt
+                    SentAt = lm.SentAt,
                 };
 
                 return new UserChatResponseDto
                 {
-                    Id = meta.GroupId,
-                    AvatarUrl = meta.AvatarUrl,
-                    Name = meta.Name,
-                    Type = ChatType.Group,
+                    Id = meta.ConversationId,
+                    AvatarUrl = otherUser?.AvatarUrl,
+                    Name = otherUser?.Username,
+                    Type = ChatType.Conversation,
                     LastMessage = lastMessageDto,
                     NotificationsCount = notif?.Count ?? 0,
                     UserLastMessage = userLast?.Last
@@ -99,26 +102,6 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             .ToList();
 
             return dtos;
-        }
-
-
-
-        public async Task<ICollection<ChatSearchResponseDto>?> SearchByNameAsync(string searchTerm)
-        {
-            var groups = await _dbContext.Groups
-                .Where(g => EF.Functions.Like(g.Name, $"%{searchTerm}%"))
-                .ToListAsync();
-
-            var groupsDtos = groups.Select(g => new ChatSearchResponseDto
-            {
-                EntityId = g.Id,
-                ChatId = g.Id,
-                AvatarUrl = g.AvatarUrl,
-                DisplayName = g.Name,
-                ChatType = ChatType.Group
-            }).ToList();
-
-            return groupsDtos;
         }
     }
 }

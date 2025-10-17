@@ -1,4 +1,5 @@
-﻿using Simpchat.Application.Common.Models.Chats.Search;
+﻿using Simpchat.Application.Common.Models.Chats.Get.UserChat;
+using Simpchat.Application.Common.Models.Chats.Search;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;

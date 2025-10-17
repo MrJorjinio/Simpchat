@@ -14,5 +14,6 @@ namespace Simpchat.Application.Common.Interfaces.External.FileStorage
         Task<bool> RemoveFileAsync(string bucketName, string objectName);
         Task<bool> BucketExistsAsync(string bucketName);
         Task CreateBucketAsync(string bucketName);
+
     }
 }

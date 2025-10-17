@@ -42,6 +42,11 @@ namespace Simpchat.Application.Features.Users.Services
 
         public async Task<ApiResult<ICollection<ChatSearchResponseDto>>?> SearchByUsernameAsync(string searchTerm, Guid currentUserId)
         {
+            if (await _userRepository.GetByIdAsync(currentUserId) is null)
+            {
+                ApiResult.FailureResult($"User with ID[{currentUserId}] not found", ResultStatus.NotFound);
+            }
+
             var users = await _userRepository.SearchByUsernameAsync(searchTerm, currentUserId);
             return ApiResult<ICollection<ChatSearchResponseDto>>.SuccessResult(users);
         }

@@ -7,12 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Chats\" />
     <Folder Include="Features\Messages\" />
     <Folder Include="Features\Groups\" />
-    <Folder Include="Channels\" />
     <Folder Include="Features\Conversations\" />
-    <Folder Include="Chats\" />
     <Folder Include="Features\Notifications\" />
   </ItemGroup>
 

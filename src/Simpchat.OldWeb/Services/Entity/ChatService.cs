@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿2using AutoMapper;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using SimpchatWeb.Services.Db.Contexts.Default;
@@ -215,7 +215,7 @@ namespace SimpchatWeb.Services.Entity
                             SentAt = m.SentAt,
                             SenderName = m.Sender?.Username ?? "Unknown Sender",
                             FileUrl = m.FileUrl
-                        })
+                        }).
                         .FirstOrDefault(),
                     LastMessageTime = c.Messages
                         .OrderByDescending(m => m.SentAt)
