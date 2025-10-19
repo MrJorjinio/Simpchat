@@ -9,20 +9,20 @@ using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
 {
-    [Route("api/group")]
+    [Route("api/channels")]
     [ApiController]
-    public class GroupController : ControllerBase
+    public class ChannelController : ControllerBase
     {
-        private readonly IGroupService _groupService;
+        private readonly IChannelService _channelService;
 
-        public GroupController(IGroupService groupService)
+        public ChannelController(IChannelService channelService)
         {
-            _groupService = groupService;
+            _channelService = channelService;
         }
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> CreateAsync([FromForm]ChatPostDto model, IFormFile? file)
+        public async Task<IActionResult> CreateAsync([FromForm] ChatPostDto model, IFormFile? file)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
@@ -37,8 +37,8 @@ namespace Simpchat.Web.Controllers
                     FileName = file.Name
                 };
             }
-            
-            var response = await _groupService.CreateAsync(userId, model, fileUploadRequest);
+
+            var response = await _channelService.CreateAsync(userId, model, fileUploadRequest);
 
             return response.Status switch
             {
@@ -56,7 +56,7 @@ namespace Simpchat.Web.Controllers
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var response = await _groupService.AddUserAsync(chatId, addingUserId, userId);
+            var response = await _channelService.AddUserAsync(chatId, addingUserId, userId);
 
             return response.Status switch
             {
@@ -74,7 +74,7 @@ namespace Simpchat.Web.Controllers
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var response = await _groupService.AddUserPermissionAsync(permissionName, chatId, addingUserId, userId);
+            var response = await _channelService.AddUserPermissionAsync(permissionName, chatId, addingUserId, userId);
 
             return response.Status switch
             {

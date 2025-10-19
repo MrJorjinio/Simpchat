@@ -424,8 +424,13 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         {
             return await _dbContext.Chats
                 .Include(c => c.Group)
+                    .ThenInclude(g => g.Members)
                 .Include(c => c.Channel)
+                    .ThenInclude(c => c.Subscribers)
                 .Include(c => c.Conversation)
+                    .ThenInclude(c => c.User1)
+                .Include(c => c.Conversation)
+                    .ThenInclude(c => c.User2)
                 .FirstOrDefaultAsync(c => c.Id == chatId);
         }
 
@@ -434,6 +439,11 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             await _dbContext.AddAsync(chat);
             await _dbContext.SaveChangesAsync();
             return chat;
+        }
+
+        public Task<ChatPermission> GetPermissionByNameAsync(string name)
+        {
+            return _dbContext.ChatPermissions.FirstOrDefaultAsync(cp => cp.Name == name);
         }
     }
 }

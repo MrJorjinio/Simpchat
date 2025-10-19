@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Common.Interfaces.Services
 {
-    public interface IGroupService
+    public interface IChannelService
     {
         Task<ApiResult> CreateAsync(Guid userId, ChatPostDto chatPostDto, FileUploadRequest? avatar);
         Task<ApiResult> AddUserAsync(Guid chatId, Guid addingUserId, Guid currentUserId);

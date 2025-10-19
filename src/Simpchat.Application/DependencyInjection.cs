@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Simpchat.Application.Common.Interfaces.Auth;
 using Simpchat.Application.Common.Interfaces.Services;
+using Simpchat.Application.Features.Channels;
 using Simpchat.Application.Features.Chats;
 using Simpchat.Application.Features.Groups;
 using Simpchat.Application.Features.Users;
@@ -29,6 +30,7 @@ namespace Simpchat.Application
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IChatService, ChatService>();
             services.AddScoped<IGroupService, GroupService>();
+            services.AddScoped<IChannelService, ChannelService>();
 
             return services;
         }
