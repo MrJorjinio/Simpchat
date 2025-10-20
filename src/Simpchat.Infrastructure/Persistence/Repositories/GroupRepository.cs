@@ -3,6 +3,8 @@ using Simpchat.Application.Common.Interfaces.Repositories;
 using Simpchat.Application.Common.Models.Chats.Get.UserChat;
 using Simpchat.Application.Common.Models.Chats.Search;
 using Simpchat.Domain.Entities;
+using Simpchat.Domain.Entities.Groups;
+using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +20,36 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         public GroupRepository(SimpchatDbContext dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public async Task AddMemberAsync(Chat chat, User addingUser, User currentUser)
+        {
+            chat.Group.Members.Add(new GroupMember
+            {
+                UserId = addingUser.Id,
+            });
+
+            var chatPermissions = await _dbContext.ChatPermissions.Where(cp => cp.Name == "TextMessage")
+                .ToListAsync();
+
+            foreach (var chatPermission in chatPermissions)
+            {
+                _dbContext.ChatsUsersPermissions.Add(new ChatUserPermission { ChatId = chat.Id, UserId = addingUser.Id, PermissionId = chatPermission.Id });
+            }
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task AddUserPermissionAsync(ChatPermission permission, Chat chat, User addingUser, User currentUser)
+        {
+            await _dbContext.ChatsUsersPermissions.AddAsync(new ChatUserPermission { ChatId = chat.Id, PermissionId = permission.Id, UserId = addingUser.Id });
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task CreateAsync(Group group)
+        {
+            await _dbContext.Groups.AddAsync(group);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<ICollection<UserChatResponseDto>?> GetUserParticipatedGroupsAsync(Guid currentUserId)

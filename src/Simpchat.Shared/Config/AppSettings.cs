@@ -5,5 +5,6 @@
         public JwtSettings JwtSettings { get; set; }
         public ConnectionStrings ConnectionStrings { get; set; }
         public MinioSettings MinioSettings { get; set; }
+        public RabbitMQSettings RabbitMQSettings { get; set; }
     }
 }

@@ -28,6 +28,8 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs.Channels
                 .HasMaxLength(200);
             builder.Property(c => c.Name)
                 .IsRequired();
+            builder.Property(c => c.AvatarUrl)
+                .IsRequired(false);
         }
     }
 }

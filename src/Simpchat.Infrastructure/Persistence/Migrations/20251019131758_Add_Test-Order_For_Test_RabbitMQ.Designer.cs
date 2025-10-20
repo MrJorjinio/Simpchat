@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Simpchat.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Simpchat.Infrastructure.Persistence;
 namespace Simpchat.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(SimpchatDbContext))]
-    partial class SimpchatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251019131758_Add_Test-Order_For_Test_RabbitMQ")]
+    partial class Add_TestOrder_For_Test_RabbitMQ
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -277,6 +280,7 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("AvatarUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<Guid>("CreatedById")
@@ -406,6 +410,7 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("AvatarUrl")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<Guid>("CreatedById")

@@ -65,13 +65,16 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         public async Task<User> GetByIdAsync(Guid id)
         {
             return _dbContext.Users
-                .Find(id);
+                .Include(u => u.GlobalRoles)
+                    .ThenInclude(g => g.Role)
+                .FirstOrDefault(u => u.Id == id);
         }
 
         public async Task<User?> GetByUsernameAsync(string username)
         {
             return await _dbContext.Users
                 .Include(u => u.GlobalRoles)
+                    .ThenInclude(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Username == username);
         }
 
@@ -81,16 +84,9 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             var users = _dbContext.Users
                 .Where(u => EF.Functions.Like(u.Username, $"%{searchTerm}%"));
 
-            var chatId = _dbContext.Conversations
-                .FirstOrDefault(c => users.Any(u =>
-                (u.Id == c.UserId1 && c.UserId2 == currentUserId)
-                ||
-                (u.Id == currentUserId && c.UserId2 == u.Id)
-                ))?.Id;
-
             var usersDtos = await users.Select(u => new ChatSearchResponseDto
             {
-                ChatId = chatId,
+                ChatId = _dbContext.Conversations.FirstOrDefault(c => (c.UserId1 == currentUserId && c.UserId2 == u.Id) || (c.UserId1 == u.Id && c.UserId2 == currentUserId)).Id,
                 DisplayName = u.Username,
                 ChatType = ChatType.Conversation,
                 EntityId = u.Id,

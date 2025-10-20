@@ -26,6 +26,8 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs.Groups
                 .IsRequired();
             builder.Property(g => g.Description)
                 .HasMaxLength(200);
+            builder.Property(g => g.AvatarUrl)
+                .IsRequired(false);
         }
     }
 }
