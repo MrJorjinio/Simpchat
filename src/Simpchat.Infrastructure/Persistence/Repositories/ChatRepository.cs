@@ -34,19 +34,19 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             IGroupRepository groupRepository,
             IChannelRepository channelRepository,
             SimpchatDbContext dbContext,
-            IConversationRepository conversationRepository,
-            IFileStorageService fileStorageService
+            IFileStorageService fileStorageService,
+            IConversationRepository conversationRepository
             )
         {
             _conversationRepository = conversationRepository;
             _userRepository = userRepository;
             _groupRepository = groupRepository;
             _channelRepository = channelRepository;
-            _dbContext = dbContext;
             _fileStorageService = fileStorageService;
+            _dbContext = dbContext;
         }
 
-        public async Task AddMessageAsync(MessagePostDto message, Guid currentUserId)
+        public async Task<Message> AddMessageAsync(MessagePostDto message, User currentUser)
         {
             string? fileUrl = null;
             if (message.FileUploadRequest?.Content != null &&
@@ -74,9 +74,9 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                     .Include(c => c.User1)
                     .Include(c => c.User2)
                     .FirstOrDefaultAsync(c =>
-                        (c.UserId1 == currentUserId && c.UserId2 == receiverId)
+                        (c.UserId1 == currentUser.Id && c.UserId2 == receiverId)
                         ||
-                        (c.UserId2 == currentUserId && c.UserId1 == receiverId)
+                        (c.UserId2 == currentUser.Id && c.UserId1 == receiverId)
                     );
 
                 if (existingConversation != null)
@@ -97,14 +97,14 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                     var newConversation = new Conversation
                     {
                         Id = newChat.Id,
-                        UserId1 = currentUserId,
+                        UserId1 = currentUser.Id,
                         UserId2 = receiverId
                     };
 
                     var newMessage = new Message
                     {
                         ChatId = newChat.Id,
-                        SenderId = currentUserId,
+                        SenderId = currentUser.Id,
                         Content = message.Content,
                         FileUrl = fileUrl,
                         ReplyId = message.ReplyId,
@@ -120,20 +120,48 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                 }
             }
 
+            var messageEntity = new Message
+            {
+                ChatId = chatId,
+                SenderId = currentUser.Id,
+                Content = message.Content,
+                FileUrl = fileUrl,
+                ReplyId = message.ReplyId,
+                SentAt = DateTime.UtcNow
+            };
+
             if (message.ChatId != null)
             {
-                var messageEntity = new Message
-                {
-                    ChatId = chatId,
-                    SenderId = currentUserId,
-                    Content = message.Content,
-                    FileUrl = fileUrl,
-                    ReplyId = message.ReplyId,
-                    SentAt = DateTime.UtcNow
-                };
-
                 _dbContext.Messages.Add(messageEntity);
                 await _dbContext.SaveChangesAsync();
+
+                var chat = await GetByIdAsync(chatId);
+
+                if (chat.Type == ChatType.Conversation)
+                {
+                    _dbContext.Notifications.Add(new Notification { MessageId = messageEntity.Id, ReceiverId = chat.Conversation.UserId1 == currentUser.Id ? chat.Conversation.UserId2 : chat.Conversation.UserId1 });
+                }
+                else if (chat.Type == ChatType.Group)
+                {
+                    foreach (var member in chat.Group.Members.Where(m => m.UserId != currentUser.Id))
+                    {
+                        _dbContext.Add(new Notification { MessageId = messageEntity.Id, ReceiverId = member.UserId });
+                    }
+                }
+                else
+                {
+                    foreach (var subscriber in chat.Channel.Subscribers.Where(s => s.UserId != currentUser.Id))
+                    {
+                        _dbContext.Add(new Notification { MessageId = messageEntity.Id, ReceiverId = subscriber.UserId });
+                    }
+                }
+
+                _dbContext.SaveChangesAsync();
+                return messageEntity;
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -426,9 +454,26 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         {
             return await _dbContext.Chats
                 .Include(c => c.Group)
+                    .ThenInclude(g => g.Members)
                 .Include(c => c.Channel)
+                    .ThenInclude(c => c.Subscribers)
                 .Include(c => c.Conversation)
+                    .ThenInclude(c => c.User1)
+                .Include(c => c.Conversation)
+                    .ThenInclude(c => c.User2)
                 .FirstOrDefaultAsync(c => c.Id == chatId);
+        }
+
+        public async Task<Chat> CreateAsync(Chat chat)
+        {
+            await _dbContext.AddAsync(chat);
+            await _dbContext.SaveChangesAsync();
+            return chat;
+        }
+
+        public Task<ChatPermission> GetPermissionByNameAsync(string name)
+        {
+            return _dbContext.ChatPermissions.FirstOrDefaultAsync(cp => cp.Name == name);
         }
     }
 }

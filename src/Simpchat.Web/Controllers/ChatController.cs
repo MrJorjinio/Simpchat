@@ -5,6 +5,7 @@ using Simpchat.Application.Common.Interfaces.Services;
 using Simpchat.Application.Common.Models.ApiResults.Enums;
 using Simpchat.Application.Common.Models.Chats.Post.Message;
 using Simpchat.Application.Common.Models.Files;
+using Simpchat.Application.Common.Models.Pagination.Chat;
 using Simpchat.Domain.Entities;
 using System.Security.Claims;
 
@@ -21,12 +22,12 @@ namespace Simpchat.Web.Controllers
             _chatService = chatService;
         }
 
-        [HttpGet("search/{name}")]
+        [HttpPost("search")]
         [Authorize]
-        public async Task<IActionResult> SearchByNameAsync(string name)
+        public async Task<IActionResult> SearchByNameAsync(ChatSearchPageModel model)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var response = await _chatService.SearchByNameAsync(name, userId);
+            var response = await _chatService.SearchByNameAsync(model, userId);
 
             return response.Status switch
             {

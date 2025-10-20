@@ -4,8 +4,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Minio;
 using Simpchat.Application.Common.Interfaces.Auth;
+using Simpchat.Application.Common.Interfaces.External.Cashing;
 using Simpchat.Application.Common.Interfaces.External.FileStorage;
 using Simpchat.Application.Common.Interfaces.Repositories;
+using Simpchat.Infrastructure.External.Cashing;
 using Simpchat.Infrastructure.ExternalServices.FileStorage;
 using Simpchat.Infrastructure.Persistence;
 using Simpchat.Infrastructure.Persistence.Repositories;
@@ -26,7 +28,8 @@ namespace Simpchat.Infrastructure
             services
                 .AddPersistence(config)
                 .AddSecurity()
-                .AddFileStorage(config);
+                .AddFileStorage(config)
+                .AddRabbitMQ(config);
 
             return services;
         }
@@ -44,12 +47,14 @@ namespace Simpchat.Infrastructure
             });
 
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IChannelRepository, ChannelRepository>();
             services.AddScoped<IGlobalRoleRepository, GlobalRoleRepository>();
             services.AddScoped<IGlobalPermissionRepository, GlobalPermissionRepository>();
             services.AddScoped<IChannelRepository, ChannelRepository>();
             services.AddScoped<IGroupRepository, GroupRepository>();
             services.AddScoped<IChatRepository, ChatRepository>();
             services.AddScoped<IConversationRepository, ConversationRepository>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();
 
             return services;
         }
@@ -90,6 +95,14 @@ namespace Simpchat.Infrastructure
 
                 return client.Build();
             });
+
+            return services;
+        }
+
+        private static IServiceCollection AddRabbitMQ(this IServiceCollection services, IConfiguration config)
+        {
+            services.AddSingleton<IRabbitMQProducer, RabbitMQProducer>();
+            services.AddHostedService<RabbitMQConsumer>();
 
             return services;
         }

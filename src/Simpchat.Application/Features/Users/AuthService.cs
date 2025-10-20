@@ -39,7 +39,7 @@ namespace Simpchat.Application.Features.Users
 
             if (user is null || await _passwordHasher.VerifyAsync(user.PasswordHash, password, user.Salt) is false)
             {
-                ApiResult<string>.FailureResult("Username or Password is invalid", ResultStatus.Failure);
+                return ApiResult<string>.FailureResult("Username or Password is invalid", ResultStatus.Failure);
             }
 
             string jwtToken = await _jwtTokenGenerator.GenerateJwtTokenAsync(user.Id, user.GlobalRoles.Select(r => r.Role));

@@ -5,6 +5,8 @@ using Simpchat.Application.Common.Models.Chats.Get.UserChat;
 using Simpchat.Application.Common.Models.Chats.Post.Message;
 using Simpchat.Application.Common.Models.Chats.Search;
 using Simpchat.Application.Common.Models.Files;
+using Simpchat.Application.Common.Models.Pagination;
+using Simpchat.Application.Common.Models.Pagination.Chat;
 using Simpchat.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -16,7 +18,7 @@ namespace Simpchat.Application.Common.Interfaces.Services
 {
     public interface IChatService
     {
-        Task<ApiResult<ICollection<ChatSearchResponseDto>?>> SearchByNameAsync(string searchTerm, Guid currentUserId);
+        Task<ApiResult<PaginationResult<ChatSearchResponseDto>>> SearchByNameAsync(ChatSearchPageModel chatSearchDto, Guid currentUserId);
         Task<ApiResult<ICollection<UserChatResponseDto>?>> GetUserChatsAsync(Guid userId);
         Task<ApiResult<ChatGetByIdDto>> GetByIdAsync(Guid chatId, Guid userId);
         Task<ApiResult<ChatGetByIdProfile>> GetProfileByIdAsync(Guid chatId, Guid userId);

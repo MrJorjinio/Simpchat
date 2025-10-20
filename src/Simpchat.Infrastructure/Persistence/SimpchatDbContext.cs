@@ -2,6 +2,7 @@
 using Simpchat.Domain.Entities.Channels;
 using Simpchat.Domain.Entities.Chats;
 using Simpchat.Domain.Entities.Groups;
+using Simpchat.Domain.Entities.Orders;
 using Simpchat.Infrastructure.Identity;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
@@ -32,6 +33,7 @@ namespace Simpchat.Infrastructure.Persistence
         public DbSet<GlobalRoleUser> UsersGlobalRoles { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<ChatBan> ChatsBans { get; set; }
+        public DbSet<Order> Orders { get; set; }
         public SimpchatDbContext(DbContextOptions<SimpchatDbContext> options)
             : base(options) { }
 

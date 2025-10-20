@@ -9,6 +9,8 @@ using Simpchat.Application.Common.Models.Chats.Get.UserChat;
 using Simpchat.Application.Common.Models.Chats.Post.Message;
 using Simpchat.Application.Common.Models.Chats.Search;
 using Simpchat.Application.Common.Models.Files;
+using Simpchat.Application.Common.Models.Pagination;
+using Simpchat.Application.Common.Models.Pagination.Chat;
 using Simpchat.Domain.Entities;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
@@ -42,15 +44,36 @@ namespace Simpchat.Application.Features.Chats
             return ApiResult<ICollection<UserChatResponseDto>>.SuccessResult(await _chatRepository.GetUserChatsAsync(userId));
         }
 
-        public async Task<ApiResult<ICollection<ChatSearchResponseDto>?>> SearchByNameAsync(string searchTerm, Guid currentUserId)
+        public async Task<ApiResult<PaginationResult<ChatSearchResponseDto>>> SearchByNameAsync(ChatSearchPageModel chatSearchDto, Guid currentUserId)
         {
             if (await _userRepository.GetByIdAsync(currentUserId) is null)
             {
-                ApiResult<ICollection<ChatSearchResponseDto>>.FailureResult($"User with ID[{currentUserId}] not found", ResultStatus.NotFound);
+                return ApiResult<PaginationResult<ChatSearchResponseDto>>.FailureResult($"User with ID[{currentUserId}] not found", ResultStatus.NotFound);
             }
 
-            var chats = await _chatRepository.SearchByNameAsync(searchTerm, currentUserId);
-            return ApiResult<ICollection<ChatSearchResponseDto>?>.SuccessResult(chats);
+            var chats = await _chatRepository.SearchByNameAsync(chatSearchDto.searchTerm, currentUserId);
+
+            var filteredChats = chats
+                .Skip(chatSearchDto.PageSize * (chatSearchDto.PageNumber - 1))
+                .Take(chatSearchDto.PageSize)
+                .Select(c => new ChatSearchResponseDto
+                {
+                    ChatId = c.ChatId,
+                    DisplayName = c.DisplayName,
+                    AvatarUrl = c.AvatarUrl,
+                    EntityId = c.EntityId,
+                    ChatType = c.ChatType
+                }).ToList();
+
+            var paginationResult = new PaginationResult<ChatSearchResponseDto?>
+            {
+                Data = filteredChats,
+                PageNumber = chatSearchDto.PageNumber,
+                PageSize = chatSearchDto.PageSize,
+                TotalCount = chats.Count
+            };
+
+            return ApiResult<PaginationResult<ChatSearchResponseDto>>.SuccessResult(paginationResult);
         }
 
         public async Task<ApiResult<ChatGetByIdDto>> GetByIdAsync(Guid chatId, Guid userId)
@@ -89,7 +112,19 @@ namespace Simpchat.Application.Features.Chats
 
         public async Task<ApiResult> SendMessageAsync(MessagePostDto message, Guid currentUserId)
         {
-            await _chatRepository.AddMessageAsync(message, currentUserId);
+            var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+
+            if (currentUser is null)
+            {
+                return ApiResult.FailureResult($"User with ID[{currentUserId}] not found", ResultStatus.NotFound);
+            }
+
+            var addedMessage = await _chatRepository.AddMessageAsync(message, currentUser);
+
+            if (addedMessage is null)
+            {
+                return ApiResult.FailureResult("Failed to add message", ResultStatus.Failure);
+            }
             return ApiResult.SuccessResult();
         }
 
