@@ -112,7 +112,19 @@ namespace Simpchat.Application.Features.Chats
 
         public async Task<ApiResult> SendMessageAsync(MessagePostDto message, Guid currentUserId)
         {
-            await _chatRepository.AddMessageAsync(message, currentUserId);
+            var currentUser = await _userRepository.GetByIdAsync(currentUserId);
+
+            if (currentUser is null)
+            {
+                return ApiResult.FailureResult($"User with ID[{currentUserId}] not found", ResultStatus.NotFound);
+            }
+
+            var addedMessage = await _chatRepository.AddMessageAsync(message, currentUser);
+
+            if (addedMessage is null)
+            {
+                return ApiResult.FailureResult("Failed to add message", ResultStatus.Failure);
+            }
             return ApiResult.SuccessResult();
         }
 

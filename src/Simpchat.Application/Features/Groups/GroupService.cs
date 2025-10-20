@@ -69,7 +69,13 @@ namespace Simpchat.Application.Features.Groups
                 }
             };
 
-            group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
+            if (avatar is not null)
+            {
+                if (avatar.FileName != null && avatar.Content != null && avatar.ContentType != null)
+                {
+                    group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
+                }
+            }
 
             await _groupRepository.CreateAsync(group);
 
