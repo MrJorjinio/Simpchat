@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simpchat.Application.Common.Pagination.Chat;
 using Simpchat.Application.Interfaces.Services;
@@ -16,11 +17,13 @@ namespace Simpchat.Web.Controllers
     {
         private readonly IChatService _chatService;
         private readonly IChatMessageService _chatMessageService;
+        private readonly IValidator<PostMessageApiRequestDto> _validator;
 
-        public ChatController(IChatService chatService, IChatMessageService chatMessageService)
+        public ChatController(IChatService chatService, IChatMessageService chatMessageService, IValidator<PostMessageApiRequestDto> validator)
         {
             _chatService = chatService;
             _chatMessageService = chatMessageService;
+            _validator = validator;
         }
 
         [HttpPost("search")]
@@ -94,6 +97,17 @@ namespace Simpchat.Web.Controllers
         [HttpPost("message")]
         public async Task<IActionResult> SendMessageAsync([FromForm]PostMessageApiRequestDto messagePostDto, IFormFile? file)
         {
+            var result = await _validator.ValidateAsync(messagePostDto);
+
+            if (!result.IsValid)
+            {
+                var errors = result.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ValidationProblemDetails(errors));
+            }
+
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             UploadFileRequest? fileUploadRequest = null;

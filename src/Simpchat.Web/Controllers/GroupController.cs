@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResults.Enums;
 using Simpchat.Application.Models.Chats.Post;
 using Simpchat.Application.Models.Files;
+using Simpchat.Application.Models.Users.Post;
 using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
@@ -13,16 +15,29 @@ namespace Simpchat.Web.Controllers
     public class GroupController : ControllerBase
     {
         private readonly IGroupService _groupService;
+        private readonly IValidator<PostChatDto> _validator;
 
-        public GroupController(IGroupService groupService)
+        public GroupController(IGroupService groupService, IValidator<PostChatDto> validator)
         {
             _groupService = groupService;
+            _validator = validator;
         }
 
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> CreateAsync([FromForm]PostChatDto model, IFormFile? file)
         {
+            var result = await _validator.ValidateAsync(model);
+
+            if (!result.IsValid)
+            {
+                var errors = result.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ValidationProblemDetails(errors));
+            }
+
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             var fileUploadRequest = new UploadFileRequest();
@@ -123,6 +138,17 @@ namespace Simpchat.Web.Controllers
         [Authorize]
         public async Task<IActionResult> UpdateAsync(Guid chatId, PostChatDto updateChatDto)
         {
+            var result = await _validator.ValidateAsync(updateChatDto);
+
+            if (!result.IsValid)
+            {
+                var errors = result.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ValidationProblemDetails(errors));
+            }
+
             var response = await _groupService.UpdateAsync(chatId, updateChatDto);
 
             return response.Status switch
