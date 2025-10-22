@@ -1,18 +1,10 @@
-﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using Simpchat.Application.Common.Interfaces.Repositories;
-using Simpchat.Application.Common.Models.Chats.Get.UserChat;
-using Simpchat.Application.Common.Models.Chats.Search;
-using Simpchat.Application.Common.Models.Users;
+﻿using Microsoft.EntityFrameworkCore;
+using Simpchat.Application.Interfaces.Repositories;
+using Simpchat.Application.Models.Chats.Search;
+using Simpchat.Application.Models.Users.GetById;
 using Simpchat.Domain.Entities;
 using Simpchat.Infrastructure.Identity;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories
 {
@@ -43,11 +35,11 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<UserGetByIdDto?> GetByIdAsync(Guid id, Guid currentUserId)
+        public async Task<GetByIdUserDto?> GetByIdAsync(Guid id, Guid currentUserId)
         {
             var dto = _dbContext.Users
                 .Where(u => u.Id == id)
-                .Select(u => new UserGetByIdDto
+                .Select(u => new GetByIdUserDto
                 {
                     Description = u.Description,
                     AvatarUrl = u.AvatarUrl,
@@ -79,12 +71,12 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         }
 
 
-        public async Task<ICollection<ChatSearchResponseDto>?> SearchByUsernameAsync(string searchTerm, Guid currentUserId)
+        public async Task<ICollection<SearchChatResponseDto>?> SearchByUsernameAsync(string searchTerm, Guid currentUserId)
         {
             var users = _dbContext.Users
                 .Where(u => EF.Functions.Like(u.Username, $"%{searchTerm}%"));
 
-            var usersDtos = await users.Select(u => new ChatSearchResponseDto
+            var usersDtos = await users.Select(u => new SearchChatResponseDto
             {
                 ChatId = _dbContext.Conversations.FirstOrDefault(c => (c.UserId1 == currentUserId && c.UserId2 == u.Id) || (c.UserId1 == u.Id && c.UserId2 == currentUserId)).Id,
                 DisplayName = u.Username,

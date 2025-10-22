@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Simpchat.Application.Common.Interfaces.Services;
-using Simpchat.Application.Common.Models.ApiResults.Enums;
-using Simpchat.Application.Common.Models.Chats.Post;
-using Simpchat.Application.Common.Models.Files;
+using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Models.ApiResults.Enums;
+using Simpchat.Application.Models.Chats.Post;
+using Simpchat.Application.Models.Files;
 using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
@@ -22,15 +21,15 @@ namespace Simpchat.Web.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> CreateAsync([FromForm] ChatPostDto model, IFormFile? file)
+        public async Task<IActionResult> CreateAsync([FromForm] PostChatDto model, IFormFile? file)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var fileUploadRequest = new FileUploadRequest();
+            var fileUploadRequest = new UploadFileRequest();
 
             if (file is not null)
             {
-                fileUploadRequest = new FileUploadRequest
+                fileUploadRequest = new UploadFileRequest
                 {
                     Content = file.OpenReadStream(),
                     ContentType = file.ContentType,
@@ -75,6 +74,72 @@ namespace Simpchat.Web.Controllers
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             var response = await _channelService.AddUserPermissionAsync(permissionName, chatId, addingUserId, userId);
+
+            return response.Status switch
+            {
+                ResultStatus.Success => Ok(response),
+                ResultStatus.NotFound => NotFound(response),
+                ResultStatus.Failure => BadRequest(response),
+                ResultStatus.Unauthorized => Unauthorized(response),
+                _ => StatusCode(500, response)
+            };
+        }
+
+        [HttpDelete("leave")]
+        [Authorize]
+        public async Task<IActionResult> LeaveAsync(Guid chatId)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var response = await _channelService.DeleteSubscriberAsync(userId, chatId);
+
+            return response.Status switch
+            {
+                ResultStatus.Success => Ok(response),
+                ResultStatus.NotFound => NotFound(response),
+                ResultStatus.Failure => BadRequest(response),
+                ResultStatus.Unauthorized => Unauthorized(response),
+                _ => StatusCode(500, response)
+            };
+        }
+
+        [HttpDelete]
+        [Authorize]
+        public async Task<IActionResult> DeleteAsync(Guid chatId)
+        {
+            var response = await _channelService.DeleteAsync(chatId);
+
+            return response.Status switch
+            {
+                ResultStatus.Success => Ok(response),
+                ResultStatus.NotFound => NotFound(response),
+                ResultStatus.Failure => BadRequest(response),
+                ResultStatus.Unauthorized => Unauthorized(response),
+                _ => StatusCode(500, response)
+            };
+        }
+
+        [HttpPost("update")]
+        [Authorize]
+        public async Task<IActionResult> UpdateAsync(Guid chatId, PostChatDto updateChatDto)
+        {
+            var response = await _channelService.UpdateAsync(chatId, updateChatDto);
+
+            return response.Status switch
+            {
+                ResultStatus.Success => Ok(response),
+                ResultStatus.NotFound => NotFound(response),
+                ResultStatus.Failure => BadRequest(response),
+                ResultStatus.Unauthorized => Unauthorized(response),
+                _ => StatusCode(500, response)
+            };
+        }
+
+        [HttpGet("search")]
+        [Authorize]
+        public async Task<IActionResult> SearchAsync(string searchTerm)
+        {
+            var response = await _channelService.SearchAsync(searchTerm);
 
             return response.Status switch
             {

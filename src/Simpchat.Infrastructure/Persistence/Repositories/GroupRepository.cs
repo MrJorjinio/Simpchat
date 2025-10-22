@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Simpchat.Application.Common.Interfaces.Repositories;
-using Simpchat.Application.Common.Models.Chats.Get.UserChat;
-using Simpchat.Application.Common.Models.Chats.Search;
+using Simpchat.Application.Interfaces.Repositories;
+using Simpchat.Application.Models.Chats.Get.UserChat;
+using Simpchat.Application.Models.Chats.Search;
 using Simpchat.Domain.Entities;
 using Simpchat.Domain.Entities.Groups;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
@@ -49,6 +49,19 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         public async Task CreateAsync(Group group)
         {
             await _dbContext.Groups.AddAsync(group);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(Group group)
+        {
+            _dbContext.Remove(group);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task DeleteMemberAsync(User user, Group group)
+        {
+            var groupMember = await _dbContext.GroupsMembers.FirstOrDefaultAsync(gm => gm.UserId == user.Id && gm.GroupId == group.Id);
+            _dbContext.Remove(groupMember);
             await _dbContext.SaveChangesAsync();
         }
 
@@ -127,13 +140,13 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
 
 
 
-        public async Task<ICollection<ChatSearchResponseDto>?> SearchByNameAsync(string searchTerm)
+        public async Task<ICollection<SearchChatResponseDto>?> SearchByNameAsync(string searchTerm)
         {
             var groups = await _dbContext.Groups
                 .Where(g => EF.Functions.Like(g.Name, $"%{searchTerm}%"))
                 .ToListAsync();
 
-            var groupsDtos = groups.Select(g => new ChatSearchResponseDto
+            var groupsDtos = groups.Select(g => new SearchChatResponseDto
             {
                 EntityId = g.Id,
                 ChatId = g.Id,
@@ -143,6 +156,12 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             }).ToList();
 
             return groupsDtos;
+        }
+
+        public async Task UpdateAsync(Group group)
+        {
+            _dbContext.Groups.Update(group);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

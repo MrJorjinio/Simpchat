@@ -1,16 +1,16 @@
-﻿using Simpchat.Application.Common.Interfaces.External.FileStorage;
-using Simpchat.Application.Common.Interfaces.Repositories;
-using Simpchat.Application.Common.Interfaces.Services;
-using Simpchat.Application.Common.Models.ApiResults;
-using Simpchat.Application.Common.Models.ApiResults.Enums;
-using Simpchat.Application.Common.Models.Chats.Get.ById;
-using Simpchat.Application.Common.Models.Chats.Get.Profile;
-using Simpchat.Application.Common.Models.Chats.Get.UserChat;
-using Simpchat.Application.Common.Models.Chats.Post.Message;
-using Simpchat.Application.Common.Models.Chats.Search;
-using Simpchat.Application.Common.Models.Files;
-using Simpchat.Application.Common.Models.Pagination;
-using Simpchat.Application.Common.Models.Pagination.Chat;
+﻿using Simpchat.Application.Common.Pagination;
+using Simpchat.Application.Common.Pagination.Chat;
+using Simpchat.Application.Interfaces.External.FileStorage;
+using Simpchat.Application.Interfaces.Repositories;
+using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Models.ApiResults;
+using Simpchat.Application.Models.ApiResults.Enums;
+using Simpchat.Application.Models.Chats.Get.ById;
+using Simpchat.Application.Models.Chats.Get.Profile;
+using Simpchat.Application.Models.Chats.Get.UserChat;
+using Simpchat.Application.Models.Chats.Post.Message;
+using Simpchat.Application.Models.Chats.Search;
+using Simpchat.Application.Models.Files;
 using Simpchat.Domain.Entities;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
@@ -44,11 +44,11 @@ namespace Simpchat.Application.Features.Chats
             return ApiResult<ICollection<UserChatResponseDto>>.SuccessResult(await _chatRepository.GetUserChatsAsync(userId));
         }
 
-        public async Task<ApiResult<PaginationResult<ChatSearchResponseDto>>> SearchByNameAsync(ChatSearchPageModel chatSearchDto, Guid currentUserId)
+        public async Task<ApiResult<PaginationResult<SearchChatResponseDto>>> SearchByNameAsync(ChatSearchPageModel chatSearchDto, Guid currentUserId)
         {
             if (await _userRepository.GetByIdAsync(currentUserId) is null)
             {
-                return ApiResult<PaginationResult<ChatSearchResponseDto>>.FailureResult($"User with ID[{currentUserId}] not found", ResultStatus.NotFound);
+                return ApiResult<PaginationResult<SearchChatResponseDto>>.FailureResult($"User with ID[{currentUserId}] not found", ResultStatus.NotFound);
             }
 
             var chats = await _chatRepository.SearchByNameAsync(chatSearchDto.searchTerm, currentUserId);
@@ -56,7 +56,7 @@ namespace Simpchat.Application.Features.Chats
             var filteredChats = chats
                 .Skip(chatSearchDto.PageSize * (chatSearchDto.PageNumber - 1))
                 .Take(chatSearchDto.PageSize)
-                .Select(c => new ChatSearchResponseDto
+                .Select(c => new SearchChatResponseDto
                 {
                     ChatId = c.ChatId,
                     DisplayName = c.DisplayName,
@@ -65,7 +65,7 @@ namespace Simpchat.Application.Features.Chats
                     ChatType = c.ChatType
                 }).ToList();
 
-            var paginationResult = new PaginationResult<ChatSearchResponseDto?>
+            var paginationResult = new PaginationResult<SearchChatResponseDto?>
             {
                 Data = filteredChats,
                 PageNumber = chatSearchDto.PageNumber,
@@ -73,62 +73,44 @@ namespace Simpchat.Application.Features.Chats
                 TotalCount = chats.Count
             };
 
-            return ApiResult<PaginationResult<ChatSearchResponseDto>>.SuccessResult(paginationResult);
+            return ApiResult<PaginationResult<SearchChatResponseDto>>.SuccessResult(paginationResult);
         }
 
-        public async Task<ApiResult<ChatGetByIdDto>> GetByIdAsync(Guid chatId, Guid userId)
+        public async Task<ApiResult<GetByIdChatDto>> GetByIdAsync(Guid chatId, Guid userId)
         {
             if (_userRepository.GetByIdAsync(userId) is null)
             {
-                return ApiResult<ChatGetByIdDto>.FailureResult($"User with ID[{userId}] not found", ResultStatus.NotFound);
+                return ApiResult<GetByIdChatDto>.FailureResult($"User with ID[{userId}] not found", ResultStatus.NotFound);
             }
 
             var chat = await _chatRepository.GetByIdAsync(chatId, userId);
 
             if (chat is null)
             {
-                return ApiResult<ChatGetByIdDto>.FailureResult($"Chat with ID[{chatId}] not found", ResultStatus.NotFound);
+                return ApiResult<GetByIdChatDto>.FailureResult($"Chat with ID[{chatId}] not found", ResultStatus.NotFound);
             }
 
-            return ApiResult<ChatGetByIdDto>.SuccessResult(chat);
+            return ApiResult<GetByIdChatDto>.SuccessResult(chat);
         }
 
-        public async Task<ApiResult<ChatGetByIdProfile>> GetProfileByIdAsync(Guid chatId, Guid userId)
+        public async Task<ApiResult<GetByIdChatProfile>> GetProfileByIdAsync(Guid chatId, Guid userId)
         {
             if (await _userRepository.GetByIdAsync(userId) is null)
             {
-                return ApiResult<ChatGetByIdProfile>.FailureResult($"User with ID[{userId}] not found", ResultStatus.NotFound);
+                return ApiResult<GetByIdChatProfile>.FailureResult($"User with ID[{userId}] not found", ResultStatus.NotFound);
             }
 
             var chat = await _chatRepository.GetProfileByIdAsync(chatId, userId);
 
             if (chat is null)
             {
-                return ApiResult<ChatGetByIdProfile>.FailureResult($"Chat with ID[{chatId}] not found", ResultStatus.NotFound);
+                return ApiResult<GetByIdChatProfile>.FailureResult($"Chat with ID[{chatId}] not found", ResultStatus.NotFound);
             }
 
-            return ApiResult<ChatGetByIdProfile>.SuccessResult(chat);
+            return ApiResult<GetByIdChatProfile>.SuccessResult(chat);
         }
 
-        public async Task<ApiResult> SendMessageAsync(MessagePostDto message, Guid currentUserId)
-        {
-            var currentUser = await _userRepository.GetByIdAsync(currentUserId);
-
-            if (currentUser is null)
-            {
-                return ApiResult.FailureResult($"User with ID[{currentUserId}] not found", ResultStatus.NotFound);
-            }
-
-            var addedMessage = await _chatRepository.AddMessageAsync(message, currentUser);
-
-            if (addedMessage is null)
-            {
-                return ApiResult.FailureResult("Failed to add message", ResultStatus.Failure);
-            }
-            return ApiResult.SuccessResult();
-        }
-
-        public async Task<ApiResult> UpdateAvatarAsync(Guid chatId, Guid userId, FileUploadRequest file)
+        public async Task<ApiResult> UpdateAvatarAsync(Guid chatId, Guid userId, UploadFileRequest file)
         {
             var chat = await _chatRepository.GetByIdAsync(chatId);
             if (chat is null)

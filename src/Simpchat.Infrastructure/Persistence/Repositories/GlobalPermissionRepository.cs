@@ -1,11 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Simpchat.Application.Common.Interfaces.Repositories;
+using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Infrastructure.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories
 {

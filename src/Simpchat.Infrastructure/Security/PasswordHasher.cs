@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Simpchat.Application.Common.Interfaces.Auth;
+using Simpchat.Application.Interfaces.Auth;
 using System;
 using System.Collections.Generic;
 using System.Linq;

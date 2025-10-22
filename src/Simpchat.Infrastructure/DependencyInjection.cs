@@ -3,10 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Minio;
-using Simpchat.Application.Common.Interfaces.Auth;
-using Simpchat.Application.Common.Interfaces.External.Cashing;
-using Simpchat.Application.Common.Interfaces.External.FileStorage;
-using Simpchat.Application.Common.Interfaces.Repositories;
+using Simpchat.Application.Interfaces.Auth;
+using Simpchat.Application.Interfaces.External.Cashing;
+using Simpchat.Application.Interfaces.External.FileStorage;
+using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Infrastructure.External.Cashing;
 using Simpchat.Infrastructure.ExternalServices.FileStorage;
 using Simpchat.Infrastructure.Persistence;
@@ -55,6 +55,7 @@ namespace Simpchat.Infrastructure
             services.AddScoped<IChatRepository, ChatRepository>();
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
+            services.AddScoped<IMessageRepository, MessageRepository>();
 
             return services;
         }
