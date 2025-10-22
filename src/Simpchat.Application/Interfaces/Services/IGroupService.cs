@@ -1,4 +1,5 @@
-﻿using Simpchat.Application.Models.ApiResults;
+﻿using Simpchat.Application.Common.Pagination;
+using Simpchat.Application.Models.ApiResults;
 using Simpchat.Application.Models.Chats.Post;
 using Simpchat.Application.Models.Chats.Search;
 using Simpchat.Application.Models.Files;

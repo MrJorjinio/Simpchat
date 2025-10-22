@@ -10,6 +10,8 @@ using Simpchat.Application.Features.Users;
 using Simpchat.Application.Features.Users.Services;
 using Simpchat.Application.Interfaces.Auth;
 using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Models.Chats.Post;
+using Simpchat.Application.Models.Chats.Post.Message;
 using Simpchat.Application.Models.Users.Post;
 using Simpchat.Application.Validators;
 using System;
@@ -48,6 +50,8 @@ namespace Simpchat.Application
         private static IServiceCollection AddValidation(this IServiceCollection services)
         {
             services.AddTransient<IValidator<RegisterUserDto>, RegisterUserValidator>();
+            services.AddTransient<IValidator<PostChatDto>, PostChatValidator>();
+            services.AddTransient<IValidator<PostMessageApiRequestDto>, PostMessageValidator>();
 
             return services;
         }
