@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Simpchat.Application.Common.Interfaces.Auth;
+using Simpchat.Application.Interfaces.Auth;
 using Simpchat.Infrastructure.Identity;
 using Simpchat.Shared.Config;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;

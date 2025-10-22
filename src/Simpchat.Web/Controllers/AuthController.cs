@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Simpchat.Application.Common.Interfaces.Auth;
-using Simpchat.Application.Common.Models.ApiResults.Enums;
+using Simpchat.Application.Interfaces.Auth;
+using Simpchat.Application.Models.ApiResults.Enums;
+using Simpchat.Application.Models.Users.Post;
 
 namespace Simpchat.Web.Controllers
 {
@@ -10,16 +12,29 @@ namespace Simpchat.Web.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IValidator<RegisterUserDto> _validator;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IValidator<RegisterUserDto> validator)
         {
             _authService = authService;
+            _validator = validator;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> RegisterAsync(string username, string password)
+        public async Task<IActionResult> RegisterAsync(RegisterUserDto registerUserDto)
         {
-            var response = await _authService.RegisterAsync(username, password);
+            var result = await _validator.ValidateAsync(registerUserDto);
+
+            if (!result.IsValid)
+            {
+                var errors = result.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new ValidationProblemDetails(errors));
+            }
+
+            var response = await _authService.RegisterAsync(registerUserDto.Username, registerUserDto.Password);
 
             return response.Status switch
             {

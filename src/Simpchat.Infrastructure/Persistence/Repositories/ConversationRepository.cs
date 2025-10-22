@@ -1,12 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Simpchat.Application.Common.Interfaces.Repositories;
-using Simpchat.Application.Common.Models.Chats.Get.UserChat;
+using Simpchat.Application.Interfaces.Repositories;
+using Simpchat.Application.Models.Chats.Get.UserChat;
 using Simpchat.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories
 {
@@ -18,6 +14,18 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         {
             _dbContext = dbContext;
         }
+
+        public async Task DeleteAsync(User user1, User user2)
+        {
+            var conversation = await _dbContext.Conversations.FirstOrDefaultAsync(c => 
+            (c.UserId1 == user1.Id && c.UserId2 == user2.Id) 
+            || 
+            (c.UserId1 == user2.Id && c.UserId2 == user1.Id));
+
+            _dbContext.Remove(conversation);
+            await _dbContext.SaveChangesAsync();
+        }
+
         public async Task<ICollection<UserChatResponseDto>?> GetUserConversationsAsync(Guid currentUserId)
         {
             var metas = await _dbContext.Conversations

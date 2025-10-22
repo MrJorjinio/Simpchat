@@ -1,16 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Simpchat.Application.Common.Interfaces.Repositories;
-using Simpchat.Application.Common.Models.Chats.Get.UserChat;
-using Simpchat.Application.Common.Models.Chats.Search;
+using Simpchat.Application.Interfaces.Repositories;
+using Simpchat.Application.Models.Chats.Get.UserChat;
+using Simpchat.Application.Models.Chats.Search;
 using Simpchat.Domain.Entities;
 using Simpchat.Domain.Entities.Channels;
-using Simpchat.Domain.Entities.Groups;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories
 {
@@ -50,6 +44,19 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         public async Task CreateAsync(Channel channel)
         {
             await _dbContext.Channels.AddAsync(channel);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(Channel channel)
+        {
+            _dbContext.Remove(channel);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task DeleteSubscriberAsync(User user, Channel channel)
+        {
+            var channelSubscriber = await _dbContext.ChannelsSubscribers.FirstOrDefaultAsync(gm => gm.UserId == user.Id && gm.ChannelId == channel.Id);
+            _dbContext.Remove(channelSubscriber);
             await _dbContext.SaveChangesAsync();
         }
 
@@ -125,13 +132,13 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                 .ToList();
         }
 
-        public async Task<ICollection<ChatSearchResponseDto>?> SearchByNameAsync(string searchTerm)
+        public async Task<ICollection<SearchChatResponseDto>?> SearchByNameAsync(string searchTerm)
         {
             var channels = await _dbContext.Groups
                 .Where(g => EF.Functions.Like(g.Name, $"%{searchTerm}%"))
                 .ToListAsync();
 
-            var channelsDtos = channels.Select(g => new ChatSearchResponseDto
+            var channelsDtos = channels.Select(g => new SearchChatResponseDto
             {
                 EntityId = g.Id,
                 ChatId = g.Id,

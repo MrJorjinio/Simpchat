@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Simpchat.Application.Common.Interfaces.External.Cashing;
-using Simpchat.Application.Common.Models.Orders;
+using Simpchat.Application.Interfaces.External.Cashing;
+using Simpchat.Application.Models.Orders;
 
 namespace Simpchat.Web.Controllers
 {

@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Simpchat.Application.Common.Interfaces.Services;
-using Simpchat.Application.Common.Models.ApiResults.Enums;
-using Simpchat.Application.Common.Models.Chats.Post.Message;
-using Simpchat.Application.Common.Models.Files;
-using Simpchat.Application.Common.Models.Pagination.Chat;
+using Simpchat.Application.Common.Pagination.Chat;
+using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Models.ApiResults.Enums;
+using Simpchat.Application.Models.Chats.Post.Message;
+using Simpchat.Application.Models.Files;
 using Simpchat.Domain.Entities;
 using System.Security.Claims;
 
@@ -16,10 +15,12 @@ namespace Simpchat.Web.Controllers
     public class ChatController : ControllerBase
     {
         private readonly IChatService _chatService;
+        private readonly IChatMessageService _chatMessageService;
 
-        public ChatController(IChatService chatService)
+        public ChatController(IChatService chatService, IChatMessageService chatMessageService)
         {
             _chatService = chatService;
+            _chatMessageService = chatMessageService;
         }
 
         [HttpPost("search")]
@@ -91,15 +92,15 @@ namespace Simpchat.Web.Controllers
         }
 
         [HttpPost("message")]
-        public async Task<IActionResult> SendMessageAsync([FromForm]MessagePostApiRequestDto messagePostDto, IFormFile? file)
+        public async Task<IActionResult> SendMessageAsync([FromForm]PostMessageApiRequestDto messagePostDto, IFormFile? file)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            FileUploadRequest? fileUploadRequest = null;
+            UploadFileRequest? fileUploadRequest = null;
 
             if (file != null)
             {
-                fileUploadRequest = new FileUploadRequest
+                fileUploadRequest = new UploadFileRequest
                 {
                     Content = file.OpenReadStream(),
                     FileName = file.FileName,
@@ -107,7 +108,7 @@ namespace Simpchat.Web.Controllers
                 };
             }
 
-            var messagePostRequest = new MessagePostDto
+            var messagePostRequest = new PostMessageDto
             {
                 ChatId = messagePostDto.ChatId,
                 Content = messagePostDto.Content,
@@ -116,7 +117,7 @@ namespace Simpchat.Web.Controllers
                 FileUploadRequest = fileUploadRequest
             };
 
-            var response = await _chatService.SendMessageAsync(messagePostRequest, userId);
+            var response = await _chatMessageService.SendMessageAsync(messagePostRequest, userId);
 
             return response.Status switch
             {
@@ -149,7 +150,7 @@ namespace Simpchat.Web.Controllers
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var newAvatarRequest = new FileUploadRequest
+            var newAvatarRequest = new UploadFileRequest
             {
                 Content = file.OpenReadStream(),
                 ContentType = file.ContentType,

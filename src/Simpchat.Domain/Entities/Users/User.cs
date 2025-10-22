@@ -1,4 +1,6 @@
-﻿using Simpchat.Domain.Entities.Chats;
+﻿using Simpchat.Domain.Entities.Channels;
+using Simpchat.Domain.Entities.Chats;
+using Simpchat.Domain.Entities.Groups;
 using Simpchat.Infrastructure.Identity;
 using SimpchatWeb.Services.Db.Contexts.Default.Enums;
 namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
@@ -20,8 +22,8 @@ namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
         public ICollection<Group> CreatedGroups { get; set; }
         public ICollection<Conversation> ConversationsAsUser1 { get; set; }
         public ICollection<Conversation> ConversationsAsUser2 { get; set; }
-        public ICollection<Channel> SubscribedChannels { get; set; }
-        public ICollection<Group> ParticipatedGroups { get; set; }
+        public ICollection<ChannelSubscriber> SubscribedChannels { get; set; }
+        public ICollection<GroupMember> ParticipatedGroups { get; set; }
         public ICollection<ChatUserPermission> ChatPermissions { get; set; }
         public ICollection<GlobalRoleUser> GlobalRoles { get; set; }
         public ICollection<Notification> Notifications { get; set; }

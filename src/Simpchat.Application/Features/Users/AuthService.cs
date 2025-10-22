@@ -1,8 +1,7 @@
-﻿using Simpchat.Application.Common.Interfaces.Auth;
-using Simpchat.Application.Common.Interfaces.Repositories;
-using Simpchat.Application.Common.Models.ApiResults;
-using Simpchat.Application.Common.Models.ApiResults.Enums;
-using Simpchat.Application.Common.Models.Users;
+﻿using Simpchat.Application.Interfaces.Auth;
+using Simpchat.Application.Interfaces.Repositories;
+using Simpchat.Application.Models.ApiResults;
+using Simpchat.Application.Models.ApiResults.Enums;
 using Simpchat.Infrastructure.Identity;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using SimpchatWeb.Services.Db.Contexts.Default.Enums;
