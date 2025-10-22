@@ -292,14 +292,9 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedById");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Channels");
                 });
@@ -421,14 +416,9 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedById");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Groups");
                 });
@@ -516,7 +506,7 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.HasOne("SimpchatWeb.Services.Db.Contexts.Default.Entities.User", "User")
-                        .WithMany()
+                        .WithMany("SubscribedChannels")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -606,7 +596,7 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.HasOne("SimpchatWeb.Services.Db.Contexts.Default.Entities.User", "User")
-                        .WithMany()
+                        .WithMany("ParticipatedGroups")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -667,10 +657,6 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                         .HasForeignKey("SimpchatWeb.Services.Db.Contexts.Default.Entities.Channel", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("SimpchatWeb.Services.Db.Contexts.Default.Entities.User", null)
-                        .WithMany("SubscribedChannels")
-                        .HasForeignKey("UserId");
 
                     b.Navigation("Chat");
 
@@ -744,10 +730,6 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                         .HasForeignKey("SimpchatWeb.Services.Db.Contexts.Default.Entities.Group", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("SimpchatWeb.Services.Db.Contexts.Default.Entities.User", null)
-                        .WithMany("ParticipatedGroups")
-                        .HasForeignKey("UserId");
 
                     b.Navigation("Chat");
 

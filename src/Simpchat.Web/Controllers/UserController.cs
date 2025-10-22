@@ -1,14 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Simpchat.Application.Common.Interfaces.Services;
-using Simpchat.Application.Common.Models.ApiResults;
-using Simpchat.Application.Common.Models.ApiResults.Enums;
-using Simpchat.Application.Common.Models.Files;
-using Simpchat.Application.Common.Models.Users;
-using Simpchat.Web.ViewModels.Users;
+using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Models.ApiResults.Enums;
+using Simpchat.Application.Models.Files;
+using Simpchat.Application.Models.Users.Update;
 using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
@@ -73,7 +69,7 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> UpdateAvatarAsync(IFormFile profilePic)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var fileUploadRequest = new FileUploadRequest
+            var fileUploadRequest = new UploadFileRequest
             {
                 FileName = profilePic.FileName,
                 ContentType = profilePic.ContentType,
@@ -92,7 +88,7 @@ namespace Simpchat.Web.Controllers
         }
 
         [HttpPut("update-info")]
-        public async Task<IActionResult> UpdateInfoAsync(UserUpdateInfoDto dto)
+        public async Task<IActionResult> UpdateInfoAsync(UpdateUserInfoDto dto)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var response = await _userService.UpdateInfoAsync(userId, dto);

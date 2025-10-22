@@ -1,10 +1,11 @@
-﻿using Simpchat.Application.Common.Interfaces.External.FileStorage;
-using Simpchat.Application.Common.Interfaces.Repositories;
-using Simpchat.Application.Common.Interfaces.Services;
-using Simpchat.Application.Common.Models.ApiResults;
-using Simpchat.Application.Common.Models.ApiResults.Enums;
-using Simpchat.Application.Common.Models.Chats.Post;
-using Simpchat.Application.Common.Models.Files;
+﻿using Simpchat.Application.Interfaces.External.FileStorage;
+using Simpchat.Application.Interfaces.Repositories;
+using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Models.ApiResults;
+using Simpchat.Application.Models.ApiResults.Enums;
+using Simpchat.Application.Models.Chats.Post;
+using Simpchat.Application.Models.Chats.Search;
+using Simpchat.Application.Models.Files;
 using Simpchat.Domain.Entities;
 using Simpchat.Domain.Entities.Channels;
 using Simpchat.Domain.Entities.Groups;
@@ -13,7 +14,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using Channel = SimpchatWeb.Services.Db.Contexts.Default.Entities.Channel;
 
 namespace Simpchat.Application.Features.Channels
 {
@@ -88,7 +91,7 @@ namespace Simpchat.Application.Features.Channels
             return ApiResult.SuccessResult();
         }
 
-        public async Task<ApiResult> CreateAsync(Guid userId, ChatPostDto chatPostDto, FileUploadRequest? avatar)
+        public async Task<ApiResult> CreateAsync(Guid userId, PostChatDto chatPostDto, UploadFileRequest? avatar)
         {
             var user = await _userRepository.GetByIdAsync(userId);
 
@@ -120,11 +123,86 @@ namespace Simpchat.Application.Features.Channels
                 }
             };
 
-            channel.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
+            if (avatar is not null)
+            {
+                if (avatar.FileName != null && avatar.Content != null && avatar.ContentType != null)
+                {
+                    channel.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
+                }
+            }
 
             await _channelRepository.CreateAsync(channel);
 
             return ApiResult.SuccessResult();
+        }
+
+        public async Task<ApiResult> DeleteSubscriberAsync(Guid userId, Guid channelId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            if (user is null)
+            {
+                return ApiResult.FailureResult($"User with ID[{userId}] not found");
+            }
+
+            var chat = await _chatRepository.GetByIdAsync(channelId);
+
+            if (chat is null)
+            {
+                return ApiResult.FailureResult($"Channel with ID[{channelId}] not found");
+            }
+
+            if (chat.Type != ChatType.Channel)
+            {
+                return ApiResult.FailureResult($"Can't delete from Channel TYPE[{chat.Type}]");
+            }
+
+            await _channelRepository.DeleteSubscriberAsync(user, chat.Channel);
+
+            return ApiResult.SuccessResult();
+        }
+
+        public async Task<ApiResult> DeleteAsync(Guid chatId)
+        {
+            var chat = await _chatRepository.GetByIdAsync(chatId);
+
+            if (chat is null)
+            {
+                return ApiResult.FailureResult($"Channel with ID[{chatId}] not found");
+            }
+
+            if (chat.Type != ChatType.Channel)
+            {
+                return ApiResult.FailureResult($"Can't delete from Channel TYPE[{chat.Type}]");
+            }
+
+            await _channelRepository.DeleteAsync(chat.Channel);
+
+            return ApiResult.SuccessResult();
+        }
+
+        public async Task<ApiResult> UpdateAsync(Guid chatId, PostChatDto updateChatDto)
+        {
+            var chat = await _chatRepository.GetByIdAsync(chatId);
+
+            if (chat is null)
+            {
+                return ApiResult.FailureResult($"Channel with ID[{chatId}] not found");
+            }
+
+            chat.Channel.Name = updateChatDto.Name;
+            chat.Channel.Description = updateChatDto.Description;
+
+            await _chatRepository.UpdateAsync(chat);
+
+            return ApiResult.SuccessResult();
+        }
+
+        public async Task<ApiResult<ICollection<SearchChatResponseDto>?>> SearchAsync(string searchTerm)
+        {
+            var response = await _channelRepository.SearchByNameAsync(searchTerm);
+
+            return ApiResult<ICollection<SearchChatResponseDto>>.SuccessResult(response);
         }
     }
 }

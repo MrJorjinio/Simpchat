@@ -2,7 +2,7 @@
 using Minio;
 using Minio.DataModel.Args;
 using Minio.Exceptions;
-using Simpchat.Application.Common.Interfaces.External.FileStorage;
+using Simpchat.Application.Interfaces.External.FileStorage;
 using Simpchat.Shared.Config;
 
 namespace Simpchat.Infrastructure.ExternalServices.FileStorage

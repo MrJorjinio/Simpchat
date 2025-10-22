@@ -1,12 +1,11 @@
-﻿using Simpchat.Application.Common.Interfaces.External.FileStorage;
-using Simpchat.Application.Common.Interfaces.Repositories;
-using Simpchat.Application.Common.Interfaces.Services;
-using Simpchat.Application.Common.Models.ApiResults;
-using Simpchat.Application.Common.Models.ApiResults.Enums;
-using Simpchat.Application.Common.Models.Chats.Post;
-using Simpchat.Application.Common.Models.Chats.Search;
-using Simpchat.Application.Common.Models.Files;
-using Simpchat.Application.Common.Models.Pagination;
+﻿using Simpchat.Application.Interfaces.External.FileStorage;
+using Simpchat.Application.Interfaces.Repositories;
+using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Models.ApiResults;
+using Simpchat.Application.Models.ApiResults.Enums;
+using Simpchat.Application.Models.Chats.Post;
+using Simpchat.Application.Models.Chats.Search;
+using Simpchat.Application.Models.Files;
 using Simpchat.Domain.Entities;
 using Simpchat.Domain.Entities.Groups;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
@@ -37,7 +36,7 @@ namespace Simpchat.Application.Features.Groups
             _chatRepository = chatRepository;
         }
 
-        public async Task<ApiResult> CreateAsync(Guid userId, ChatPostDto chatPostDto, FileUploadRequest? avatar)
+        public async Task<ApiResult> CreateAsync(Guid userId, PostChatDto chatPostDto, UploadFileRequest? avatar)
         {
             var user = await _userRepository.GetByIdAsync(userId);
 
@@ -135,6 +134,75 @@ namespace Simpchat.Application.Features.Groups
             await _groupRepository.AddUserPermissionAsync(permission, chat, addingUser, currentUser);
 
             return ApiResult.SuccessResult();
+        }
+
+        public async Task<ApiResult> DeleteMemberAsync(Guid userId, Guid channelId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            if (user is null)
+            {
+                return ApiResult.FailureResult($"User with ID[{userId}] not found");
+            }
+
+            var chat = await _chatRepository.GetByIdAsync(channelId);
+
+            if (chat is null)
+            {
+                return ApiResult.FailureResult($"Group with ID[{channelId}] not found");
+            }
+
+            if (chat.Type != ChatType.Group)
+            {
+                return ApiResult.FailureResult($"Can't delete from TYPE[{chat.Type}]");
+            }
+
+            await _groupRepository.DeleteMemberAsync(user, chat.Group);
+
+            return ApiResult.SuccessResult();
+        }
+
+        public async Task<ApiResult> DeleteAsync(Guid chatId)
+        {
+            var chat = await _chatRepository.GetByIdAsync(chatId);
+
+            if (chat is null)
+            {
+                return ApiResult.FailureResult($"Channel with ID[{chatId}] not found");
+            }
+
+            if (chat.Type != ChatType.Group)
+            {
+                return ApiResult.FailureResult($"Can't delete from TYPE[{chat.Type}]");
+            }
+
+            await _groupRepository.DeleteAsync(chat.Group);
+
+            return ApiResult.SuccessResult();
+        }
+
+        public async Task<ApiResult> UpdateAsync(Guid chatId, PostChatDto updateChatDto)
+        {
+            var chat = await _chatRepository.GetByIdAsync(chatId);
+
+            if (chat is null)
+            {
+                return ApiResult.FailureResult($"Channel with ID[{chatId}] not found");
+            }
+
+            chat.Group.Name = updateChatDto.Name;
+            chat.Group.Description = updateChatDto.Description;
+
+            await _chatRepository.UpdateAsync(chat);
+
+            return ApiResult.SuccessResult();
+        }
+
+        public async Task<ApiResult<ICollection<SearchChatResponseDto>?>> SearchAsync(string searchTerm)
+        {
+            var response = await _groupRepository.SearchByNameAsync(searchTerm);
+
+            return ApiResult<ICollection<SearchChatResponseDto>>.SuccessResult(response);
         }
     }
 }

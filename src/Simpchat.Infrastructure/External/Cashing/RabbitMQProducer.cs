@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Connections;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
-using Simpchat.Application.Common.Interfaces.External.Cashing;
-using Simpchat.Application.Common.Models.Orders;
+using Simpchat.Application.Interfaces.External.Cashing;
+using Simpchat.Application.Models.Orders;
 using System.Text;
 using System.Text.Json;
 using IModel = RabbitMQ.Client.IModel;

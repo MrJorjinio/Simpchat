@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
-using Simpchat.Application.Common.Interfaces.External.FileStorage;
-using Simpchat.Application.Common.Interfaces.Repositories;
-using Simpchat.Application.Common.Interfaces.Services;
-using Simpchat.Application.Common.Models.ApiResults;
-using Simpchat.Application.Common.Models.ApiResults.Enums;
-using Simpchat.Application.Common.Models.Chats.Search;
-using Simpchat.Application.Common.Models.Files;
-using Simpchat.Application.Common.Models.Users;
+using Simpchat.Application.Interfaces.External.FileStorage;
+using Simpchat.Application.Interfaces.Repositories;
+using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Models.ApiResults;
+using Simpchat.Application.Models.ApiResults.Enums;
+using Simpchat.Application.Models.Chats.Search;
+using Simpchat.Application.Models.Files;
+using Simpchat.Application.Models.Users.GetById;
+using Simpchat.Application.Models.Users.Response;
+using Simpchat.Application.Models.Users.Update;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
@@ -28,19 +30,19 @@ namespace Simpchat.Application.Features.Users.Services
             _fileStorageService = fileStorageService;
         }
 
-        public async Task<ApiResult<UserGetByIdDto>> GetByIdAsync(Guid id, Guid currentUserId)
+        public async Task<ApiResult<GetByIdUserDto>> GetByIdAsync(Guid id, Guid currentUserId)
         {
             var user = await _userRepository.GetByIdAsync(id, currentUserId);
 
             if (user is null)
             {
-                return ApiResult<UserGetByIdDto>.FailureResult($"User with id[{id}] not found", ResultStatus.NotFound);
+                return ApiResult<GetByIdUserDto>.FailureResult($"User with id[{id}] not found", ResultStatus.NotFound);
             }
 
-            return ApiResult<UserGetByIdDto>.SuccessResult(user);
+            return ApiResult<GetByIdUserDto>.SuccessResult(user);
         }
 
-        public async Task<ApiResult<ICollection<ChatSearchResponseDto>>?> SearchByUsernameAsync(string searchTerm, Guid currentUserId)
+        public async Task<ApiResult<ICollection<SearchChatResponseDto>>?> SearchByUsernameAsync(string searchTerm, Guid currentUserId)
         {
             if (await _userRepository.GetByIdAsync(currentUserId) is null)
             {
@@ -48,7 +50,7 @@ namespace Simpchat.Application.Features.Users.Services
             }
 
             var users = await _userRepository.SearchByUsernameAsync(searchTerm, currentUserId);
-            return ApiResult<ICollection<ChatSearchResponseDto>>.SuccessResult(users);
+            return ApiResult<ICollection<SearchChatResponseDto>>.SuccessResult(users);
         }
 
         public async Task<ApiResult<UserResponseDto>> SetLastSeenAsync(Guid userId)
@@ -65,7 +67,7 @@ namespace Simpchat.Application.Features.Users.Services
             return ApiResult<UserResponseDto>.SuccessResult(UserResponseDto.ConvertFromDomainObject(user));
         }
 
-        public async Task<ApiResult> UpdateAvatarAsync(Guid currentUserId, FileUploadRequest fileUploadRequest)
+        public async Task<ApiResult> UpdateAvatarAsync(Guid currentUserId, UploadFileRequest fileUploadRequest)
         {
             var user = await _userRepository.GetByIdAsync(currentUserId);
 
@@ -87,7 +89,7 @@ namespace Simpchat.Application.Features.Users.Services
             return ApiResult.SuccessResult();
         }
 
-        public async Task<ApiResult> UpdateInfoAsync(Guid userId, UserUpdateInfoDto dto)
+        public async Task<ApiResult> UpdateInfoAsync(Guid userId, UpdateUserInfoDto dto)
         {
             var user = await _userRepository.GetByIdAsync(userId);
 

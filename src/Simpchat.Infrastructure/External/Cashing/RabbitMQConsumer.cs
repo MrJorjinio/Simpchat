@@ -4,15 +4,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using Simpchat.Application.Common.Models.Orders;
+using Simpchat.Application.Models.Orders;
 using Simpchat.Domain.Entities.Orders;
 using Simpchat.Infrastructure.Persistence;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure.External.Cashing
 {

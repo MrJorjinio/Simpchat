@@ -1,12 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Simpchat.Application.Common.Interfaces.External.FileStorage;
-using Simpchat.Application.Common.Interfaces.Repositories;
-using Simpchat.Application.Common.Models.Chats.Get.ById;
-using Simpchat.Application.Common.Models.Chats.Get.Profile;
-using Simpchat.Application.Common.Models.Chats.Get.UserChat;
-using Simpchat.Application.Common.Models.Chats.Post.Message;
-using Simpchat.Application.Common.Models.Chats.Search;
-using Simpchat.Application.Common.Models.Users;
+using Simpchat.Application.Interfaces.External.FileStorage;
+using Simpchat.Application.Interfaces.Repositories;
+using Simpchat.Application.Models.Chats.Get.ById;
+using Simpchat.Application.Models.Chats.Get.Profile;
+using Simpchat.Application.Models.Chats.Get.UserChat;
+using Simpchat.Application.Models.Chats.Post.Message;
+using Simpchat.Application.Models.Chats.Search;
+using Simpchat.Application.Models.Users.Response;
 using Simpchat.Domain.Entities;
 using Simpchat.Domain.Entities.Chats;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
@@ -26,8 +26,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         private readonly IGroupRepository _groupRepository;
         private readonly IChannelRepository _channelRepository;
         private readonly SimpchatDbContext _dbContext;
-        private readonly IFileStorageService _fileStorageService;
-        private const string BucketName = "chats-files";
+        
 
         public ChatRepository(
             IUserRepository userRepository,
@@ -42,131 +41,10 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             _userRepository = userRepository;
             _groupRepository = groupRepository;
             _channelRepository = channelRepository;
-            _fileStorageService = fileStorageService;
             _dbContext = dbContext;
         }
 
-        public async Task<Message> AddMessageAsync(MessagePostDto message, User currentUser)
-        {
-            string? fileUrl = null;
-            if (message.FileUploadRequest?.Content != null &&
-                message.FileUploadRequest.FileName != null &&
-                message.FileUploadRequest.ContentType != null)
-            {
-                fileUrl = await _fileStorageService.UploadFileAsync(
-                    BucketName,
-                    message.FileUploadRequest.FileName,
-                    message.FileUploadRequest.Content,
-                    message.FileUploadRequest.ContentType
-                );
-            }
-
-            Guid chatId;
-            if (message.ChatId != null)
-            {
-                chatId = message.ChatId.Value;
-            }
-            else
-            {
-                var receiverId = message.ReceiverId.Value;
-
-                var existingConversation = await _dbContext.Conversations
-                    .Include(c => c.User1)
-                    .Include(c => c.User2)
-                    .FirstOrDefaultAsync(c =>
-                        (c.UserId1 == currentUser.Id && c.UserId2 == receiverId)
-                        ||
-                        (c.UserId2 == currentUser.Id && c.UserId1 == receiverId)
-                    );
-
-                if (existingConversation != null)
-                {
-                    chatId = existingConversation.Id;
-                }
-                else
-                {
-                    var newChat = new Chat
-                    {
-                        Id = Guid.NewGuid(),
-                        Type = ChatType.Conversation,
-                        CreatedAt = DateTime.UtcNow,
-                    };
-
-                    await _dbContext.SaveChangesAsync();
-
-                    var newConversation = new Conversation
-                    {
-                        Id = newChat.Id,
-                        UserId1 = currentUser.Id,
-                        UserId2 = receiverId
-                    };
-
-                    var newMessage = new Message
-                    {
-                        ChatId = newChat.Id,
-                        SenderId = currentUser.Id,
-                        Content = message.Content,
-                        FileUrl = fileUrl,
-                        ReplyId = message.ReplyId,
-                        SentAt = DateTime.UtcNow
-                    };
-
-                    _dbContext.Chats.Add(newChat);
-                    _dbContext.Conversations.Add(newConversation);
-                    _dbContext.Messages.Add(newMessage);
-
-                    chatId = newChat.Id;
-                    message.ChatId = newConversation.Id;
-                }
-            }
-
-            var messageEntity = new Message
-            {
-                ChatId = chatId,
-                SenderId = currentUser.Id,
-                Content = message.Content,
-                FileUrl = fileUrl,
-                ReplyId = message.ReplyId,
-                SentAt = DateTime.UtcNow
-            };
-
-            if (message.ChatId != null)
-            {
-                _dbContext.Messages.Add(messageEntity);
-                await _dbContext.SaveChangesAsync();
-
-                var chat = await GetByIdAsync(chatId);
-
-                if (chat.Type == ChatType.Conversation)
-                {
-                    _dbContext.Notifications.Add(new Notification { MessageId = messageEntity.Id, ReceiverId = chat.Conversation.UserId1 == currentUser.Id ? chat.Conversation.UserId2 : chat.Conversation.UserId1 });
-                }
-                else if (chat.Type == ChatType.Group)
-                {
-                    foreach (var member in chat.Group.Members.Where(m => m.UserId != currentUser.Id))
-                    {
-                        _dbContext.Add(new Notification { MessageId = messageEntity.Id, ReceiverId = member.UserId });
-                    }
-                }
-                else
-                {
-                    foreach (var subscriber in chat.Channel.Subscribers.Where(s => s.UserId != currentUser.Id))
-                    {
-                        _dbContext.Add(new Notification { MessageId = messageEntity.Id, ReceiverId = subscriber.UserId });
-                    }
-                }
-
-                _dbContext.SaveChangesAsync();
-                return messageEntity;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-
-        public async Task<ChatGetByIdDto> GetByIdAsync(Guid chatId, Guid currentUserId)
+        public async Task<GetByIdChatDto> GetByIdAsync(Guid chatId, Guid currentUserId)
         {
             var chat = await _dbContext.Chats
                 .Include(c => c.Channel)
@@ -267,7 +145,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             var messagesRaw = await messagesQuery.ToListAsync();
             messagesRaw.Reverse();
 
-            var messagesDto = messagesRaw.Select(m => new ChatGetByIdMessageDto
+            var messagesDto = messagesRaw.Select(m => new GetByIdMessageDto
             {
                 MessageId = m.Id,
                 Content = m.Content,
@@ -280,7 +158,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                 IsSeen = messagesRaw.Any(mr => mr.Id == m.Id && mr.IsSeen == true)
             }).ToList();
 
-            var dto = new ChatGetByIdDto
+            var dto = new GetByIdChatDto
             {
                 Id = chat.Id,
                 Name = name ?? string.Empty,
@@ -295,7 +173,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             return dto;
         }
 
-        public async Task<ChatGetByIdProfile> GetProfileByIdAsync(Guid chatId, Guid userId)
+        public async Task<GetByIdChatProfile> GetProfileByIdAsync(Guid chatId, Guid userId)
         {
             var chat = await _dbContext.Chats
                 .Include(c => c.Channel)
@@ -405,7 +283,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                 participantsCount = subscribers.Count(p => p.IsOnline == true);
             }
 
-            return new ChatGetByIdProfile
+            return new GetByIdChatProfile
             {
                 ChatId = chatId,
                 Name = name,
@@ -430,7 +308,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             return result;
         }
 
-        public async Task<ICollection<ChatSearchResponseDto>?> SearchByNameAsync(string searchTerm, Guid currentUserId)
+        public async Task<ICollection<SearchChatResponseDto>?> SearchByNameAsync(string searchTerm, Guid currentUserId)
         {
             var users = await _userRepository.SearchByUsernameAsync(searchTerm, currentUserId);
             var groups = await _groupRepository.SearchByNameAsync(searchTerm);

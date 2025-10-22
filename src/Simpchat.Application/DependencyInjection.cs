@@ -1,12 +1,17 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using FluentValidation;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Simpchat.Application.Common.Interfaces.Auth;
-using Simpchat.Application.Common.Interfaces.Services;
 using Simpchat.Application.Features.Channels;
 using Simpchat.Application.Features.Chats;
+using Simpchat.Application.Features.Conversations;
 using Simpchat.Application.Features.Groups;
+using Simpchat.Application.Features.Notifications;
 using Simpchat.Application.Features.Users;
 using Simpchat.Application.Features.Users.Services;
+using Simpchat.Application.Interfaces.Auth;
+using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Models.Users.Post;
+using Simpchat.Application.Validators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +24,9 @@ namespace Simpchat.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
-            services.AddServices();
+            services
+                .AddServices()
+                .AddValidation();
 
             return services;
         }
@@ -31,6 +38,16 @@ namespace Simpchat.Application
             services.AddScoped<IChatService, ChatService>();
             services.AddScoped<IGroupService, GroupService>();
             services.AddScoped<IChannelService, ChannelService>();
+            services.AddScoped<IChatMessageService, ChatMessageService>();
+            services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<IConversationService, ConversationService>();
+
+            return services;
+        }
+
+        private static IServiceCollection AddValidation(this IServiceCollection services)
+        {
+            services.AddTransient<IValidator<RegisterUserDto>, RegisterUserValidator>();
 
             return services;
         }
