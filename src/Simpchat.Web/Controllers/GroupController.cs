@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Interfaces.Services.Old;
 using Simpchat.Application.Models.ApiResults.Enums;
 using Simpchat.Application.Models.Chats.Post;
 using Simpchat.Application.Models.Files;
