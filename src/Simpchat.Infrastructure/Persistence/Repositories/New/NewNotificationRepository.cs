@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Simpchat.Application.Common.Repository;
+using Simpchat.Application.Interfaces.Repositories.New;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories.New
 {
-    public class NewNotificationRepository : IBaseRepository<Notification>
+    public class NewNotificationRepository : INewNotificationRepository
     {
         private readonly SimpchatDbContext _dbContext;
 
@@ -39,6 +40,14 @@ namespace Simpchat.Infrastructure.Persistence.Repositories.New
                 .Include(n => n.Message)
                     .ThenInclude(m => m.Sender)
                 .FirstOrDefaultAsync(n => n.Id == id);
+        }
+
+        public Task<int> GetUserChatNotificationsCountAsync(Guid userId, Guid chatId)
+        {
+            return _dbContext.Notifications
+                .Include(n => n.Message)
+                .Where(n => n.ReceiverId == userId && n.Message.ChatId == chatId && n.IsSeen == false)
+                .CountAsync();
         }
 
         public async Task UpdateAsync(Notification entity)

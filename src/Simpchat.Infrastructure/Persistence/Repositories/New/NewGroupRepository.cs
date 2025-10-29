@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Simpchat.Application.Common.Repository;
+using Simpchat.Application.Interfaces.Repositories.New;
+using Simpchat.Domain.Entities.Groups;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
@@ -9,13 +11,25 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories.New
 {
-    public class NewGroupRepository : IBaseRepository<Group>, ISearchableRepository<Group>
+    public class NewGroupRepository : INewGroupRepository
     {
         private readonly SimpchatDbContext _dbContext;
 
         public NewGroupRepository(SimpchatDbContext dbContext)
         {
             _dbContext = dbContext;
+        }
+
+        public async Task AddMemberAsync(Guid userId, Guid groupId)
+        {
+            var groupMember = new GroupMember
+            {
+                UserId = userId,
+                GroupId = groupId
+            };
+
+            await _dbContext.GroupsMembers.AddAsync(groupMember);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<Guid> CreateAsync(Group entity)
@@ -32,6 +46,12 @@ namespace Simpchat.Infrastructure.Persistence.Repositories.New
             await _dbContext.SaveChangesAsync();
         }
 
+        public async Task DeleteMemberAsync(GroupMember groupMember)
+        {
+            _dbContext.GroupsMembers.Remove(groupMember);
+            await _dbContext.SaveChangesAsync();
+        }
+
         public async Task<List<Group>?> GetAllAsync()
         {
             return await _dbContext.Groups.ToListAsync();
@@ -44,6 +64,15 @@ namespace Simpchat.Infrastructure.Persistence.Repositories.New
                     .ThenInclude(m => m.User)
                 .Include(g => g.Owner)
                 .FirstOrDefaultAsync(g => g.Id == id);
+        }
+
+        public async Task<List<Group>> GetUserParticipatedGroupsAsync(Guid userId)
+        {
+            return await _dbContext.GroupsMembers
+                .Include(cs => cs.Group)
+                .Where(cs => cs.UserId == userId)
+                .Select(cs => cs.Group)
+                .ToListAsync();
         }
 
         public async Task<List<Group>?> SearchAsync(string term)

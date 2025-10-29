@@ -1,8 +1,6 @@
 ﻿using Simpchat.Application.Interfaces.External.FileStorage;
 using Simpchat.Application.Interfaces.Repositories.New;
-using Simpchat.Application.Interfaces.Repositories.Old;
 using Simpchat.Application.Interfaces.Services.New;
-using Simpchat.Application.Interfaces.Services.Old;
 using Simpchat.Application.Models.ApiResults;
 using Simpchat.Application.Models.ApiResults.Enums;
 using Simpchat.Application.Models.Chats.Get.UserChat;
@@ -10,7 +8,7 @@ using Simpchat.Application.Models.Chats.Post;
 using Simpchat.Application.Models.Chats.Search;
 using Simpchat.Application.Models.Files;
 using Simpchat.Domain.Entities;
-using Simpchat.Domain.Entities.Channels;
+using Simpchat.Domain.Entities.Groups;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
@@ -20,18 +18,18 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Features.New
 {
-    public class NewChannelService : INewChannelService
+    public class NewGroupService : INewGroupService
     {
-        private readonly INewChannelRepository _repo;
+        private readonly INewGroupRepository _repo;
         private readonly INewUserRepository _userRepo;
         private readonly INewChatRepository _chatRepo;
         private readonly IFileStorageService _fileStorageService;
         private readonly INewNotificationRepository _notificationRepo;
         private readonly INewMessageRepository _messageRepo;
-        private const string BucketName = "channels-avatars";
+        private const string BucketName = "groups-avatars";
 
-        public NewChannelService(
-            INewChannelRepository repo,
+        public NewGroupService(
+            INewGroupRepository repo,
             INewUserRepository userRepo,
             INewChatRepository chatRepo,
             IFileStorageService fileStorageService,
@@ -46,24 +44,24 @@ namespace Simpchat.Application.Features.New
             _messageRepo = messageRepository;
         }
 
-        public async Task<ApiResult> AddSubscriberAsync(Guid channelId, Guid userId)
+        public async Task<ApiResult> AddMemberAsync(Guid groupId, Guid userId)
         {
-            var chat = await _repo.GetByIdAsync(channelId);
+            var group = await _repo.GetByIdAsync(groupId);
 
-            if (chat is null)
-                return ApiResult.FailureResult($"Chat with ID[{channelId}] not found", ResultStatus.NotFound);
+            if (group is null)
+                return ApiResult.FailureResult($"Group with ID[{groupId}] not found", ResultStatus.NotFound);
 
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
-                return ApiResult.FailureResult($"Adding User with ID[{userId} not found", ResultStatus.NotFound);
+                return ApiResult.FailureResult($"Adding User with ID[{userId}] not found", ResultStatus.NotFound);
 
-            await _repo.AddSubscriberAsync(userId, channelId);
+            await _repo.AddMemberAsync(userId, groupId);
 
             return ApiResult.SuccessResult();
         }
 
-        public async Task<ApiResult> CreateAsync(Guid userId, PostChatDto chatPostDto, UploadFileRequest? avatar)
+        public async Task<ApiResult> CreateAsync(Guid userId, PostChatDto groupPostDto, UploadFileRequest? avatar)
         {
             var user = await _userRepo.GetByIdAsync(userId);
 
@@ -72,26 +70,26 @@ namespace Simpchat.Application.Features.New
                 return ApiResult.FailureResult($"User with ID[{userId}] not found", ResultStatus.NotFound);
             }
 
-            if (string.IsNullOrWhiteSpace(chatPostDto?.Name))
-                return ApiResult.FailureResult("Channel name is required", ResultStatus.Failure);
+            if (string.IsNullOrWhiteSpace(groupPostDto?.Name))
+                return ApiResult.FailureResult("Group name is required", ResultStatus.Failure);
 
             var chat = new Chat
             {
-                Type = ChatType.Channel,
-                PrivacyType = ChatPrivacyType.Public
+                Type = ChatType.Group,
+                PrivacyType = ChatPrivacyType.Private
             };
 
             var chatId = await _chatRepo.CreateAsync(chat);
 
-            var channel = new Channel
+            var group = new Group
             {
                 Id = chatId,
                 CreatedById = user.Id,
-                Description = chatPostDto.Description,
-                Name = chatPostDto.Name,
-                Subscribers = new List<ChannelSubscriber>
+                Description = groupPostDto.Description,
+                Name = groupPostDto.Name,
+                Members = new List<GroupMember>
                 {
-                    new ChannelSubscriber{ UserId = user.Id }
+                    new GroupMember{ UserId = user.Id }
                 }
             };
 
@@ -99,30 +97,30 @@ namespace Simpchat.Application.Features.New
             {
                 if (avatar.FileName != null && avatar.Content != null && avatar.ContentType != null)
                 {
-                    channel.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
+                    group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
                 }
             }
 
-            await _repo.CreateAsync(channel);
+            await _repo.CreateAsync(group);
 
             return ApiResult.SuccessResult();
         }
 
-        public async Task<ApiResult> DeleteAsync(Guid channelId)
+        public async Task<ApiResult> DeleteAsync(Guid groupId)
         {
-            var channel = await _repo.GetByIdAsync(channelId);
+            var group = await _repo.GetByIdAsync(groupId);
 
-            if (channel is null)
+            if (group is null)
             {
-                return ApiResult.FailureResult($"Channel with ID[{channelId}] not found");
+                return ApiResult.FailureResult($"Group with ID[{groupId}] not found");
             }
 
-            await _repo.DeleteAsync(channel);
+            await _repo.DeleteAsync(group);
 
             return ApiResult.SuccessResult();
         }
 
-        public async Task<ApiResult> DeleteSubscriberAsync(Guid userId, Guid channelId)
+        public async Task<ApiResult> DeleteMemberAsync(Guid userId, Guid groupId)
         {
             var user = await _userRepo.GetByIdAsync(userId);
 
@@ -131,25 +129,25 @@ namespace Simpchat.Application.Features.New
                 return ApiResult.FailureResult($"User with ID[{userId}] not found");
             }
 
-            var chat = await _chatRepo.GetByIdAsync(channelId);
+            var chat = await _chatRepo.GetByIdAsync(groupId);
 
             if (chat is null)
             {
-                return ApiResult.FailureResult($"Channel with ID[{channelId}] not found");
+                return ApiResult.FailureResult($"Group with ID[{groupId}] not found");
             }
 
-            if (chat.Type != ChatType.Channel)
+            if (chat.Type != ChatType.Group)
             {
-                return ApiResult.FailureResult($"Can't delete from Chat TYPE[{chat.Type}]");
+                return ApiResult.FailureResult($"Can't delete from Group TYPE[{chat.Type}]");
             }
 
-            var channelSubscriber = new ChannelSubscriber
+            var groupMember = new GroupMember
             {
-                ChannelId = channelId,
+                GroupId = groupId,
                 UserId = userId
             };
 
-            await _repo.DeleteSubscriberAsync(channelSubscriber);
+            await _repo.DeleteMemberAsync(groupMember);
 
             return ApiResult.SuccessResult();
         }
@@ -164,26 +162,26 @@ namespace Simpchat.Application.Features.New
                     ChatId = r.Id,
                     AvatarUrl = r.AvatarUrl,
                     DisplayName = r.Name,
-                    ChatType = ChatType.Channel
+                    ChatType = ChatType.Group
                 })
                 .ToList();
 
             return ApiResult<List<SearchChatResponseDto>>.SuccessResult(modeledResults);
         }
 
-        public async Task<ApiResult> UpdateAsync(Guid channelId, PostChatDto updateChatDto)
+        public async Task<ApiResult> UpdateAsync(Guid groupId, PostChatDto updateChatDto)
         {
-            var channel = await _repo.GetByIdAsync(channelId);
+            var group = await _repo.GetByIdAsync(groupId);
 
-            if (channel is null)
+            if (group is null)
             {
-                return ApiResult.FailureResult($"Channel with ID[{channelId}] not found");
+                return ApiResult.FailureResult($"Group with ID[{groupId}] not found");
             }
 
-            channel.Name = updateChatDto.Name;
-            channel.Description = updateChatDto.Description;
+            group.Name = updateChatDto.Name;
+            group.Description = updateChatDto.Description;
 
-            await _repo.UpdateAsync(channel);
+            await _repo.UpdateAsync(group);
 
             return ApiResult.SuccessResult();
         }
@@ -197,20 +195,20 @@ namespace Simpchat.Application.Features.New
                 return ApiResult<List<UserChatResponseDto>>.FailureResult($"User with ID[{userId}] not found");
             }
 
-            var channels = await _repo.GetUserSubscribedChannelsAsync(userId);
+            var groups = await _repo.GetUserParticipatedGroupsAsync(userId);
 
-            var modeledChannels = new List<UserChatResponseDto>();
+            var modeledGroups = new List<UserChatResponseDto>();
 
-            foreach (var channel in channels)
+            foreach (var group in groups)
             {
-                var notificationsCount = await _notificationRepo.GetUserChatNotificationsCountAsync(userId, channel.Id);
-                var lastMessage = await _messageRepo.GetLastMessageAsync(channel.Id);
-                var lastUserSendedMessage = await _messageRepo.GetUserLastSendedMessageAsync(userId, channel.Id);
+                var notificationsCount = await _notificationRepo.GetUserChatNotificationsCountAsync(userId, group.Id);
+                var lastMessage = await _messageRepo.GetLastMessageAsync(group.Id);
+                var lastUserSendedMessage = await _messageRepo.GetUserLastSendedMessageAsync(userId, group.Id);
 
-                var modeledChannel = new UserChatResponseDto
+                var modeledGroup = new UserChatResponseDto
                 {
-                    Id = channel.Id,
-                    AvatarUrl = channel.AvatarUrl,
+                    Id = group.Id,
+                    AvatarUrl = group.AvatarUrl,
                     LastMessage = new LastMessageResponseDto
                     {
                         Content = lastMessage.Content,
@@ -218,16 +216,16 @@ namespace Simpchat.Application.Features.New
                         SenderUsername = lastMessage.Sender.Username,
                         SentAt = lastMessage.SentAt
                     },
-                    Name = channel.Name,
+                    Name = group.Name,
                     NotificationsCount = notificationsCount,
                     Type = ChatType.Channel,
                     UserLastMessage = lastUserSendedMessage?.SentAt
                 };
 
-                modeledChannels.Add(modeledChannel);
+                modeledGroups.Add(modeledGroup);
             }
 
-            return ApiResult<List<UserChatResponseDto>>.SuccessResult(modeledChannels);
+            return ApiResult<List<UserChatResponseDto>>.SuccessResult(modeledGroups);
         }
     }
 }

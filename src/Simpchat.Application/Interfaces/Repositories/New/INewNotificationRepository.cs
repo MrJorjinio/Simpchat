@@ -1,5 +1,4 @@
 ﻿using Simpchat.Application.Common.Repository;
-using Simpchat.Domain.Entities.Chats;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
@@ -9,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Interfaces.Repositories.New
 {
-    public interface INewChatRepository : IBaseRepository<Chat>
+    public interface INewNotificationRepository : IBaseRepository<Notification>
     {
-        Task AddUserPermissionAsync(ChatUserPermission chatUserPermission);
+        Task<int> GetUserChatNotificationsCountAsync(Guid userId, Guid chatId);
     }
 }
