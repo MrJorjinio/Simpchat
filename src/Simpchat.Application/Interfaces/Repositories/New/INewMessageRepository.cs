@@ -1,6 +1,5 @@
 ﻿using Simpchat.Application.Common.Repository;
 using Simpchat.Domain.Entities.Chats;
-using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +8,9 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Interfaces.Repositories.New
 {
-    public interface INewChatRepository : IBaseRepository<Chat>
+    public interface INewMessageRepository : IBaseRepository<Message>
     {
-        Task AddUserPermissionAsync(ChatUserPermission chatUserPermission);
+        Task<Message?> GetLastMessageAsync(Guid chatId);
+        Task<Message?> GetUserLastSendedMessageAsync(Guid userId, Guid chatId);
     }
 }

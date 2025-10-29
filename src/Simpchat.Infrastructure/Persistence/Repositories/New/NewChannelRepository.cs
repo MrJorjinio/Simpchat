@@ -35,6 +35,12 @@ namespace Simpchat.Infrastructure.Persistence.Repositories.New
             await _dbContext.SaveChangesAsync();
         }
 
+        public async Task DeleteSubscriberAsync(ChannelSubscriber channelSubscriber)
+        {
+            _dbContext.ChannelsSubscribers.Remove(channelSubscriber);
+            await _dbContext.SaveChangesAsync();
+        }
+
         public async Task<List<Channel>?> GetAllAsync()
         {
             return await _dbContext.Channels.ToListAsync();
@@ -47,6 +53,15 @@ namespace Simpchat.Infrastructure.Persistence.Repositories.New
                     .ThenInclude(s => s.User)
                 .Include(c => c.Owner)
                 .FirstOrDefaultAsync(c => c.Id == id);
+        }
+
+        public async Task<List<Channel>> GetUserSubscribedChannelsAsync(Guid userId)
+        {
+            return await _dbContext.ChannelsSubscribers
+                .Include(cs => cs.Channel)
+                .Where(cs => cs.UserId == userId)
+                .Select(cs => cs.Channel)
+                .ToListAsync();
         }
 
         public async Task<List<Channel>?> SearchAsync(string term)

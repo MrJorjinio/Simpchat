@@ -1,10 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Simpchat.Application.Common.Repository;
+using Simpchat.Application.Interfaces.Repositories.New;
 using Simpchat.Domain.Entities.Chats;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories.New
 {
-    public class NewMessageRepository : IBaseRepository<Message>
+    public class NewMessageRepository : INewMessageRepository
     {
         private readonly SimpchatDbContext _dbContext;
 
@@ -38,6 +39,23 @@ namespace Simpchat.Infrastructure.Persistence.Repositories.New
             return await _dbContext.Messages
                 .Include(m => m.Sender)
                 .FirstOrDefaultAsync(m => m.Id == id);
+        }
+
+        public async Task<Message?> GetLastMessageAsync(Guid chatId)
+        {
+            return await _dbContext.Messages
+                .Include(m => m.Sender)
+                .Where(m => m.ChatId == chatId)
+                .OrderByDescending(m => m.SentAt)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<Message?> GetUserLastSendedMessageAsync(Guid userId, Guid chatId)
+        {
+            return await _dbContext.Messages
+                .Where(m => m.ChatId == chatId && m.SenderId == userId)
+                .OrderByDescending(m => (DateTimeOffset?)m.SentAt ?? DateTimeOffset.MinValue)
+                .FirstOrDefaultAsync();
         }
 
         public async Task UpdateAsync(Message entity)

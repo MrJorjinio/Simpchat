@@ -1,5 +1,6 @@
 ﻿using Simpchat.Application.Common.Repository;
 using Simpchat.Domain.Entities.Channels;
+using Simpchat.Domain.Entities.Groups;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
@@ -9,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Interfaces.Repositories.New
 {
-    public interface INewChannelRepository : IBaseRepository<Channel>, ISearchableRepository<Channel>
+    public interface INewGroupRepository : IBaseRepository<Group>, ISearchableRepository<Group>
     {
-        Task AddSubscriberAsync(Guid userId, Guid channelId);
-        Task DeleteSubscriberAsync(ChannelSubscriber channelSubscriber);
-        Task<List<Channel>> GetUserSubscribedChannelsAsync(Guid userId);
+        Task AddMemberAsync(Guid userId, Guid groupId);
+        Task DeleteMemberAsync(GroupMember groupMember);
+        Task<List<Group>> GetUserParticipatedGroupsAsync(Guid userId);
     }
 }
