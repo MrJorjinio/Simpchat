@@ -51,6 +51,8 @@ namespace Simpchat.Infrastructure.Persistence.Repositories.New
         {
             _dbContext.Chats.Update(entity);
             await _dbContext.SaveChangesAsync();
+            //umid trans 
+            //
         }
     }
 }

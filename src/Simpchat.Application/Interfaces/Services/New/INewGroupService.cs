@@ -14,7 +14,7 @@ namespace Simpchat.Application.Interfaces.Services.New
     internal interface INewGroupService
     {
         Task<ApiResult> AddMemberAsync(Guid groupId, Guid userId);
-        Task<ApiResult> CreateAsync(Guid userId, PostChatDto chatPostDto, UploadFileRequest? avatar);
+        Task<ApiResult> CreateAsync(PostChatDto chatPostDto);
         Task<ApiResult> DeleteAsync(Guid groupId);
         Task<ApiResult> DeleteMemberAsync(Guid userId, Guid groupId);
         Task<ApiResult<List<SearchChatResponseDto>?>> SearchAsync(string searchTerm);

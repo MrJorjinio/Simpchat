@@ -5,13 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simpchat.Application.Models.Chats.Post
+namespace Simpchat.Application.Models.Chats
 {
-    public class PostChatDto
+    public class PutChatDto
     {
         public string Name { get; set; }
         public string? Description { get; set; }
-        public Guid OwnerId { get; set; }
         public UploadFileRequest? Avatar { get; set; }
     }
 }

@@ -61,13 +61,13 @@ namespace Simpchat.Application.Features.New
             return ApiResult.SuccessResult();
         }
 
-        public async Task<ApiResult> CreateAsync(Guid userId, PostChatDto groupPostDto, UploadFileRequest? avatar)
+        public async Task<ApiResult> CreateAsync(PostChatDto groupPostDto)
         {
-            var user = await _userRepo.GetByIdAsync(userId);
+            var user = await _userRepo.GetByIdAsync(groupPostDto.OwnerId);
 
             if (user is null)
             {
-                return ApiResult.FailureResult($"User with ID[{userId}] not found", ResultStatus.NotFound);
+                return ApiResult.FailureResult($"User with ID[{groupPostDto.OwnerId}] not found", ResultStatus.NotFound);
             }
 
             if (string.IsNullOrWhiteSpace(groupPostDto?.Name))
@@ -93,11 +93,11 @@ namespace Simpchat.Application.Features.New
                 }
             };
 
-            if (avatar is not null)
+            if (groupPostDto.Avatar is not null)
             {
-                if (avatar.FileName != null && avatar.Content != null && avatar.ContentType != null)
+                if (groupPostDto.Avatar.FileName != null && groupPostDto.Avatar.Content != null && groupPostDto.Avatar.ContentType != null)
                 {
-                    group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
+                    group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, groupPostDto.Avatar.FileName, groupPostDto.Avatar.Content, groupPostDto.Avatar.ContentType);
                 }
             }
 
