@@ -14,7 +14,7 @@ namespace Simpchat.Application.Interfaces.Services.New
     public interface INewChannelService
     {
         Task<ApiResult> AddSubscriberAsync(Guid channelId, Guid userId);
-        Task<ApiResult> CreateAsync(Guid userId, PostChatDto chatPostDto, UploadFileRequest? avatar);
+        Task<ApiResult> CreateAsync(PostChatDto chatPostDto);
         Task<ApiResult> DeleteAsync(Guid channelId);
         Task<ApiResult> DeleteSubscriberAsync(Guid userId, Guid channelId);
         Task<ApiResult<List<SearchChatResponseDto>?>> SearchAsync(string searchTerm);

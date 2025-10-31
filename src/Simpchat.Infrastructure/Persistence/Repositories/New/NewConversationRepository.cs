@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Simpchat.Application.Common.Repository;
+using Simpchat.Application.Interfaces.Repositories.New;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories.New
 {
-    public class NewConversationRepository : IBaseRepository<Conversation>
+    public class NewConversationRepository : INewConversationRepository
     {
         private readonly SimpchatDbContext _dbContext;
 
