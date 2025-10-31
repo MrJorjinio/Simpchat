@@ -1,10 +1,10 @@
-﻿using SimpchatWeb.Services.Db.Contexts.Default.Enums;
+﻿using Simpchat.Domain.Entities;
+using SimpchatWeb.Services.Db.Contexts.Default.Enums;
 
 namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
 {
-    public class Conversation
+    public class Conversation : BaseEntity
     {
-        public Guid Id { get; set; }
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset DeletedAt { get; set; }
         public Guid UserId1 { get; set; }

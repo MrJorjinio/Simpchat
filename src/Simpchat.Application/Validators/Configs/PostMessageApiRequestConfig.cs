@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Validators.Configs
 {
-    public static class PostMessageConfig
+    public static class PostMessageApiRequestConfig
     {
-        public const int ContentMaxLength = 0;
+        public const int ContentMinLength = 1;
     }
 }

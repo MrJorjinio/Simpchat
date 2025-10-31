@@ -9,9 +9,11 @@ using Simpchat.Application.Features.Old.Notifications;
 using Simpchat.Application.Features.Old.Users;
 using Simpchat.Application.Interfaces.Auth;
 using Simpchat.Application.Interfaces.Services.Old;
+using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Chats.Post;
 using Simpchat.Application.Models.Chats.Post.Message;
 using Simpchat.Application.Models.Users.Post;
+using Simpchat.Application.Models.Users.Update;
 using Simpchat.Application.Validators;
 using System;
 using System.Collections.Generic;
@@ -50,7 +52,9 @@ namespace Simpchat.Application
         {
             services.AddTransient<IValidator<RegisterUserDto>, RegisterUserValidator>();
             services.AddTransient<IValidator<PostChatDto>, PostChatValidator>();
-            services.AddTransient<IValidator<PostMessageApiRequestDto>, PostMessageValidator>();
+            services.AddTransient<IValidator<PostMessageApiRequestDto>, PostMessageApiRequestValidator>();
+            services.AddTransient<IValidator<PutChatDto>,PutChatValidator >();
+            services.AddTransient<IValidator<UpdateUserInfoDto>, UpdateUserInfoValidator>();
 
             return services;
         }

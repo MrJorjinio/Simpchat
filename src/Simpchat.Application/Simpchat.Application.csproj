@@ -8,13 +8,14 @@
 
   <ItemGroup>
     <Compile Remove="Features\Messages\**" />
+    <Compile Remove="Models\Channels\**" />
+    <Compile Remove="Models\Groups\**" />
     <EmbeddedResource Remove="Features\Messages\**" />
+    <EmbeddedResource Remove="Models\Channels\**" />
+    <EmbeddedResource Remove="Models\Groups\**" />
     <None Remove="Features\Messages\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Models\Channels\" />
-    <Folder Include="Models\Groups\" />
+    <None Remove="Models\Channels\**" />
+    <None Remove="Models\Groups\**" />
   </ItemGroup>
 
   <ItemGroup>
