@@ -1,8 +1,9 @@
-﻿namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
+﻿using Simpchat.Domain.Entities;
+
+namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
 {
-    public class ChatPermission
+    public class ChatPermission : BaseEntity
     {
-        public Guid Id { get; set; }
         public string Name { get; set; }
         public ICollection<ChatUserPermission> UsersAppliedTo { get; set; }
     }

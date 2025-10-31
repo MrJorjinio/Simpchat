@@ -5,9 +5,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
 {
-    public class Chat
+    public class Chat : BaseEntity
     {
-        public Guid Id { get; set; }
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         public ChatType Type { get; set; }
         public ChatPrivacyType PrivacyType { get; set; }

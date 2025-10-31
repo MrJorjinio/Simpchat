@@ -417,3 +417,4 @@ FodyWeavers.xsd
 *.msm
 *.msp
 /SimpchatWeb/appsettings.Development.json
+/src/Simpchat.Web/appsettings.Development.json

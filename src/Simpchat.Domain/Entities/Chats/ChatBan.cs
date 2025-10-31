@@ -2,9 +2,8 @@
 
 namespace Simpchat.Domain.Entities.Chats
 {
-    public class ChatBan
+    public class ChatBan : BaseEntity
     {
-        public Guid Id { get; set; }
         public DateTimeOffset From { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset To { get; set; }
         public Guid ChatId { get; set; }
