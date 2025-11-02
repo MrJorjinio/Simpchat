@@ -6,11 +6,11 @@ using Minio;
 using Simpchat.Application.Interfaces.Auth;
 using Simpchat.Application.Interfaces.External.Cashing;
 using Simpchat.Application.Interfaces.External.FileStorage;
-using Simpchat.Application.Interfaces.Repositories.Old;
+using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Infrastructure.External.Cashing;
 using Simpchat.Infrastructure.ExternalServices.FileStorage;
 using Simpchat.Infrastructure.Persistence;
-using Simpchat.Infrastructure.Persistence.Repositories.Old;
+using Simpchat.Infrastructure.Persistence.Repositories;
 using Simpchat.Infrastructure.Security;
 using Simpchat.Shared.Config;
 using System;
@@ -46,16 +46,19 @@ namespace Simpchat.Infrastructure
                 options.UseNpgsql(appSettings.ConnectionStrings.Default);
             });
 
-            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<INewUserRepository, UserRepository>();
             services.AddScoped<IChannelRepository, ChannelRepository>();
             services.AddScoped<IGlobalRoleRepository, GlobalRoleRepository>();
             services.AddScoped<IGlobalPermissionRepository, GlobalPermissionRepository>();
+            services.AddScoped<IGlobalRoleUserRepository, GlobalRoleUserRepository>();
             services.AddScoped<IChannelRepository, ChannelRepository>();
             services.AddScoped<IGroupRepository, GroupRepository>();
             services.AddScoped<IChatRepository, ChatRepository>();
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
+            services.AddScoped<IChatPermissionRepository, ChatPermissionRepository>();
+            services.AddScoped<IChatUserPermissionRepository, ChatUserPermissionRepository>();
 
             return services;
         }

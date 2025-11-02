@@ -15,6 +15,8 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs.Reaction
     {
         public void Configure(EntityTypeBuilder<Reaction> builder)
         {
+            builder.Property(r => r.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
             builder.Property(r => r.Name).HasMaxLength(20);
         }
     }

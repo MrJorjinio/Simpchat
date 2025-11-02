@@ -1,5 +1,6 @@
 ﻿using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +10,7 @@ using Channel = SimpchatWeb.Services.Db.Contexts.Default.Entities.Channel;
 
 namespace Simpchat.Domain.Entities.Channels
 {
-    public class ChannelSubscriber
+    public class ChannelSubscriber : BaseEntity
     {
         public Guid ChannelId { get; set; }
         public Guid UserId { get; set; }

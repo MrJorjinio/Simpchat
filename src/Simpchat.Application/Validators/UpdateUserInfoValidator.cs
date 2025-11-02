@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Validators
 {
-    public class UpdateUserInfoValidator : AbstractValidator<UpdateUserInfoDto>
+    public class UpdateUserInfoValidator : AbstractValidator<UpdateUserDto>
     {
         public UpdateUserInfoValidator()
         {

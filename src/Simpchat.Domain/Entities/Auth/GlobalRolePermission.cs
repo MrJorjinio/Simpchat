@@ -2,7 +2,7 @@
 
 namespace Simpchat.Infrastructure.Identity
 {
-    public class GlobalRolePermission
+    public class GlobalRolePermission : BaseEntity
     {
         public Guid PermissionId { get; set; }
         public GlobalRole Role { get; set; }

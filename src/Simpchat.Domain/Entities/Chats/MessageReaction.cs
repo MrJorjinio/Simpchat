@@ -2,7 +2,7 @@
 
 namespace Simpchat.Domain.Entities.Chats
 {
-    public class MessageReaction
+    public class MessageReaction : BaseEntity
     {
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         public Guid UserId { get; set; }

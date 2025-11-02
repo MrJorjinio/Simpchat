@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Simpchat.Application.Interfaces.Services.Old;
+using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResults.Enums;
 using System.Security.Claims;
 
@@ -18,11 +18,11 @@ namespace Simpchat.Web.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteAsync(Guid fromUserId)
+        public async Task<IActionResult> DeleteAsync(Guid conversationId)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var response = await _conversationService.DeleteAsync(fromUserId, userId);
+            var response = await _conversationService.DeleteAsync(conversationId);
 
             return response.Status switch
             {

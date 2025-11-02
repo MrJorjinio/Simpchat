@@ -1,4 +1,5 @@
 ﻿using Simpchat.Application.Models.Files;
+using Simpchat.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,6 @@ namespace Simpchat.Application.Models.Chats
     public class PutChatDto
     {
         public string Name { get; set; }
-        public string? Description { get; set; }
-        public UploadFileRequest? Avatar { get; set; }
+        public string Description { get; set; }
     }
 }

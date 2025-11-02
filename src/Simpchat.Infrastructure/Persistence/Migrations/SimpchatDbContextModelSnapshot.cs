@@ -30,10 +30,15 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ChannelId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
                     b.Property<DateTimeOffset>("SubscribedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("UserId", "ChannelId");
+                    b.HasKey("UserId", "ChannelId", "Id");
 
                     b.HasIndex("ChannelId");
 
@@ -121,10 +126,15 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("MessageId", "ReactionId", "UserId");
+                    b.HasKey("MessageId", "ReactionId", "UserId", "Id");
 
                     b.HasIndex("ReactionId");
 
@@ -137,7 +147,8 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
@@ -161,10 +172,15 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
                     b.Property<DateTimeOffset>("JoinedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("GroupId", "UserId");
+                    b.HasKey("GroupId", "UserId", "Id");
 
                     b.HasIndex("UserId");
 
@@ -249,7 +265,12 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("PermissionId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("RoleId", "PermissionId");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.HasKey("RoleId", "PermissionId", "Id");
 
                     b.HasIndex("PermissionId");
 
@@ -264,7 +285,12 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("UserId", "RoleId");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.HasKey("UserId", "RoleId", "Id");
 
                     b.HasIndex("RoleId");
 
@@ -357,7 +383,12 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("PermissionId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("UserId", "ChatId", "PermissionId");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.HasKey("UserId", "ChatId", "PermissionId", "Id");
 
                     b.HasIndex("ChatId");
 

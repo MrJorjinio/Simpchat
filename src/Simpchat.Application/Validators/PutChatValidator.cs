@@ -19,15 +19,6 @@ namespace Simpchat.Application.Validators
             RuleFor(c => c.Description)
                 .MaximumLength(ChatConfig.ChatDescriptionMaxLength)
                     .WithMessage($"Chat description cannot exceed {ChatConfig.ChatDescriptionMaxLength} characters");
-
-            When(c => c.Avatar != null, () =>
-            {
-                RuleFor(c => c.Avatar!.FileName)
-                    .NotEmpty()
-                        .WithMessage("Avatar filename cannot be empty")
-                    .MinimumLength(ChatConfig.AvatarFileNameMinLength)
-                        .WithMessage($"Avatar filename must be at least {ChatConfig.AvatarFileNameMinLength} character");
-            });
         }
     }
 }

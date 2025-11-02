@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Simpchat.Application.Interfaces.Services.Old;
+using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResults.Enums;
 using Simpchat.Application.Models.Files;
 using Simpchat.Application.Models.Users.Update;
@@ -44,7 +44,7 @@ namespace Simpchat.Web.Controllers
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var users = await _userService.SearchByUsernameAsync(username, userId);
+            var users = await _userService.SearchAsync(username, userId);
             return Ok(users);
         }
 
@@ -64,34 +64,24 @@ namespace Simpchat.Web.Controllers
             };
         }
 
-        [HttpPut("update-profile-pic")]
-        [Authorize]
-        public async Task<IActionResult> UpdateAvatarAsync(IFormFile profilePic)
+        [HttpPut]
+        public async Task<IActionResult> UpdateAsync([FromForm]UpdateUserDto model, IFormFile? file)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var fileUploadRequest = new UploadFileRequest
-            {
-                FileName = profilePic.FileName,
-                ContentType = profilePic.ContentType,
-                Content = profilePic.OpenReadStream()
-            };
 
-            var response = await _userService.UpdateAvatarAsync(userId, fileUploadRequest);
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
-        }
+            var fileUploadRequest = new UploadFileRequest();
 
-        [HttpPut("update-info")]
-        public async Task<IActionResult> UpdateInfoAsync(UpdateUserInfoDto dto)
-        {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var response = await _userService.UpdateInfoAsync(userId, dto);
+            if (file is not null)
+            {
+                fileUploadRequest = new UploadFileRequest
+                {
+                    Content = file.OpenReadStream(),
+                    ContentType = file.ContentType,
+                    FileName = file.Name
+                };
+            }
+
+            var response = await _userService.UpdateAsync(userId, model, fileUploadRequest);
 
             return response.Status switch
             {

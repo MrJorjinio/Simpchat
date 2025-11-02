@@ -14,7 +14,9 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.AppConfigs.Messages
     {
         public void Configure(EntityTypeBuilder<MessageReaction> builder)
         {
-            builder.HasKey(mr => new { mr.MessageId, mr.ReactionId, mr.UserId });
+            builder.Property(mr => mr.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
+            builder.HasKey(mr => new { mr.MessageId, mr.ReactionId, mr.UserId, mr.Id });
         }
     }
 }
