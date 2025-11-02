@@ -1,11 +1,11 @@
-﻿using Simpchat.Domain.Entities.Groups;
+﻿using Simpchat.Domain.Entities;
+using Simpchat.Domain.Entities.Groups;
 using SimpchatWeb.Services.Db.Contexts.Default.Enums;
 
 namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
 {
-    public class Group
+    public class Group : BaseEntity
     {
-        public Guid Id { get; set; }
         public string AvatarUrl { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }

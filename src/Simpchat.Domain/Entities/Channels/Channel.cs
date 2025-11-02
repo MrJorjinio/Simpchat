@@ -1,10 +1,10 @@
-﻿using Simpchat.Domain.Entities.Channels;
+﻿using Simpchat.Domain.Entities;
+using Simpchat.Domain.Entities.Channels;
 
 namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
 {
-    public class Channel
+    public class Channel : BaseEntity
     {
-        public Guid Id { get; set; }
         public string AvatarUrl { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }

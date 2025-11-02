@@ -14,7 +14,9 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.IdentityConfigs
     {
         public void Configure(EntityTypeBuilder<GlobalRoleUser> builder)
         {
-            builder.HasKey(gra => new { gra.UserId, gra.RoleId });
+            builder.Property(gru => gru.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
+            builder.HasKey(gra => new { gra.UserId, gra.RoleId, gra.Id });
         }
     }
 }

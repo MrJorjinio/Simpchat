@@ -17,5 +17,7 @@ namespace Simpchat.Application.Models.Chats.Get.ById
         public Guid? ReplyId { get; set; }
         public DateTimeOffset SentAt { get; set; }
         public bool IsSeen { get; set; }
+        public bool IsNotificated { get; set; }
+        public Guid NotificationId { get; set; }
     }
 }

@@ -13,7 +13,10 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.App.Channels
     {
         public void Configure(EntityTypeBuilder<ChannelSubscriber> builder)
         {
-            builder.HasKey(cs => new { cs.UserId, cs.ChannelId });
+            builder.Property(cs => cs.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            builder.HasKey(cs => new { cs.UserId, cs.ChannelId, cs.Id });
         }
     }
 }

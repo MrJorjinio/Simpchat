@@ -18,11 +18,11 @@ namespace Simpchat.Web.Controllers
         }
 
         [HttpPut("seen")]
-        public async Task<IActionResult> SeenAsync(Guid messageId)
+        public async Task<IActionResult> SeenAsync(Guid notificationId)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var response = await _notificationService.SetSeenAsync(messageId, userId);
+            var response = await _notificationService.SetAsSeenAsync(notificationId);
 
             return response.Status switch
             {

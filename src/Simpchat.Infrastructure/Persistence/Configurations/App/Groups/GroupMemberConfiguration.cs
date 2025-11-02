@@ -13,7 +13,9 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.App.Groups
     {
         public void Configure(EntityTypeBuilder<GroupMember> builder)
         {
-            builder.HasKey(gp => new { gp.GroupId, gp.UserId });
+            builder.Property(gm => gm.Id)
+                .HasDefaultValueSql("gen_random_uuid()");
+            builder.HasKey(gp => new { gp.GroupId, gp.UserId, gp.Id });
         }
     }
 }

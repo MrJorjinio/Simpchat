@@ -1,10 +1,10 @@
-﻿using Simpchat.Domain.Entities.Chats;
+﻿using Simpchat.Domain.Entities;
+using Simpchat.Domain.Entities.Chats;
 
 namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
 {
-    public class Notification
+    public class Notification : BaseEntity
     {
-        public Guid Id { get; set; }
         public bool IsSeen { get; set; }
         public Guid MessageId { get; set; }
         public Guid ReceiverId { get; set; }

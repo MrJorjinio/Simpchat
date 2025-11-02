@@ -1,10 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Infrastructure.Identity;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories
 {
-    internal class GlobalRoleRepository : IGlobalRoleRepository
+    public class GlobalRoleRepository : IGlobalRoleRepository
     {
         private readonly SimpchatDbContext _dbContext;
 
@@ -13,43 +18,44 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task CreateAsync(GlobalRole role)
+        public async Task<Guid> CreateAsync(GlobalRole entity)
         {
-            await _dbContext.GlobalRoles.AddAsync(role);
+            _dbContext.GlobalRoles.Add(entity);
+            await _dbContext.SaveChangesAsync();
+            return entity.Id;
+        }
+
+        public async Task DeleteAsync(GlobalRole entity)
+        {
+            _dbContext.GlobalRoles.Remove(entity);
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(GlobalRole role)
+        public async Task<List<GlobalRole>?> GetAllAsync()
         {
-            _dbContext.GlobalRoles.Remove(role);
-            await _dbContext.SaveChangesAsync();
+            return await _dbContext.GlobalRoles
+                .AsNoTracking()
+                .ToListAsync();
         }
 
         public async Task<GlobalRole?> GetByIdAsync(Guid id)
         {
-            return await _dbContext.GlobalRoles.FindAsync(id);
+            return await _dbContext.GlobalRoles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == id);
         }
 
         public async Task<GlobalRole?> GetByNameAsync(string name)
         {
-            return await _dbContext.GlobalRoles.FirstOrDefaultAsync(gr => gr.Name == name);
+            return await _dbContext.GlobalRoles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Name == name);
         }
 
-        public async Task UpdateAsync(GlobalRole role)
+        public async Task UpdateAsync(GlobalRole entity)
         {
-            _dbContext.Update(role);
+            _dbContext.GlobalRoles.Update(entity);
             await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task AssignTo(Guid roleId, Guid permissionId)
-        {
-            await _dbContext.GlobalRolesPermissions.AddAsync(new GlobalRolePermission { RoleId = roleId, PermissionId = permissionId });
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task AssignPermission(Guid roleId, Guid permissionId)
-        {
-            
         }
     }
 }

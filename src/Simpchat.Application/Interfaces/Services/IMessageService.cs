@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Interfaces.Services
 {
-    public interface IChatMessageService
+    public interface IMessageService
     {
-        Task<ApiResult> SendMessageAsync(PostMessageDto message, Guid currentUserId);
+        Task<ApiResult<Guid>> SendMessageAsync(PostMessageDto postMessageDto);
     }
 }

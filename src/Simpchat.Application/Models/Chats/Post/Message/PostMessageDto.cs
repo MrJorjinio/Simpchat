@@ -11,6 +11,7 @@ namespace Simpchat.Application.Models.Chats.Post.Message
     {
         public Guid? ChatId { get; set; }
         public Guid? ReceiverId { get; set; }
+        public Guid SenderId { get; set; }
         public Guid? ReplyId { get; set; }
         public UploadFileRequest? FileUploadRequest { get; set; }
         public string? Content { get; set; }
