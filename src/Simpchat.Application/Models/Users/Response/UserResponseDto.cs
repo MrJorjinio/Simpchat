@@ -1,4 +1,5 @@
-﻿using SimpchatWeb.Services.Db.Contexts.Default.Entities;
+﻿using Simpchat.Application.Extentions;
+using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace Simpchat.Application.Models.Users.Response
             {
                 Id = user.Id,
                 Description = user.Description,
-                IsOnline = user.LastSeen.AddSeconds(10) > DateTimeOffset.UtcNow,
+                IsOnline = user.LastSeen.GetOnlineStatus(),
                 LastSeen = user.LastSeen,
                 AvatarUrl = user.AvatarUrl,
                 Username = user.Username

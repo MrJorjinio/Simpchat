@@ -7,14 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Features\Messages\" />
-    <Folder Include="Models\Channels\" />
-    <Folder Include="Models\Groups\" />
+    <Compile Remove="Features\Messages\**" />
+    <Compile Remove="Models\Channels\**" />
+    <Compile Remove="Models\Groups\**" />
+    <EmbeddedResource Remove="Features\Messages\**" />
+    <EmbeddedResource Remove="Models\Channels\**" />
+    <EmbeddedResource Remove="Models\Groups\**" />
+    <None Remove="Features\Messages\**" />
+    <None Remove="Models\Channels\**" />
+    <None Remove="Models\Groups\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="FluentValidation" Version="12.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" />

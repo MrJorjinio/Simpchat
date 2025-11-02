@@ -1,5 +1,6 @@
-﻿using Simpchat.Application.Common.Pagination;
-using Simpchat.Application.Models.ApiResults;
+﻿using Simpchat.Application.Models.ApiResults;
+using Simpchat.Application.Models.Chats;
+using Simpchat.Application.Models.Chats.Get.UserChat;
 using Simpchat.Application.Models.Chats.Post;
 using Simpchat.Application.Models.Chats.Search;
 using Simpchat.Application.Models.Files;
@@ -13,12 +14,12 @@ namespace Simpchat.Application.Interfaces.Services
 {
     public interface IGroupService
     {
-        Task<ApiResult> CreateAsync(Guid userId, PostChatDto chatPostDto, UploadFileRequest? avatar);
-        Task<ApiResult> AddUserAsync(Guid chatId, Guid addingUserId, Guid currentUserId);
-        Task<ApiResult> AddUserPermissionAsync(string permissionName, Guid chatId, Guid addingUserId, Guid currentUserId);
-        Task<ApiResult> DeleteMemberAsync(Guid userId, Guid chatId);
-        Task<ApiResult> DeleteAsync(Guid chatId);
-        Task<ApiResult> UpdateAsync(Guid chatId, PostChatDto updateChatDto);
-        Task<ApiResult<ICollection<SearchChatResponseDto>?>> SearchAsync(string searchTerm);
+        Task<ApiResult> AddMemberAsync(Guid groupId, Guid userId);
+        Task<ApiResult<Guid>> CreateAsync(PostChatDto chatPostDto, UploadFileRequest? avatar);
+        Task<ApiResult> DeleteAsync(Guid groupId);
+        Task<ApiResult> DeleteMemberAsync(Guid userId, Guid groupId);
+        Task<ApiResult<List<SearchChatResponseDto>?>> SearchAsync(string searchTerm);
+        Task<ApiResult> UpdateAsync(Guid groupId, PutChatDto updateChatDto, UploadFileRequest? avatar);
+        Task<ApiResult<List<UserChatResponseDto>>> GetUserParticipatedAsync(Guid userId);
     }
 }

@@ -1,4 +1,4 @@
-﻿using Simpchat.Application.Models.Chats.Get.UserChat;
+﻿using Simpchat.Application.Common.Repository;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Interfaces.Repositories
 {
-    public interface IConversationRepository
+    public interface IConversationRepository : IBaseRepository<Conversation>
     {
-        Task<ICollection<UserChatResponseDto>?> GetUserConversationsAsync(Guid currentUserId);
-        Task DeleteAsync(User user1, User user2);
+        Task<Guid?> GetConversationBetweenAsync(Guid userId1, Guid userId2);
+        Task<List<Conversation>> GetUserConversationsAsync(Guid userId);
     }
 }

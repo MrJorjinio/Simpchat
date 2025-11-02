@@ -13,8 +13,8 @@ namespace Simpchat.Application.Models.Chats.Get.Profile
         public int ParticipantsCount { get; set; }
         public int ParticipantsOnline { get; set; }
         public string Name { get; set; }
-        public string AvatarUrl { get; set; }
-        public string Description { get; set; }
+        public string? AvatarUrl { get; set; }
+        public string? Description { get; set; }
         public ICollection<UserResponseDto> Participants { get; set; }
     }
 }

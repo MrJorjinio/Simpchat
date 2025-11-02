@@ -1,13 +1,13 @@
-﻿using Simpchat.Domain.Entities.Channels;
+﻿using Simpchat.Domain.Entities;
+using Simpchat.Domain.Entities.Channels;
 using Simpchat.Domain.Entities.Chats;
 using Simpchat.Domain.Entities.Groups;
 using Simpchat.Infrastructure.Identity;
 using SimpchatWeb.Services.Db.Contexts.Default.Enums;
 namespace SimpchatWeb.Services.Db.Contexts.Default.Entities
 {
-    public class User
+    public class User : BaseEntity
     {
-        public Guid Id { get; set; }
         public string Username { get; set; }
         public string Description { get; set; }
         public string AvatarUrl { get; set; }

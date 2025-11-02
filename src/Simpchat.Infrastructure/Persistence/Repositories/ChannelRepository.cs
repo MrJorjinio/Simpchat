@@ -1,8 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Simpchat.Application.Common.Repository;
 using Simpchat.Application.Interfaces.Repositories;
-using Simpchat.Application.Models.Chats.Get.UserChat;
-using Simpchat.Application.Models.Chats.Search;
-using Simpchat.Domain.Entities;
 using Simpchat.Domain.Entities.Channels;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 
@@ -12,142 +10,71 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
     {
         private readonly SimpchatDbContext _dbContext;
 
-        public ChannelRepository(SimpchatDbContext dbContext, IUserRepository userRepository)
+        public ChannelRepository(SimpchatDbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public async Task AddSubscriberAsync(Chat chat, User addingUser, User currentUser)
+        public async Task AddSubscriberAsync(Guid userId, Guid channelId)
         {
-            chat.Channel.Subscribers.Add(new ChannelSubscriber
-            {
-                UserId = addingUser.Id,
-            });
+            await _dbContext.ChannelsSubscribers.AddAsync(new ChannelSubscriber { UserId = userId, ChannelId = channelId });
+            await _dbContext.SaveChangesAsync();
+        }
 
-            var chatPermissions = await _dbContext.ChatPermissions.Where(cp => cp.Name == "TextMessage")
+        public async Task<Guid> CreateAsync(Channel entity)
+        {
+            await _dbContext.Channels.AddAsync(entity);
+            await _dbContext.SaveChangesAsync();
+
+            return entity.Id;
+        }
+
+        public async Task DeleteAsync(Channel entity)
+        {
+            _dbContext.Channels.Remove(entity);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task DeleteSubscriberAsync(ChannelSubscriber channelSubscriber)
+        {
+            _dbContext.ChannelsSubscribers.Remove(channelSubscriber);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<List<Channel>?> GetAllAsync()
+        {
+            return await _dbContext.Channels.ToListAsync();
+        }
+
+        public async Task<Channel?> GetByIdAsync(Guid id)
+        {
+            return await _dbContext.Channels
+                .Include(c => c.Subscribers)
+                    .ThenInclude(s => s.User)
+                .Include(c => c.Owner)
+                .FirstOrDefaultAsync(c => c.Id == id);
+        }
+
+        public async Task<List<Channel>> GetUserSubscribedChannelsAsync(Guid userId)
+        {
+            return await _dbContext.ChannelsSubscribers
+                .Include(cs => cs.Channel)
+                .Where(cs => cs.UserId == userId)
+                .Select(cs => cs.Channel)
                 .ToListAsync();
-
-            foreach (var chatPermission in chatPermissions)
-            {
-                _dbContext.ChatsUsersPermissions.Add(new ChatUserPermission { ChatId = chat.Id, UserId = addingUser.Id, PermissionId = chatPermission.Id });
-            }
-
-            await _dbContext.SaveChangesAsync();
         }
 
-        public async Task AddUserPermissionAsync(ChatPermission permission, Chat chat, User addingUser, User currentUser)
+        public async Task<List<Channel>?> SearchAsync(string term)
         {
-            await _dbContext.ChatsUsersPermissions.AddAsync(new ChatUserPermission { ChatId = chat.Id, PermissionId = permission.Id, UserId = addingUser.Id });
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task CreateAsync(Channel channel)
-        {
-            await _dbContext.Channels.AddAsync(channel);
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task DeleteAsync(Channel channel)
-        {
-            _dbContext.Remove(channel);
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task DeleteSubscriberAsync(User user, Channel channel)
-        {
-            var channelSubscriber = await _dbContext.ChannelsSubscribers.FirstOrDefaultAsync(gm => gm.UserId == user.Id && gm.ChannelId == channel.Id);
-            _dbContext.Remove(channelSubscriber);
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task<ICollection<UserChatResponseDto>?> GetUserSubscribedChannelsAsync(Guid currentUserId)
-        {
-            var metas = await _dbContext.ChannelsSubscribers
-                .Where(cs => cs.UserId == currentUserId)
-                .Select(cs => new
-                {
-                    ChannelId = cs.ChannelId,
-                    ChatId = cs.Channel.Chat.Id,
-                    AvatarUrl = cs.Channel.AvatarUrl,
-                    Name = cs.Channel.Name
-                })
-                .AsNoTracking()
+            return await _dbContext.Channels
+                .Where(c => EF.Functions.Like(c.Name, $"%{term}"))
                 .ToListAsync();
-
-            if (!metas.Any())
-                return new List<UserChatResponseDto>();
-
-            var result = new List<UserChatResponseDto>();
-
-            foreach (var meta in metas)
-            {
-                var lastMsg = await _dbContext.Messages
-                    .Where(m => m.ChatId == meta.ChatId)
-                    .OrderByDescending(m => m.SentAt)
-                    .ThenByDescending(m => m.Id)
-                    .Select(m => new
-                    {
-                        m.Id,
-                        m.Content,
-                        m.FileUrl,
-                        SenderUsername = m.Sender.Username,
-                        m.SentAt
-                    })
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync();
-
-                var notifCount = await _dbContext.Notifications
-                    .CountAsync(n => n.Message.ChatId == meta.ChatId
-                                     && n.ReceiverId == currentUserId
-                                     && !n.IsSeen);
-
-                var userLast = await _dbContext.Messages
-                    .Where(m => m.ChatId == meta.ChatId && m.SenderId == currentUserId)
-                    .OrderByDescending(m => m.SentAt)
-                    .Select(m => (DateTimeOffset?)m.SentAt)
-                    .FirstOrDefaultAsync();
-
-                var lastMessageDto = lastMsg == null ? null : new LastMessageResponseDto
-                {
-                    Content = lastMsg.Content,
-                    FileUrl = lastMsg.FileUrl,
-                    SenderUsername = lastMsg.SenderUsername,
-                    SentAt = lastMsg.SentAt
-                };
-
-                result.Add(new UserChatResponseDto
-                {
-                    Id = meta.ChannelId,
-                    AvatarUrl = meta.AvatarUrl,
-                    Name = meta.Name,
-                    Type = ChatType.Channel,
-                    LastMessage = lastMessageDto,
-                    NotificationsCount = notifCount,
-                    UserLastMessage = userLast
-                });
-            }
-
-            return result
-                .OrderByDescending(x => x.UserLastMessage ?? DateTimeOffset.MinValue)
-                .ToList();
         }
 
-        public async Task<ICollection<SearchChatResponseDto>?> SearchByNameAsync(string searchTerm)
+        public async Task UpdateAsync(Channel entity)
         {
-            var channels = await _dbContext.Groups
-                .Where(g => EF.Functions.Like(g.Name, $"%{searchTerm}%"))
-                .ToListAsync();
-
-            var channelsDtos = channels.Select(g => new SearchChatResponseDto
-            {
-                EntityId = g.Id,
-                ChatId = g.Id,
-                AvatarUrl = g.AvatarUrl,
-                DisplayName = g.Name,
-                ChatType = ChatType.Group
-            }).ToList();
-
-            return channelsDtos;
+            _dbContext.Channels.Update(entity);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

@@ -16,14 +16,14 @@ namespace Simpchat.Web.Controllers
     public class ChatController : ControllerBase
     {
         private readonly IChatService _chatService;
-        private readonly IChatMessageService _chatMessageService;
+        private readonly IMessageService _messageService;
         private readonly IValidator<PostMessageApiRequestDto> _validator;
 
-        public ChatController(IChatService chatService, IChatMessageService chatMessageService, IValidator<PostMessageApiRequestDto> validator)
+        public ChatController(IChatService chatService, IValidator<PostMessageApiRequestDto> validator, IMessageService messageService)
         {
             _chatService = chatService;
-            _chatMessageService = chatMessageService;
             _validator = validator;
+            _messageService = messageService;
         }
 
         [HttpPost("search")]
@@ -31,7 +31,25 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> SearchByNameAsync(ChatSearchPageModel model)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var response = await _chatService.SearchByNameAsync(model, userId);
+            var response = await _chatService.SearchAsync(model.searchTerm, userId);
+
+            return response.Status switch
+            {
+                ResultStatus.Success => Ok(response),
+                ResultStatus.NotFound => NotFound(response),
+                ResultStatus.Failure => BadRequest(response),
+                ResultStatus.Unauthorized => Unauthorized(response),
+                _ => StatusCode(500, response)
+            };
+        }
+
+        [HttpPost("add-user-permission")]
+        [Authorize]
+        public async Task<IActionResult> AddPermissionAsync(string permissionName, Guid chatId, Guid addingUserId)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var response = await _chatService.AddUserPermissionAsync(userId, chatId, permissionName);
 
             return response.Status switch
             {
@@ -82,7 +100,7 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> GetProfileByIdAsync(Guid chatId)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var response = await _chatService.GetProfileByIdAsync(chatId, userId);
+            var response = await _chatService.GetProfileAsync(chatId, userId);
 
             return response.Status switch
             {
@@ -128,10 +146,11 @@ namespace Simpchat.Web.Controllers
                 Content = messagePostDto.Content,
                 ReceiverId = messagePostDto.ReceiverId,
                 ReplyId = messagePostDto.ReplyId,
-                FileUploadRequest = fileUploadRequest
+                FileUploadRequest = fileUploadRequest,
+                SenderId = userId
             };
 
-            var response = await _chatMessageService.SendMessageAsync(messagePostRequest, userId);
+            var response = await _messageService.SendMessageAsync(messagePostRequest);
 
             return response.Status switch
             {
@@ -147,31 +166,7 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyType privacyType)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var response = await _chatService.UpdatePrivacyTypeAsync(chatId, userId, privacyType);
-
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
-        }
-
-        [HttpPut("avatar")]
-        public async Task<IActionResult> UpdateAvatarAsync(Guid chatId, IFormFile file)
-        {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-            var newAvatarRequest = new UploadFileRequest
-            {
-                Content = file.OpenReadStream(),
-                ContentType = file.ContentType,
-                FileName = file.FileName
-            };
-
-            var response = await _chatService.UpdateAvatarAsync(chatId, userId, newAvatarRequest);
+            var response = await _chatService.UpdatePrivacyTypeAsync(chatId, privacyType);
 
             return response.Status switch
             {

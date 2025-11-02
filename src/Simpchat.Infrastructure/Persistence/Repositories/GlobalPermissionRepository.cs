@@ -1,10 +1,14 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Simpchat.Application.Interfaces.Repositories;
+﻿using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Infrastructure.Identity;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories
 {
-    internal class GlobalPermissionRepository : IGlobalPermissionRepository
+    public class GlobalPermissionRepository : IGlobalPermissionRepository
     {
         private readonly SimpchatDbContext _dbContext;
 
@@ -13,31 +17,34 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task CreateAsync(GlobalPermission permission)
+        public Task<Guid> CreateAsync(GlobalPermission entity)
         {
-            await _dbContext.GlobalPermissions.AddAsync(permission);
-            await _dbContext.SaveChangesAsync();
+            throw new NotImplementedException();
         }
 
-        public async Task DeleteAsync(GlobalPermission permission)
+        public Task DeleteAsync(GlobalPermission entity)
         {
-            _dbContext.GlobalPermissions.Remove(permission);
-            await _dbContext.SaveChangesAsync();
+            throw new NotImplementedException();
         }
 
-        public async Task<GlobalPermission?> GetByIdAsync(Guid id)
+        public Task<List<GlobalPermission>?> GetAllAsync()
         {
-            return await _dbContext.GlobalPermissions.FindAsync(id);
+            throw new NotImplementedException();
         }
 
-        public async Task<GlobalPermission?> GetByNameAsync(string name)
+        public Task<GlobalPermission?> GetByIdAsync(Guid id)
         {
-            return await _dbContext.GlobalPermissions.FirstOrDefaultAsync(gp => gp.Name == name);
+            throw new NotImplementedException();
         }
 
-        public async Task UpdateAsync(GlobalPermission permission)
+        public Task<GlobalPermission?> GetByNameAsync(string name)
         {
-            _dbContext.GlobalPermissions.Update(permission);
-            await _dbContext.SaveChangesAsync();
-        }    }
+            throw new NotImplementedException();
+        }
+
+        public Task UpdateAsync(GlobalPermission entity)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

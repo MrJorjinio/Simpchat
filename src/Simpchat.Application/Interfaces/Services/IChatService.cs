@@ -1,12 +1,10 @@
-﻿using Simpchat.Application.Common.Pagination;
-using Simpchat.Application.Common.Pagination.Chat;
-using Simpchat.Application.Models.ApiResults;
+﻿using Simpchat.Application.Models.ApiResults;
+using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Chats.Get.ById;
 using Simpchat.Application.Models.Chats.Get.Profile;
 using Simpchat.Application.Models.Chats.Get.UserChat;
-using Simpchat.Application.Models.Chats.Post.Message;
+using Simpchat.Application.Models.Chats.Post;
 using Simpchat.Application.Models.Chats.Search;
-using Simpchat.Application.Models.Files;
 using Simpchat.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -18,11 +16,11 @@ namespace Simpchat.Application.Interfaces.Services
 {
     public interface IChatService
     {
-        Task<ApiResult<PaginationResult<SearchChatResponseDto>>> SearchByNameAsync(ChatSearchPageModel chatSearchDto, Guid currentUserId);
-        Task<ApiResult<ICollection<UserChatResponseDto>?>> GetUserChatsAsync(Guid userId);
+        Task<ApiResult> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyType chatPrivacyType);
+        Task<ApiResult<GetByIdChatProfile>> GetProfileAsync(Guid chatId, Guid userId);
         Task<ApiResult<GetByIdChatDto>> GetByIdAsync(Guid chatId, Guid userId);
-        Task<ApiResult<GetByIdChatProfile>> GetProfileByIdAsync(Guid chatId, Guid userId);
-        Task<ApiResult> UpdateAvatarAsync(Guid chatId, Guid userId, UploadFileRequest file);
-        Task<ApiResult> UpdatePrivacyTypeAsync(Guid chatId, Guid userId, ChatPrivacyType privacyType);
+        Task<ApiResult<List<UserChatResponseDto>>> GetUserChatsAsync(Guid userId);
+        Task<ApiResult<List<SearchChatResponseDto>>> SearchAsync(string term, Guid userId);
+        Task<ApiResult<Guid>> AddUserPermissionAsync(Guid userId, Guid chatId, string permissionName);
     }
 }

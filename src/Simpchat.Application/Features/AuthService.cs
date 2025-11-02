@@ -1,5 +1,6 @@
 ﻿using Simpchat.Application.Interfaces.Auth;
 using Simpchat.Application.Interfaces.Repositories;
+using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResults;
 using Simpchat.Application.Models.ApiResults.Enums;
 using Simpchat.Infrastructure.Identity;
@@ -11,45 +12,49 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simpchat.Application.Features.Users
+namespace Simpchat.Application.Features
 {
-    internal class AuthService : IAuthService
+    public class AuthService : IAuthService
     {
+
         private readonly IJwtTokenGenerator _jwtTokenGenerator;
-        private readonly IUserRepository _userRepository;
+        private readonly INewUserRepository _userRepo;
         private readonly IPasswordHasher _passwordHasher;
-        private readonly IGlobalRoleRepository _globalRoleRepository;
+        private readonly IGlobalRoleRepository _globalRoleRepo;
+        private readonly IGlobalRoleUserRepository _globalRoleUserRepository;
 
         public AuthService(
             IJwtTokenGenerator jwtTokenGenerator,
             IPasswordHasher passwordHasher,
-            IUserRepository userRepository,
-            IGlobalRoleRepository globalRoleRepository)
+            INewUserRepository userRepo,
+            IGlobalRoleRepository globalRoleRepo,
+            IGlobalRoleUserRepository globalRoleUserRepo)
         {
             _jwtTokenGenerator = jwtTokenGenerator;
             _passwordHasher = passwordHasher;
-            _userRepository = userRepository;
-            _globalRoleRepository = globalRoleRepository;
+            _userRepo = userRepo;
+            _globalRoleRepo = globalRoleRepo;
+            _globalRoleUserRepository = globalRoleUserRepo;
         }
 
         public async Task<ApiResult<string>> LoginAsync(string username, string password)
         {
-            var user = await _userRepository.GetByUsernameAsync(username);
+            var user = await _userRepo.GetByUsernameAsync(username);
 
             if (user is null || await _passwordHasher.VerifyAsync(user.PasswordHash, password, user.Salt) is false)
             {
                 return ApiResult<string>.FailureResult("Username or Password is invalid", ResultStatus.Failure);
             }
 
-            string jwtToken = await _jwtTokenGenerator.GenerateJwtTokenAsync(user.Id, user.GlobalRoles.Select(r => r.Role));
+            string jwtToken = await _jwtTokenGenerator.GenerateJwtTokenAsync(user.Id, await _globalRoleUserRepository.GetUserRolesAsync(user.Id));
             return ApiResult<string>.SuccessResult(jwtToken);
         }
 
-        public async Task<ApiResult> RegisterAsync(string username, string password)
+        public async Task<ApiResult<Guid>> RegisterAsync(string username, string password)
         {
-            if (await _userRepository.GetByUsernameAsync(username) is not null)
+            if (await _userRepo.GetByUsernameAsync(username) is not null)
             {
-                return ApiResult.FailureResult($"User with Username[{username}] already exists", ResultStatus.Failure);
+                return ApiResult<Guid>.FailureResult($"User with Username[{username}] already exists", ResultStatus.Failure);
             }
 
             string salt = Guid.NewGuid().ToString();
@@ -63,20 +68,27 @@ namespace Simpchat.Application.Features.Users
                 Description = string.Empty,
                 ChatMemberAddPermissionType = ChatMemberAddPermissionType.WithConversations
             };
-            await _userRepository.AddAsync(user);
+            await _userRepo.CreateAsync(user);
 
-            var defaultRole = await _globalRoleRepository.GetByNameAsync("User");
+            var defaultRole = await _globalRoleRepo.GetByNameAsync("User");
+
             if (defaultRole is not null)
             {
-                await _userRepository.AssignRoleAsync(user.Id, defaultRole.Id);
+                var globalRoleUser = new GlobalRoleUser
+                {
+                    RoleId = defaultRole.Id,
+                    UserId = user.Id
+                };
+
+                await _globalRoleUserRepository.CreateAsync(globalRoleUser);
             }
 
-            return ApiResult.SuccessResult();
+            return ApiResult<Guid>.SuccessResult(user.Id);
         }
 
         public async Task<ApiResult> UpdatePasswordAsync(Guid userId, string password)
         {
-            var user = await _userRepository.GetByIdAsync(userId);
+            var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
@@ -91,7 +103,7 @@ namespace Simpchat.Application.Features.Users
             var newPasswrodHash = await _passwordHasher.EncryptAsync(password, user.Salt);
             user.PasswordHash = newPasswrodHash;
 
-            await _userRepository.UpdateAsync(user);
+            await _userRepo.UpdateAsync(user);
 
             return ApiResult.SuccessResult();
         }

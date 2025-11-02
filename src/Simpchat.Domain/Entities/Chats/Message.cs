@@ -3,9 +3,8 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace Simpchat.Domain.Entities.Chats
 {
-    public class Message
+    public class Message : BaseEntity
     {
-        public Guid Id { get; set; }
         public string Content { get; set; }
         public string? FileUrl { get; set; }
         public DateTimeOffset SentAt { get; set; } = DateTimeOffset.UtcNow;

@@ -1,6 +1,5 @@
-﻿using Simpchat.Application.Models.Chats.Post.Message;
+﻿using Simpchat.Application.Common.Repository;
 using Simpchat.Domain.Entities.Chats;
-using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Interfaces.Repositories
 {
-    public interface IMessageRepository
+    public interface IMessageRepository : IBaseRepository<Message>
     {
-        Task<Message> AddMessageAsync(PostMessageDto message, User currentUser);
-        Task UpdateAsync(Message message);
+        Task<Message?> GetLastMessageAsync(Guid chatId);
+        Task<Message?> GetUserLastSendedMessageAsync(Guid userId, Guid chatId);
     }
 }

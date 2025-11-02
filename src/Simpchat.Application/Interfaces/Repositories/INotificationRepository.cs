@@ -1,4 +1,4 @@
-﻿using Simpchat.Domain.Entities.Chats;
+﻿using Simpchat.Application.Common.Repository;
 using SimpchatWeb.Services.Db.Contexts.Default.Entities;
 using System;
 using System.Collections.Generic;
@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Interfaces.Repositories
 {
-    public interface INotificationRepository
+    public interface INotificationRepository : IBaseRepository<Notification>
     {
-        Task AddAsync(Message message, Chat chat, User user);
-        Task UpdateAsync(Notification notification);
-        Task<Notification> GetByIdAsync(Guid id);
-        Task<Notification> GetByIdAsync(Guid messageId, Guid userId);
+        Task<int> GetUserChatNotificationsCountAsync(Guid userId, Guid chatId);
+        Task<bool> GetMessageSeenStatusAsync(Guid messageId);
+        Task<bool> CheckIsNotSeenAsync(Guid messageId, Guid userId);
+        Task<Guid> GetIdAsync(Guid messageId, Guid userId);
     }
 }
