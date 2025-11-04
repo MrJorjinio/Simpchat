@@ -1,16 +1,6 @@
-﻿using Simpchat.Application.Models.ApiResults;
+﻿using Simpchat.Application.Models.ApiResult;
 using Simpchat.Application.Models.Chats;
-using Simpchat.Application.Models.Chats.Get.ById;
-using Simpchat.Application.Models.Chats.Get.Profile;
-using Simpchat.Application.Models.Chats.Get.UserChat;
-using Simpchat.Application.Models.Chats.Post;
-using Simpchat.Application.Models.Chats.Search;
-using Simpchat.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Simpchat.Domain.Enums;
 
 namespace Simpchat.Application.Interfaces.Services
 {

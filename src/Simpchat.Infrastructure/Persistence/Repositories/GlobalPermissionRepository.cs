@@ -1,5 +1,5 @@
 ﻿using Simpchat.Application.Interfaces.Repositories;
-using Simpchat.Infrastructure.Identity;
+using Simpchat.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,23 +1,17 @@
-﻿using Simpchat.Application.Interfaces.External.FileStorage;
+﻿using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults;
-using Simpchat.Application.Models.Chats.Post.Message;
+using Simpchat.Application.Models.ApiResult;
+using Simpchat.Application.Models.Chats;
 using Simpchat.Domain.Entities;
-using Simpchat.Domain.Entities.Chats;
-using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Simpchat.Domain.Enums;
 
 namespace Simpchat.Application.Features
 {
     public class MessageService : IMessageService
     {
         private readonly IMessageRepository _repo;
-        private readonly INewUserRepository _userRepo;
+        private readonly IUserRepository _userRepo;
         private readonly IChatRepository _chatRepo;
         private readonly IFileStorageService _fileStorageService;
         private readonly IConversationRepository _conversationRepo;
@@ -25,7 +19,7 @@ namespace Simpchat.Application.Features
 
         public MessageService(
             IMessageRepository repo,
-            INewUserRepository userRepo, 
+            IUserRepository userRepo, 
             IFileStorageService fileStorageService, 
             IChatRepository chatRepo, 
             IConversationRepository conversationRepo)

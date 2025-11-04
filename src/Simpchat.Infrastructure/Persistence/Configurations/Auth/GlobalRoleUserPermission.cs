@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Simpchat.Infrastructure.Identity;
+using Simpchat.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

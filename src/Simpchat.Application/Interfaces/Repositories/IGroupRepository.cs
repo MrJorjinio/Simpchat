@@ -1,12 +1,5 @@
 ﻿using Simpchat.Application.Common.Repository;
-using Simpchat.Domain.Entities.Channels;
-using Simpchat.Domain.Entities.Groups;
-using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Simpchat.Domain.Entities;
 
 namespace Simpchat.Application.Interfaces.Repositories
 {

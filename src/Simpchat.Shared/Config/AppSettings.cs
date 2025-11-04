@@ -6,5 +6,6 @@
         public ConnectionStrings ConnectionStrings { get; set; }
         public MinioSettings MinioSettings { get; set; }
         public RabbitMQSettings RabbitMQSettings { get; set; }
+        public EmailSettings EmailSettings { get; set; }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using Simpchat.Application.Models.Users.Post;
+using Simpchat.Application.Models.Users;
 using Simpchat.Application.Validators.Configs;
 using System;
 using System.Collections.Generic;
@@ -14,18 +14,21 @@ namespace Simpchat.Application.Validators
         public RegisterUserValidator()
         {
             RuleFor(u => u.Username)
+                .NotEmpty().WithMessage("Username is required.")
                 .MaximumLength(RegisterUserConfig.NameMaxLength)
                     .WithMessage($"Username max length is {RegisterUserConfig.NameMaxLength}")
                 .MinimumLength(RegisterUserConfig.NameMinLength)
-                    .WithMessage($"Username min length us {RegisterUserConfig.NameMinLength}");
-            RuleFor(u => u.Description)
-                .MaximumLength(RegisterUserConfig.DescriptionMaxLength)
-                    .WithMessage($"Description max lenght is {RegisterUserConfig.DescriptionMaxLength}")
-                .MinimumLength(RegisterUserConfig.DescriptionMinLength)
-                    .WithMessage($"Description min length us {RegisterUserConfig.DescriptionMinLength}");
+                    .WithMessage($"Username min length is {RegisterUserConfig.NameMinLength}")
+                .Matches(@"^[A-Za-z0-9._\-]+$").WithMessage("Username may contain letters, digits, dots, underscores and hyphens only.");
+
+            RuleFor(u => u.Email)
+                .NotEmpty().WithMessage("Email is required.")
+                .EmailAddress().WithMessage("Email must be a valid email address.");
+
             RuleFor(u => u.Password)
+                .NotEmpty().WithMessage("Password is required.")
                 .MaximumLength(RegisterUserConfig.PasswordMaxLength)
-                    .WithMessage($"Password max lenght is {RegisterUserConfig.PasswordMaxLength}")
+                    .WithMessage($"Password max length is {RegisterUserConfig.PasswordMaxLength}")
                 .MinimumLength(RegisterUserConfig.PasswordMinLength)
                     .WithMessage($"Password min length is {RegisterUserConfig.PasswordMinLength}");
         }

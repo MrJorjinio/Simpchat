@@ -3,10 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Simpchat.Application.Features;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.Chats;
-using Simpchat.Application.Models.Chats.Post;
-using Simpchat.Application.Models.Chats.Post.Message;
-using Simpchat.Application.Models.Users.Post;
-using Simpchat.Application.Models.Users.Update;
+using Simpchat.Application.Models.Users;
 using Simpchat.Application.Validators;
 
 namespace Simpchat.Application
@@ -39,10 +36,13 @@ namespace Simpchat.Application
         private static IServiceCollection AddValidation(this IServiceCollection services)
         {
             services.AddTransient<IValidator<RegisterUserDto>, RegisterUserValidator>();
+            services.AddTransient<IValidator<LoginUserDto>, LoginUserValidator>();
             services.AddTransient<IValidator<PostChatDto>, PostChatValidator>();
-            services.AddTransient<IValidator<PostMessageApiRequestDto>, PostMessageApiRequestValidator>();
+            services.AddTransient<IValidator<PostMessageApiRequestDto>, PostMessageValidator>();
             services.AddTransient<IValidator<PutChatDto>,PutChatValidator >();
             services.AddTransient<IValidator<UpdateUserDto>, UpdateUserInfoValidator>();
+            services.AddTransient<IValidator<ResetPasswordDto>, ResetPasswordValidator>();
+            services.AddTransient<IValidator<UpdatePasswordDto>, UpdatePasswordValidator>();
 
             return services;
         }

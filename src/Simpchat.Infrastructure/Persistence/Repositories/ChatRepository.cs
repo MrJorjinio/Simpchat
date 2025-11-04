@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Simpchat.Application.Interfaces.Repositories;
-using Simpchat.Domain.Entities.Chats;
-using SimpchatWeb.Services.Db.Contexts.Default.Entities;
+using Simpchat.Domain.Entities;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories
 {
