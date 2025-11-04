@@ -10,8 +10,6 @@ namespace Simpchat.Application.Validators.Configs
     {
         public const int NameMaxLength = 30;
         public const int NameMinLength = 5;
-        public const int DescriptionMaxLength = 100;
-        public const int DescriptionMinLength = 0;
         public const int PasswordMinLength = 10;
         public const int PasswordMaxLength = 25;
     }

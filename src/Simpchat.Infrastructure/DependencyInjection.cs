@@ -1,23 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Minio;
 using Simpchat.Application.Interfaces.Auth;
-using Simpchat.Application.Interfaces.External.Cashing;
-using Simpchat.Application.Interfaces.External.FileStorage;
+using Simpchat.Application.Interfaces.Email;
+using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
-using Simpchat.Infrastructure.External.Cashing;
-using Simpchat.Infrastructure.ExternalServices.FileStorage;
+using Simpchat.Infrastructure.Email;
+using Simpchat.Infrastructure.FileStorage;
 using Simpchat.Infrastructure.Persistence;
 using Simpchat.Infrastructure.Persistence.Repositories;
 using Simpchat.Infrastructure.Security;
 using Simpchat.Shared.Config;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure
 {
@@ -29,7 +23,7 @@ namespace Simpchat.Infrastructure
                 .AddPersistence(config)
                 .AddSecurity()
                 .AddFileStorage(config)
-                .AddRabbitMQ(config);
+                .AddEmail();
 
             return services;
         }
@@ -46,7 +40,7 @@ namespace Simpchat.Infrastructure
                 options.UseNpgsql(appSettings.ConnectionStrings.Default);
             });
 
-            services.AddScoped<INewUserRepository, UserRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IChannelRepository, ChannelRepository>();
             services.AddScoped<IGlobalRoleRepository, GlobalRoleRepository>();
             services.AddScoped<IGlobalPermissionRepository, GlobalPermissionRepository>();
@@ -59,6 +53,8 @@ namespace Simpchat.Infrastructure
             services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IChatPermissionRepository, ChatPermissionRepository>();
             services.AddScoped<IChatUserPermissionRepository, ChatUserPermissionRepository>();
+            services.AddScoped<IUserOtpRepository, UserOtpRepository>();
+            services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
 
             return services;
         }
@@ -103,10 +99,10 @@ namespace Simpchat.Infrastructure
             return services;
         }
 
-        private static IServiceCollection AddRabbitMQ(this IServiceCollection services, IConfiguration config)
+        private static IServiceCollection AddEmail(this IServiceCollection services)
         {
-            services.AddSingleton<IRabbitMQProducer, RabbitMQProducer>();
-            services.AddHostedService<RabbitMQConsumer>();
+            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IOtpService, OtpService>();
 
             return services;
         }

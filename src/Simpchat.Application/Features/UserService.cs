@@ -1,31 +1,24 @@
 ﻿using Simpchat.Application.Extentions;
-using Simpchat.Application.Interfaces.External.FileStorage;
+using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Models.ApiResult;
 using Simpchat.Application.Models.ApiResults;
-using Simpchat.Application.Models.ApiResults.Enums;
-using Simpchat.Application.Models.Chats.Get.ById;
-using Simpchat.Application.Models.Chats.Search;
+using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Files;
-using Simpchat.Application.Models.Users.GetById;
-using Simpchat.Application.Models.Users.Update;
-using Simpchat.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Simpchat.Application.Models.Users;
+using Simpchat.Domain.Enums;
 
 namespace Simpchat.Application.Features
 {
     internal class UserService : IUserService
     {
-        private readonly INewUserRepository _userRepo;
+        private readonly IUserRepository _userRepo;
         private readonly IConversationRepository _conversationRepo;
         private readonly IFileStorageService _fileStorageService;
         private const string BucketName = "users-avatars";
 
-        public UserService(INewUserRepository userRepo)
+        public UserService(IUserRepository userRepo)
         {
             _userRepo = userRepo;
         }

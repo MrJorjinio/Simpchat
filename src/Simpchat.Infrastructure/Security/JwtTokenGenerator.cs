@@ -1,17 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Simpchat.Application.Interfaces.Auth;
-using Simpchat.Infrastructure.Identity;
+using Simpchat.Domain.Entities;
 using Simpchat.Shared.Config;
-using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure.Security
 {

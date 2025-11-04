@@ -1,5 +1,5 @@
-﻿using Simpchat.Application.Models.ApiResults;
-using Simpchat.Application.Models.Chats.Get.UserChat;
+﻿using Simpchat.Application.Models.ApiResult;
+using Simpchat.Application.Models.Chats;
 using System;
 using System.Collections.Generic;
 using System.Linq;

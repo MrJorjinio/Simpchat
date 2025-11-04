@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults.Enums;
+using Simpchat.Application.Models.ApiResults;
 using Simpchat.Application.Models.Files;
-using Simpchat.Application.Models.Users.Update;
+using Simpchat.Application.Models.Users;
 using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers

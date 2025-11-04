@@ -1,14 +1,8 @@
 ﻿using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults;
-using Simpchat.Application.Models.Chats.Get.UserChat;
-using Simpchat.Domain.Entities;
-using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Simpchat.Application.Models.ApiResult;
+using Simpchat.Application.Models.Chats;
+using Simpchat.Domain.Enums;
 
 namespace Simpchat.Application.Features
 {
@@ -16,13 +10,13 @@ namespace Simpchat.Application.Features
     {
         private readonly IConversationRepository _conversationRepo;
         private readonly INotificationRepository _notificationRepo;
-        private readonly INewUserRepository _userRepo;
+        private readonly IUserRepository _userRepo;
         private readonly IMessageRepository _messageRepo;
 
         public ConversationService(
             IConversationRepository conversationRepo,
             INotificationRepository notificationRepo,
-            INewUserRepository userRepo,
+            IUserRepository userRepo,
             IMessageRepository messageRepo)
         {
             _conversationRepo = conversationRepo;

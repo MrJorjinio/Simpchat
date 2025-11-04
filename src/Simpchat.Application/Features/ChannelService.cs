@@ -1,28 +1,19 @@
-﻿using Simpchat.Application.Interfaces.External.FileStorage;
+﻿using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Models.ApiResult;
 using Simpchat.Application.Models.ApiResults;
-using Simpchat.Application.Models.ApiResults.Enums;
 using Simpchat.Application.Models.Chats;
-using Simpchat.Application.Models.Chats.Get.UserChat;
-using Simpchat.Application.Models.Chats.Post;
-using Simpchat.Application.Models.Chats.Search;
 using Simpchat.Application.Models.Files;
 using Simpchat.Domain.Entities;
-using Simpchat.Domain.Entities.Channels;
-using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Simpchat.Domain.Enums;
 
 namespace Simpchat.Application.Features
 {
     public class ChannelService : IChannelService
     {
         private readonly IChannelRepository _repo;
-        private readonly INewUserRepository _userRepo;
+        private readonly IUserRepository _userRepo;
         private readonly IChatRepository _chatRepo;
         private readonly IFileStorageService _fileStorageService;
         private readonly INotificationRepository _notificationRepo;
@@ -31,7 +22,7 @@ namespace Simpchat.Application.Features
 
         public ChannelService(
             IChannelRepository repo,
-            INewUserRepository userRepo,
+            IUserRepository userRepo,
             IChatRepository chatRepo,
             IFileStorageService fileStorageService,
             INotificationRepository notificationRepository,

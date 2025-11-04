@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simpchat.Application.Common.Pagination.Chat;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults.Enums;
-using Simpchat.Application.Models.Chats.Post.Message;
+using Simpchat.Application.Models.ApiResults;
+using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Files;
-using Simpchat.Domain.Entities;
+using Simpchat.Domain.Enums;
 using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers

@@ -1,10 +1,12 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Simpchat.Application.Interfaces.Auth;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults.Enums;
-using Simpchat.Application.Models.Users.Post;
+using Simpchat.Application.Models.ApiResults;
+using Simpchat.Application.Models.Users;
+using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
 {
@@ -13,29 +15,31 @@ namespace Simpchat.Web.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly IValidator<RegisterUserDto> _validator;
+        private readonly IValidator<RegisterUserDto> _registerValidator;
+        private readonly IValidator<LoginUserDto> _loginUserDto;
+        private readonly IValidator<ResetPasswordDto> _resetPasswordValidator;
+        private readonly IValidator<UpdatePasswordDto> _updatePasswordValidator;
 
-        public AuthController(IAuthService authService, IValidator<RegisterUserDto> validator)
+        public AuthController(
+            IAuthService authService,
+            IValidator<RegisterUserDto> registerValidator,
+            IValidator<LoginUserDto> loginUserDto,
+            IValidator<ResetPasswordDto> resetPasswordValidator,
+            IValidator<UpdatePasswordDto> updatePasswordValidator)
         {
             _authService = authService;
-            _validator = validator;
+            _registerValidator = registerValidator;
+            _loginUserDto = loginUserDto;
+            _resetPasswordValidator = resetPasswordValidator;
+            _updatePasswordValidator = updatePasswordValidator;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> RegisterAsync(RegisterUserDto registerUserDto)
         {
-            var result = await _validator.ValidateAsync(registerUserDto);
+            await _registerValidator.ValidateAndThrowAsync(registerUserDto);
 
-            if (!result.IsValid)
-            {
-                var errors = result.Errors
-                  .GroupBy(e => e.PropertyName)
-                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
-
-                return BadRequest(new ValidationProblemDetails(errors));
-            }
-
-            var response = await _authService.RegisterAsync(registerUserDto.Username, registerUserDto.Password);
+            var response = await _authService.RegisterAsync(registerUserDto);
 
             return response.Status switch
             {
@@ -48,9 +52,11 @@ namespace Simpchat.Web.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> LoginAsync(string username, string password)
+        public async Task<IActionResult> LoginAsync(LoginUserDto loginUserDto)
         {
-            var response = await _authService.LoginAsync(username, password);
+            await _loginUserDto.ValidateAndThrowAsync(loginUserDto);
+
+            var response = await _authService.LoginAsync(loginUserDto);
 
             return response.Status switch
             {
@@ -62,10 +68,34 @@ namespace Simpchat.Web.Controllers
             };
         }
 
-        [HttpPut("update-password/{userId}")]
-        public async Task<IActionResult> UpdatePasswordAsync(Guid userId, string newPassword)
+        [HttpPut("update-password")]
+        public async Task<IActionResult> UpdatePasswordAsync(UpdatePasswordDto updatePasswordDto)
         {
-            var response = await _authService.UpdatePasswordAsync(userId, newPassword);
+            await _updatePasswordValidator.ValidateAndThrowAsync(updatePasswordDto);
+
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var response = await _authService.UpdatePasswordAsync(userId, updatePasswordDto);
+
+            return response.Status switch
+            {
+                ResultStatus.Success => Ok(response),
+                ResultStatus.NotFound => NotFound(response),
+                ResultStatus.Failure => BadRequest(response),
+                ResultStatus.Unauthorized => Unauthorized(response),
+                _ => StatusCode(500, response)
+            };
+        }
+
+        [HttpPut("forgot-password")]
+        [Authorize]
+        public async Task<IActionResult> ForgotPasswordAsync(ResetPasswordDto resetPasswordDto)
+        {
+            await _resetPasswordValidator.ValidateAndThrowAsync(resetPasswordDto);
+
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var response = await _authService.ResetPasswordAsync(userId, resetPasswordDto);
 
             return response.Status switch
             {

@@ -1,8 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Simpchat.Application.Common.Repository;
 using Simpchat.Application.Interfaces.Repositories;
-using Simpchat.Domain.Entities.Groups;
-using SimpchatWeb.Services.Db.Contexts.Default.Entities;
+using Simpchat.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
