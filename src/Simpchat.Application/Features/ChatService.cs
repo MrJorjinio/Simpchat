@@ -1,22 +1,13 @@
 ﻿using Simpchat.Application.Extentions;
-using Simpchat.Application.Interfaces.External.FileStorage;
+using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
+using Simpchat.Application.Models.ApiResult;
 using Simpchat.Application.Models.ApiResults;
-using Simpchat.Application.Models.ApiResults.Enums;
 using Simpchat.Application.Models.Chats;
-using Simpchat.Application.Models.Chats.Get.ById;
-using Simpchat.Application.Models.Chats.Get.Profile;
-using Simpchat.Application.Models.Chats.Get.UserChat;
-using Simpchat.Application.Models.Chats.Search;
-using Simpchat.Application.Models.Users.Response;
+using Simpchat.Application.Models.Users;
 using Simpchat.Domain.Entities;
-using SimpchatWeb.Services.Db.Contexts.Default.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Simpchat.Domain.Enums;
 
 namespace Simpchat.Application.Features
 {
@@ -27,7 +18,7 @@ namespace Simpchat.Application.Features
         private readonly IConversationRepository _conversationRepo;
         private readonly IGroupRepository _groupRepo;
         private readonly IChannelRepository _channelRepo;
-        private readonly INewUserRepository _userRepo;
+        private readonly IUserRepository _userRepo;
         private readonly INotificationRepository _notificationRepo;
         private readonly IFileStorageService _fileStorageService;
         private readonly IGroupService _groupService;
@@ -43,7 +34,7 @@ namespace Simpchat.Application.Features
             IConversationRepository conversationRepo,
             IGroupRepository groupRepo,
             IChannelRepository channelRepo,
-            INewUserRepository userRepo,
+            IUserRepository userRepo,
             INotificationRepository notificationRepo,
             IFileStorageService fileStorageService,
             IChannelService channelService,

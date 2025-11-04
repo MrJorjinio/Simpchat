@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults.Enums;
+using Simpchat.Application.Models.ApiResults;
 using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers

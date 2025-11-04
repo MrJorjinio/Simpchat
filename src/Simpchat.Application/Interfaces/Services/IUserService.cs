@@ -1,8 +1,7 @@
-﻿using Simpchat.Application.Models.ApiResults;
-using Simpchat.Application.Models.Chats.Search;
+﻿using Simpchat.Application.Models.ApiResult;
+using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Files;
-using Simpchat.Application.Models.Users.GetById;
-using Simpchat.Application.Models.Users.Update;
+using Simpchat.Application.Models.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;

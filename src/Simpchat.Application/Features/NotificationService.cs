@@ -1,6 +1,6 @@
 ﻿using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults;
+using Simpchat.Application.Models.ApiResult;
 using System;
 using System.Collections.Generic;
 using System.Linq;

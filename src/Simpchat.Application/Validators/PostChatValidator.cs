@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using Simpchat.Application.Models.Chats.Post;
+using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Validators.Configs;
 using System;
 using System.Collections.Generic;

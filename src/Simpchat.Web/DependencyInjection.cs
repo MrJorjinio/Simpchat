@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Simpchat.Shared.Config;
+using Simpchat.Web.Middlewares;
 using System.Text;
 
 namespace Simpchat.Web
@@ -12,6 +13,7 @@ namespace Simpchat.Web
         {
             services
                 .AddJwtAuthentication(config)
+                .AddExceptionHandling()
                 .AddSwagger();
 
             return services;
@@ -68,6 +70,22 @@ namespace Simpchat.Web
                      {
                          { securitySchema, new[] { "Bearer" } }
                      });
+            });
+
+            return services;
+        }
+
+        private static IServiceCollection AddExceptionHandling(this IServiceCollection services)
+        {
+            services.AddExceptionHandler<ValidationExceptionHandler>();
+            services.AddExceptionHandler<GlobalExceptionHandler>();
+
+            services.AddProblemDetails(opt =>
+            {
+                opt.CustomizeProblemDetails = context =>
+                {
+                    context.ProblemDetails.Extensions.TryAdd("requestId", context.HttpContext.TraceIdentifier);
+                };
             });
 
             return services;

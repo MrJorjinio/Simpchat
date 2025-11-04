@@ -1,11 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Simpchat.Application.Common.Repository;
 using Simpchat.Application.Interfaces.Repositories;
-using SimpchatWeb.Services.Db.Contexts.Default.Entities;
+using Simpchat.Domain.Entities;
 
 namespace Simpchat.Infrastructure.Persistence.Repositories
 {
-    public class UserRepository : INewUserRepository
+    public class UserRepository : IUserRepository
     {
         private readonly SimpchatDbContext _dbContext;
 
@@ -55,6 +55,12 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         {
             return await _dbContext.Users
                 .FirstOrDefaultAsync(u => u.Username == username);
+        }
+
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            return await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
     }
 }

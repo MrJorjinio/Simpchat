@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Builder;
 using Simpchat.Application;
+using Simpchat.Application.Models.ApiResults;
 using Simpchat.Infrastructure;
 using Simpchat.Shared;
 using Simpchat.Web;
+using Simpchat.Web.Middlewares;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -56,6 +59,8 @@ app.UseHttpsRedirection();
 app.UseCors("CorsPolicy");
 
 app.UseAuthorization();
+
+app.UseExceptionHandler();
 
 app.MapControllers();
 
