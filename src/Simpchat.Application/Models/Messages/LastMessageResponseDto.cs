@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simpchat.Application.Models.Chats
+namespace Simpchat.Application.Models.Messages
 {
     public class LastMessageResponseDto
     {

@@ -1,4 +1,5 @@
-﻿using Simpchat.Domain.Enums;
+﻿using Simpchat.Application.Models.Messages;
+using Simpchat.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;

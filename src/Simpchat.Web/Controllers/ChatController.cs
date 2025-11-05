@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Simpchat.Application.Common.Pagination.Chat;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResults;
-using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Files;
+using Simpchat.Application.Models.Messages;
 using Simpchat.Domain.Enums;
 using System.Security.Claims;
 
@@ -17,13 +17,15 @@ namespace Simpchat.Web.Controllers
     {
         private readonly IChatService _chatService;
         private readonly IMessageService _messageService;
-        private readonly IValidator<PostMessageApiRequestDto> _validator;
+        private readonly IChatBanService _chatBanService;
+        private readonly IValidator<PostMessageDto> _validator;
 
-        public ChatController(IChatService chatService, IValidator<PostMessageApiRequestDto> validator, IMessageService messageService)
+        public ChatController(IChatService chatService, IValidator<PostMessageDto> validator, IMessageService messageService, IChatBanService chatBanService)
         {
             _chatService = chatService;
             _validator = validator;
             _messageService = messageService;
+            _chatBanService = chatBanService;
         }
 
         [HttpPost("search")]
@@ -112,45 +114,11 @@ namespace Simpchat.Web.Controllers
             };
         }
 
-        [HttpPost("message")]
-        public async Task<IActionResult> SendMessageAsync([FromForm]PostMessageApiRequestDto messagePostDto, IFormFile? file)
+        [HttpPut("privacy-type")]
+        public async Task<IActionResult> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyType privacyType)
         {
-            var result = await _validator.ValidateAsync(messagePostDto);
-
-            if (!result.IsValid)
-            {
-                var errors = result.Errors
-                  .GroupBy(e => e.PropertyName)
-                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
-
-                return BadRequest(new ValidationProblemDetails(errors));
-            }
-
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-            UploadFileRequest? fileUploadRequest = null;
-
-            if (file != null)
-            {
-                fileUploadRequest = new UploadFileRequest
-                {
-                    Content = file.OpenReadStream(),
-                    FileName = file.FileName,
-                    ContentType = file.ContentType
-                };
-            }
-
-            var messagePostRequest = new PostMessageDto
-            {
-                ChatId = messagePostDto.ChatId,
-                Content = messagePostDto.Content,
-                ReceiverId = messagePostDto.ReceiverId,
-                ReplyId = messagePostDto.ReplyId,
-                FileUploadRequest = fileUploadRequest,
-                SenderId = userId
-            };
-
-            var response = await _messageService.SendMessageAsync(messagePostRequest);
+            var response = await _chatService.UpdatePrivacyTypeAsync(chatId, privacyType);
 
             return response.Status switch
             {
@@ -162,11 +130,25 @@ namespace Simpchat.Web.Controllers
             };
         }
 
-        [HttpPut("privacy-type")]
-        public async Task<IActionResult> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyType privacyType)
+        [HttpPost("ban/{userId}")]
+        public async Task<IActionResult> BanUserAsync(Guid chatId, Guid userId)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var response = await _chatService.UpdatePrivacyTypeAsync(chatId, privacyType);
+            var response = await _chatBanService.BanUserAsync(chatId, userId);
+
+            return response.Status switch
+            {
+                ResultStatus.Success => Ok(response),
+                ResultStatus.NotFound => NotFound(response),
+                ResultStatus.Failure => BadRequest(response),
+                ResultStatus.Unauthorized => Unauthorized(response),
+                _ => StatusCode(500, response)
+            };
+        }
+
+        [HttpPost("unban/{userId}")]
+        public async Task<IActionResult> UnbanUserAsync(Guid chatId, Guid userId)
+        {
+            var response = await _chatBanService.DeleteAsync(chatId, userId);
 
             return response.Status switch
             {

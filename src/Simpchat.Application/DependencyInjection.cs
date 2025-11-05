@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Simpchat.Application.Features;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.Chats;
+using Simpchat.Application.Models.Messages;
 using Simpchat.Application.Models.Users;
 using Simpchat.Application.Validators;
 
@@ -29,6 +30,9 @@ namespace Simpchat.Application
             services.AddScoped<IMessageService, MessageService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IConversationService, ConversationService>();
+            services.AddScoped<IReactionService, ReactionService>();
+            services.AddScoped<IMessageReactionService, MessageReactionService>();
+            services.AddScoped<IChatBanService, ChatBanService>();
 
             return services;
         }
@@ -38,8 +42,8 @@ namespace Simpchat.Application
             services.AddTransient<IValidator<RegisterUserDto>, RegisterUserValidator>();
             services.AddTransient<IValidator<LoginUserDto>, LoginUserValidator>();
             services.AddTransient<IValidator<PostChatDto>, PostChatValidator>();
-            services.AddTransient<IValidator<PostMessageApiRequestDto>, PostMessageValidator>();
-            services.AddTransient<IValidator<PutChatDto>,PutChatValidator >();
+            services.AddTransient<IValidator<PostMessageDto>, PostMessageValidator>();
+            services.AddTransient<IValidator<UpdateChatDto>,UpdateChatValidator >();
             services.AddTransient<IValidator<UpdateUserDto>, UpdateUserInfoValidator>();
             services.AddTransient<IValidator<ResetPasswordDto>, ResetPasswordValidator>();
             services.AddTransient<IValidator<UpdatePasswordDto>, UpdatePasswordValidator>();

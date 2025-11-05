@@ -1,6 +1,5 @@
-﻿using Simpchat.Application.Models.ApiResults;
-
-namespace Simpchat.Application.Models.ApiResult
+﻿
+namespace Simpchat.Application.Models.ApiResults
 {
     public class ApiResult<T>
     {

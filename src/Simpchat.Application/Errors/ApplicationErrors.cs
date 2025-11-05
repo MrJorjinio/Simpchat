@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simpchat.Application.Models.Orders
+namespace Simpchat.Application.Errors
 {
-    public class OrderCreatedDto
+    internal class ApplicationErrors
     {
-        public string ProductName { get; set; }
     }
-
 }

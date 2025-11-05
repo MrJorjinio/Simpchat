@@ -10,8 +10,6 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.Chats
         {
             builder.Property(cp => cp.Id)
                 .HasDefaultValueSql("gen_random_uuid()");
-            builder.Property(cp => cp.From)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
         }
     }
 }

@@ -13,7 +13,6 @@ namespace Simpchat.Web
         {
             services
                 .AddJwtAuthentication(config)
-                .AddExceptionHandling()
                 .AddSwagger();
 
             return services;
@@ -70,22 +69,6 @@ namespace Simpchat.Web
                      {
                          { securitySchema, new[] { "Bearer" } }
                      });
-            });
-
-            return services;
-        }
-
-        private static IServiceCollection AddExceptionHandling(this IServiceCollection services)
-        {
-            services.AddExceptionHandler<ValidationExceptionHandler>();
-            services.AddExceptionHandler<GlobalExceptionHandler>();
-
-            services.AddProblemDetails(opt =>
-            {
-                opt.CustomizeProblemDetails = context =>
-                {
-                    context.ProblemDetails.Extensions.TryAdd("requestId", context.HttpContext.TraceIdentifier);
-                };
             });
 
             return services;

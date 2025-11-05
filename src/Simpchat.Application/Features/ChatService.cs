@@ -5,6 +5,8 @@ using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResult;
 using Simpchat.Application.Models.ApiResults;
 using Simpchat.Application.Models.Chats;
+using Simpchat.Application.Models.Messages;
+using Simpchat.Application.Models.Reactions;
 using Simpchat.Application.Models.Users;
 using Simpchat.Domain.Entities;
 using Simpchat.Domain.Enums;
@@ -22,11 +24,14 @@ namespace Simpchat.Application.Features
         private readonly INotificationRepository _notificationRepo;
         private readonly IFileStorageService _fileStorageService;
         private readonly IGroupService _groupService;
+        private readonly IChatPermissionRepository _chatPermissionRepository;
+        private readonly IChatUserPermissionRepository _chatUserPermissionRepository;
+        private readonly IChatBanRepository _chatBanRepository;
         private readonly IChannelService _channelService;
         private readonly IConversationService _conversationService;
         private readonly IUserService _userService;
-        private readonly IChatPermissionRepository _chatPermissionRepository;
-        private readonly IChatUserPermissionRepository _chatUserPermissionRepository;
+        private readonly IMessageReactionRepository _messageReactionRepo;
+
 
         public ChatService(
             IChatRepository chatRepository,
@@ -42,7 +47,9 @@ namespace Simpchat.Application.Features
             IUserService userService,
             IChatPermissionRepository chatPermissionRepository,
             IChatUserPermissionRepository chatUserPermissionRepository,
-            IGroupService groupService)
+            IGroupService groupService,
+            IChatBanRepository chatBanRepository,
+            IMessageReactionRepository messageReactionRepo)
         {
             _repo = chatRepository;
             _messageRepo = messageRepo;
@@ -58,6 +65,8 @@ namespace Simpchat.Application.Features
             _chatPermissionRepository = chatPermissionRepository;
             _chatUserPermissionRepository = chatUserPermissionRepository;
             _groupService = groupService;
+            _chatBanRepository = chatBanRepository;
+            _messageReactionRepo = messageReactionRepo;
         }
 
         public async Task<ApiResult<Guid>> AddUserPermissionAsync(Guid chatId, Guid userId, string permissionName)
@@ -189,6 +198,16 @@ namespace Simpchat.Application.Features
 
             foreach (var message in chat.Messages)
             {
+                var messageReactions = await _messageReactionRepo.GetMessageReactionAsync(message.Id);
+                var messageReactionModels = messageReactions
+                    .GroupBy(mr => mr.ReactionId)
+                    .Select(g => new GetAllMessageReaction
+                    {
+                        Id = g.Key,
+                        Count = g.Count(),
+                        ImageUrl = g.First().Reaction.ImageUrl
+                    }).ToList();
+
                 var messageModel = new GetByIdMessageDto
                 {
                     MessageId = message.Id,
@@ -201,7 +220,8 @@ namespace Simpchat.Application.Features
                     SenderId = message.SenderId,
                     SentAt = message.SentAt,
                     IsNotificated = await _notificationRepo.CheckIsNotSeenAsync(message.Id, userId),
-                    NotificationId = await _notificationRepo.GetIdAsync(message.Id, userId)
+                    NotificationId = await _notificationRepo.GetIdAsync(message.Id, userId),
+                    MessageReactions = messageReactionModels
                 };
 
                 messagesModels.Add(messageModel);

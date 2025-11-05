@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Models.Chats
 {
-    public class PutChatDto
+    public class UpdateChatDto
     {
         public string Name { get; set; }
         public string Description { get; set; }

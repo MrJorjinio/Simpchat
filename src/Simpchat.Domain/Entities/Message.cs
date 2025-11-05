@@ -1,4 +1,5 @@
-﻿using static System.Net.Mime.MediaTypeNames;
+﻿using Simpchat.Domain.Common;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Simpchat.Domain.Entities
 {
