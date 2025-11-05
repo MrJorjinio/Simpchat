@@ -5,6 +5,7 @@ using Simpchat.Application.Models.ApiResult;
 using Simpchat.Application.Models.ApiResults;
 using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Files;
+using Simpchat.Application.Models.Messages;
 using Simpchat.Domain.Entities;
 using Simpchat.Domain.Enums;
 
@@ -161,7 +162,7 @@ namespace Simpchat.Application.Features
             return ApiResult<List<SearchChatResponseDto>>.SuccessResult(modeledResults);
         }
 
-        public async Task<ApiResult> UpdateAsync(Guid channelId, PutChatDto updateChatDto, UploadFileRequest? avatar)
+        public async Task<ApiResult> UpdateAsync(Guid channelId, UpdateChatDto updateChatDto, UploadFileRequest? avatar)
         {
             var channel = await _repo.GetByIdAsync(channelId);
 

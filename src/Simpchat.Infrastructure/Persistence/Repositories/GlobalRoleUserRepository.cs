@@ -20,30 +20,30 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
 
         public async Task<Guid> CreateAsync(GlobalRoleUser entity)
         {
-            await _dbContext.UsersGlobalRoles.AddAsync(entity);
+            await _dbContext.UserGlobalRoles.AddAsync(entity);
             await _dbContext.SaveChangesAsync();
             return entity.Id;
         }
 
         public async Task DeleteAsync(GlobalRoleUser entity)
         {
-            _dbContext.UsersGlobalRoles.Remove(entity);
+            _dbContext.UserGlobalRoles.Remove(entity);
             await _dbContext.SaveChangesAsync();
         }
 
         public async Task<List<GlobalRoleUser>?> GetAllAsync()
         {
-            return await _dbContext.UsersGlobalRoles.ToListAsync();
+            return await _dbContext.UserGlobalRoles.ToListAsync();
         }
 
         public async Task<GlobalRoleUser?> GetByIdAsync(Guid id)
         {
-            return await _dbContext.UsersGlobalRoles.FindAsync(id);
+            return await _dbContext.UserGlobalRoles.FindAsync(id);
         }
 
         public async Task<List<GlobalRole>> GetUserRolesAsync(Guid userId)
         {
-            var roles = await _dbContext.UsersGlobalRoles
+            var roles = await _dbContext.UserGlobalRoles
                 .Where(ugr => ugr.UserId == userId)
                 .Select(ugr => ugr.Role)
                 .ToListAsync();
@@ -53,7 +53,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
 
         public async Task UpdateAsync(GlobalRoleUser entity)
         {
-            _dbContext.UsersGlobalRoles.Update(entity);
+            _dbContext.UserGlobalRoles.Update(entity);
             await _dbContext.SaveChangesAsync();
         }
     }

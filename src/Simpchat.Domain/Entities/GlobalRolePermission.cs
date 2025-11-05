@@ -1,4 +1,6 @@
-﻿namespace Simpchat.Domain.Entities
+﻿using Simpchat.Domain.Common;
+
+namespace Simpchat.Domain.Entities
 {
     public class GlobalRolePermission : BaseEntity
     {

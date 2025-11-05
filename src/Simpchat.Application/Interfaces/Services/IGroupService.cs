@@ -1,4 +1,5 @@
 ﻿using Simpchat.Application.Models.ApiResult;
+using Simpchat.Application.Models.ApiResults;
 using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Files;
 using System;
@@ -16,7 +17,7 @@ namespace Simpchat.Application.Interfaces.Services
         Task<ApiResult> DeleteAsync(Guid groupId);
         Task<ApiResult> DeleteMemberAsync(Guid userId, Guid groupId);
         Task<ApiResult<List<SearchChatResponseDto>?>> SearchAsync(string searchTerm);
-        Task<ApiResult> UpdateAsync(Guid groupId, PutChatDto updateChatDto, UploadFileRequest? avatar);
+        Task<ApiResult> UpdateAsync(Guid groupId, UpdateChatDto updateChatDto, UploadFileRequest? avatar);
         Task<ApiResult<List<UserChatResponseDto>>> GetUserParticipatedAsync(Guid userId);
     }
 }

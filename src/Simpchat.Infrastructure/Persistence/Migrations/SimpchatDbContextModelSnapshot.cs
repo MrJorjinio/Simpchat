@@ -110,14 +110,6 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ChatId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("From")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
-
-                    b.Property<DateTimeOffset>("To")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
@@ -127,7 +119,7 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ChatsBans");
+                    b.ToTable("ChatBans");
                 });
 
             modelBuilder.Entity("Simpchat.Domain.Entities.ChatPermission", b =>
@@ -320,7 +312,7 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("UsersGlobalRoles");
+                    b.ToTable("UserGlobalRoles");
                 });
 
             modelBuilder.Entity("Simpchat.Domain.Entities.Group", b =>

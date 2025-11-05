@@ -14,11 +14,11 @@ namespace Simpchat.Web.Controllers
     public class GroupController : ControllerBase
     {
         private readonly IGroupService _groupService;
-        private readonly IValidator<PutChatDto> _updateValidator;
+        private readonly IValidator<UpdateChatDto> _updateValidator;
         private readonly IValidator<PostChatDto> _createValidator;
         private readonly IChatService _chatService;
 
-        public GroupController(IGroupService groupService, IValidator<PutChatDto> updateValidator, IValidator<PostChatDto> createValidator, IChatService chatService)
+        public GroupController(IGroupService groupService, IValidator<UpdateChatDto> updateValidator, IValidator<PostChatDto> createValidator, IChatService chatService)
         {
             _groupService = groupService;
             _updateValidator = updateValidator;
@@ -121,9 +121,9 @@ namespace Simpchat.Web.Controllers
             };
         }
 
-        [HttpPost("update")]
+        [HttpPut]
         [Authorize]
-        public async Task<IActionResult> UpdateAsync(Guid chatId, [FromForm]PutChatDto updateChatDto, IFormFile file)
+        public async Task<IActionResult> UpdateAsync(Guid chatId, [FromForm]UpdateChatDto updateChatDto, IFormFile file)
         {
             var result = await _updateValidator.ValidateAsync(updateChatDto);
 

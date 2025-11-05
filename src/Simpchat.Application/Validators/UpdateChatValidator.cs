@@ -4,9 +4,9 @@ using Simpchat.Application.Validators.Configs;
 
 namespace Simpchat.Application.Validators
 {
-    public class PutChatValidator : AbstractValidator<PutChatDto>
+    public class UpdateChatValidator : AbstractValidator<UpdateChatDto>
     {
-        public PutChatValidator()
+        public UpdateChatValidator()
         {
             RuleFor(c => c.Name)
                 .NotEmpty()

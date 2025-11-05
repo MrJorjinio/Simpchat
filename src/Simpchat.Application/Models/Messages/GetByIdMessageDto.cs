@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Simpchat.Application.Models.Reactions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simpchat.Application.Models.Chats
+namespace Simpchat.Application.Models.Messages
 {
     public class GetByIdMessageDto
     {
@@ -19,5 +20,6 @@ namespace Simpchat.Application.Models.Chats
         public bool IsSeen { get; set; }
         public bool IsNotificated { get; set; }
         public Guid NotificationId { get; set; }
+        public List<GetAllMessageReaction> MessageReactions { get; set; }
     }
 }

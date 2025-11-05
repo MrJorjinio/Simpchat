@@ -2,7 +2,9 @@
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.Chats;
+using Simpchat.Application.Models.ApiResults;
+using Simpchat.Application.Models.Files;
+using Simpchat.Application.Models.Messages;
 using Simpchat.Domain.Entities;
 using Simpchat.Domain.Enums;
 
@@ -31,20 +33,28 @@ namespace Simpchat.Application.Features
             _conversationRepo = conversationRepo;
         }
 
-        public async Task<ApiResult<Guid>> SendMessageAsync(PostMessageDto postMessageDto)
+        public async Task<ApiResult<Guid>> SendMessageAsync(PostMessageDto postMessageDto, UploadFileRequest? uploadFileRequest)
         {
             string? fileUrl = null;
-            if (postMessageDto.FileUploadRequest?.Content != null &&
-                postMessageDto.FileUploadRequest.FileName != null &&
-                postMessageDto.FileUploadRequest.ContentType != null)
+            if (uploadFileRequest.Content != null &&
+                uploadFileRequest.FileName != null &&
+                uploadFileRequest.ContentType != null)
             {
                 fileUrl = await _fileStorageService.UploadFileAsync(
                     BucketName,
-                    postMessageDto.FileUploadRequest.FileName,
-                    postMessageDto.FileUploadRequest.Content,
-                    postMessageDto.FileUploadRequest.ContentType
+                    uploadFileRequest.FileName,
+                    uploadFileRequest.Content,
+                    uploadFileRequest.ContentType
                 );
             }
+
+            if (postMessageDto.ReplyId is not null)
+            {
+                if (await _repo.GetByIdAsync((Guid)postMessageDto.ReplyId) is null)
+                {
+                    return ApiResult<Guid>.FailureResult($"Reply-Message ID[{postMessageDto.ReplyId} not found");
+                }
+            }            
 
             Guid chatId;
             if (postMessageDto.ChatId != null)
@@ -94,6 +104,64 @@ namespace Simpchat.Application.Features
             await _repo.CreateAsync(message);
 
             return ApiResult<Guid>.SuccessResult(message.Id);
+        }
+
+        public async Task<ApiResult> UpdateAsync(Guid messageId, UpdateMessageDto updateMessageDto, UploadFileRequest? uploadFileRequest)
+        {
+            string? fileUrl = null;
+            if (uploadFileRequest.Content != null &&
+                uploadFileRequest.FileName != null &&
+                uploadFileRequest.ContentType != null)
+            {
+                fileUrl = await _fileStorageService.UploadFileAsync(
+                    BucketName,
+                    uploadFileRequest.FileName,
+                    uploadFileRequest.Content,
+                    uploadFileRequest.ContentType
+                );
+            }
+
+            if (updateMessageDto.ReplyId is not null)
+            {
+                if (await _repo.GetByIdAsync((Guid)updateMessageDto.ReplyId) is null)
+                {
+                    return ApiResult.FailureResult($"Reply-Message ID[{updateMessageDto.ReplyId} not found");
+                }
+            }
+
+            var message = await _repo.GetByIdAsync(messageId);
+
+            if (message is null)
+            {
+                return ApiResult.FailureResult($"Message with ID[{messageId}] not found");
+            }
+
+            if (fileUrl is null)
+            {
+                fileUrl = message.FileUrl;
+            }
+
+            message.FileUrl = fileUrl;
+            message.Content = updateMessageDto.Content;
+            message.ReplyId = updateMessageDto.ReplyId;
+
+            await _repo.UpdateAsync(message);
+
+            return ApiResult.SuccessResult();
+        }
+
+        public async Task<ApiResult> DeleteAsync(Guid messageId)
+        {
+            var message = await _repo.GetByIdAsync(messageId);
+
+            if (message is null)
+            {
+                return ApiResult.FailureResult($"Message with ID[{messageId}] not found");
+            }
+
+            await _repo.DeleteAsync(message);
+
+            return ApiResult.SuccessResult();
         }
     }
 }

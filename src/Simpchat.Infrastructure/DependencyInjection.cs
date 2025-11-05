@@ -55,6 +55,9 @@ namespace Simpchat.Infrastructure
             services.AddScoped<IChatUserPermissionRepository, ChatUserPermissionRepository>();
             services.AddScoped<IUserOtpRepository, UserOtpRepository>();
             services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
+            services.AddScoped<IChatBanRepository, ChatBanRepository>();
+            services.AddScoped<IReactionRepository, ReactionRepository>();
+            services.AddScoped<IMessageReactionRepository, MessageReactionRepository>();
 
             return services;
         }

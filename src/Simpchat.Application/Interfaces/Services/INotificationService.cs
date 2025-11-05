@@ -1,4 +1,5 @@
 ﻿using Simpchat.Application.Models.ApiResult;
+using Simpchat.Application.Models.ApiResults;
 using System;
 using System.Collections.Generic;
 using System.Linq;
