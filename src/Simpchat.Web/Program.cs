@@ -60,7 +60,7 @@ app.UseCors("CorsPolicy");
 
 app.UseAuthorization();
 
-app.UseExceptionHandler();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.MapControllers();
 

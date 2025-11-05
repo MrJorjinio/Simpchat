@@ -1,4 +1,5 @@
-﻿using Simpchat.Domain.Enums;
+﻿using Simpchat.Domain.Common;
+using Simpchat.Domain.Enums;
 
 namespace Simpchat.Domain.Entities
 {

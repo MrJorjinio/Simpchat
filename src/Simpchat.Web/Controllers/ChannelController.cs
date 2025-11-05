@@ -15,10 +15,10 @@ namespace Simpchat.Web.Controllers
     {
         private readonly IChannelService _channelService;
         private readonly IChatService _chatService;
-        private readonly IValidator<PutChatDto> _updateValidator;
+        private readonly IValidator<UpdateChatDto> _updateValidator;
         private readonly IValidator<PostChatDto> _createValidator;
 
-        public ChannelController(IChannelService channelService, IChatService chatService, IValidator<PutChatDto> updateValidator, IValidator<PostChatDto> createValidator)
+        public ChannelController(IChannelService channelService, IChatService chatService, IValidator<UpdateChatDto> updateValidator, IValidator<PostChatDto> createValidator)
         {
             _channelService = channelService;
             _chatService = chatService;
@@ -124,7 +124,7 @@ namespace Simpchat.Web.Controllers
 
         [HttpPost("update")]
         [Authorize]
-        public async Task<IActionResult> UpdateAsync(Guid chatId, [FromForm]PutChatDto updateChatDto, IFormFile file)
+        public async Task<IActionResult> UpdateAsync(Guid chatId, [FromForm]UpdateChatDto updateChatDto, IFormFile file)
         {
             var result = await _updateValidator.ValidateAsync(updateChatDto);
 

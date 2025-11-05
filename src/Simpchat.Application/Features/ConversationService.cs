@@ -1,7 +1,9 @@
 ﻿using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResult;
+using Simpchat.Application.Models.ApiResults;
 using Simpchat.Application.Models.Chats;
+using Simpchat.Application.Models.Messages;
 using Simpchat.Domain.Enums;
 
 namespace Simpchat.Application.Features

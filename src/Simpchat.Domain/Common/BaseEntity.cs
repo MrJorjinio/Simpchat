@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simpchat.Domain.Entities;
+namespace Simpchat.Domain.Common;
 
 public class BaseEntity
 {

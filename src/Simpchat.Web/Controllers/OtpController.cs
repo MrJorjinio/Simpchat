@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Simpchat.Application.Interfaces.Email;
 using Simpchat.Application.Models.ApiResult;
+using Simpchat.Application.Models.ApiResults;
 using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
