@@ -18,20 +18,13 @@ namespace Simpchat.Infrastructure.Security
             _jwtSettings = appSettings.Value.JwtSettings;
         }
 
-        public async Task<string> GenerateJwtTokenAsync(Guid userId, IEnumerable<GlobalRole> roles)
+        public async Task<string> GenerateJwtTokenAsync(Guid userId, GlobalRole role)
         {
             List<Claim> claims = new List<Claim>()
             {
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim(ClaimTypes.Role, role.Name.ToString())
             };
-
-            if (roles is not null)
-            {
-                foreach (var role in roles)
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, role.Name));
-                }
-            }
 
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_jwtSettings.Key)

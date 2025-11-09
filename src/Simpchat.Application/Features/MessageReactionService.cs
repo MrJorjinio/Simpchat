@@ -1,8 +1,10 @@
-﻿using Simpchat.Application.Interfaces.Repositories;
+﻿using Simpchat.Application.Errors;
+using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Application.Models.Reactions;
 using Simpchat.Domain.Entities;
+using Simpchat.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,27 +34,27 @@ namespace Simpchat.Application.Features
             _messageRepo = messageRepo;
         }
 
-        public async Task<ApiResult<Guid>> CreateAsync(Guid messageId, Guid reactionId, Guid userId)
+        public async Task<Result<Guid>> CreateAsync(Guid messageId, Guid reactionId, Guid userId)
         {
             var reaction = await _repo.GetByIdAsync(reactionId);
 
             if (reaction is null)
             {
-                return ApiResult<Guid>.FailureResult($"Reaction with ID[{reactionId} not found");
+                return Result.Failure<Guid>(ApplicationErrors.Reaction.IdNotFound);
             }
 
             var message = await _repo.GetByIdAsync(messageId);
 
             if (message is null)
             {
-                return ApiResult<Guid>.FailureResult($"Message with ID[{messageId}] not found");
+                return Result.Failure<Guid>(ApplicationErrors.Message.IdNotFound);
             }
 
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult<Guid>.FailureResult($"User with ID[{userId} not found");
+                return Result.Failure<Guid>(ApplicationErrors.User.IdNotFound);
             }
 
             var messageReaction = new MessageReaction
@@ -64,42 +66,42 @@ namespace Simpchat.Application.Features
 
             await _repo.CreateAsync(messageReaction);
 
-            return ApiResult<Guid>.SuccessResult(messageReaction.Id);
+            return messageReaction.Id;
         }
 
-        public async Task<ApiResult> DeleteAsync(Guid messageId, Guid userId)
+        public async Task<Result> DeleteAsync(Guid messageId, Guid userId)
         {
             var message = await _repo.GetByIdAsync(messageId);
 
             if (message is null)
             {
-                return ApiResult.FailureResult($"Message with ID[{messageId}] not found");
+                return Result.Failure<Guid>(ApplicationErrors.Message.IdNotFound);
             }
 
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult.FailureResult($"User with ID[{userId} not found");
+                return Result.Failure<Guid>(ApplicationErrors.User.IdNotFound);
             }
 
             var userReactionId = await _repo.GetIdAsync(messageId, userId);
 
             if (userReactionId is null)
             {
-                return ApiResult.FailureResult($"UserReaction with MESSAGE_ID[{messageId}] and USER_ID[{userId}] not found");
+                return Result.Failure<Guid>(ApplicationErrors.UserReaction.NotFoundWithUserIdAndReactionId);
             }
 
             var userReaction = await _repo.GetByIdAsync((Guid)userReactionId);
 
             if (userReaction is null)
             {
-                return ApiResult.FailureResult($"Reaction with ID[{userReactionId}");
+                return Result.Failure<Guid>(ApplicationErrors.Reaction.IdNotFound);
             }
 
             await _repo.DeleteAsync(userReaction);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
     }
 }

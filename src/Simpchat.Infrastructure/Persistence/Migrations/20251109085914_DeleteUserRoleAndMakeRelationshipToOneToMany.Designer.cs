@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Simpchat.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using Simpchat.Infrastructure.Persistence;
 namespace Simpchat.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(SimpchatDbContext))]
-    partial class SimpchatDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251109085914_DeleteUserRoleAndMakeRelationshipToOneToMany")]
+    partial class DeleteUserRoleAndMakeRelationshipToOneToMany
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -467,6 +470,10 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("text");
 
+                    b.Property<string>("ChatMemberAddPermissionType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Description")
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(85)
@@ -474,10 +481,6 @@ namespace Simpchat.Infrastructure.Persistence.Migrations
                         .HasDefaultValue("");
 
                     b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("HwoCanAddType")
                         .IsRequired()
                         .HasColumnType("text");
 

@@ -1,5 +1,6 @@
 ﻿using Simpchat.Application.Models.ApiResult;
 using Simpchat.Domain.Entities;
+using Simpchat.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +11,9 @@ namespace Simpchat.Application.Interfaces.Email
 {
     public interface IOtpService
     {
-        Task<string> GenerateAndSaveUserOtpAsync(Guid userId);
-        Task<string> ValidateOtpCodeAsync(Guid userId, string code);
-        Task<string> GenerateAndSaveEmailOtpAsync(string email);
-        Task<string> GetEmailOtpAsync(string email);
+        Task<Result> SendAndSaveUserOtpAsync(Guid userId);
+        Task<Result> SendAndSaveEmailOtpAsync(string email);
+        Task<Result<bool>> ValidateUserOtpAsync(Guid userId, string otpCode);
+        Task<Result<bool>> ValidateEmailOtpAsync(string email, string otpCode);
     }
 }

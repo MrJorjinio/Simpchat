@@ -1,6 +1,7 @@
 ﻿using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Application.Models.Users;
+using Simpchat.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +12,9 @@ namespace Simpchat.Application.Interfaces.Services
 {
     public interface IAuthService
     {
-        Task<ApiResult<Guid>> RegisterAsync(RegisterUserDto registerUserDto);
-        Task<ApiResult<string>> LoginAsync(LoginUserDto loginUserDto);
-        Task<ApiResult> UpdatePasswordAsync(Guid userId, UpdatePasswordDto updatePasswordDto);
-        Task<ApiResult> ResetPasswordAsync(Guid userId, ResetPasswordDto resetPasswordDto);
+        Task<Result<Guid>> RegisterAsync(RegisterUserDto registerUserDto);
+        Task<Result<string>> LoginAsync(LoginUserDto loginUserDto);
+        Task<Result> UpdatePasswordAsync(Guid userId, UpdatePasswordDto updatePasswordDto);
+        Task<Result> ResetPasswordAsync(Guid userId, ResetPasswordDto resetPasswordDto);
     }
 }

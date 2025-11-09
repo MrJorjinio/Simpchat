@@ -6,7 +6,7 @@ namespace Simpchat.Application.Models.Chats
     {
         public Guid EntityId { get; set; }
         public Guid? ChatId { get; set; }
-        public ChatType ChatType { get; set; }
+        public ChatTypes ChatType { get; set; }
         public string DisplayName { get; set; }
         public string? AvatarUrl { get; set; }
     }

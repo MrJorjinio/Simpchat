@@ -2,22 +2,22 @@
 {
     public enum GlobalPermissionType
     {
-        // User
-        SendMessage,
-        UpdateOwnMessage,
-        JoinGroup,
-        JoinChannel,
-        ReactToMessage,
-
         // Moderator
-        ManageMessages,
-        ManageReactions,
-        ManageUsersInGroups,
-        ManageUsersInChannels,
-        ManageGroupBasics,
-        PinMessages,
+        DeleteAnyMessage,
+        EditGroupInfo,
+        PinOrUnpinMessages,
+        ManageUserReactions,
+        MuteOrBanUsers,
+        InviteUsers,
 
         // Admin
-        FullAccess
+        ManageRoles,
+        ManagePermissions,
+        ManageSystemSettings,
+        DeleteGroups,
+        DeleteChannels,
+        AccessAllData,
+        ManageInfrastructure
     }
+
 }

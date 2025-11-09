@@ -1,6 +1,6 @@
 ﻿namespace Simpchat.Domain.Enums
 {
-    public enum ChatMemberAddPermissionType
+    public enum HwoCanAddYouTypes
     {
         Everyone,
         WithConversations,

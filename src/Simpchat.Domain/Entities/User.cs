@@ -11,8 +11,10 @@ namespace Simpchat.Domain.Entities
         public string AvatarUrl { get; set; }
         public string PasswordHash { get; set; }
         public string Salt { get; set; }
+        public Guid RoleId { get; set; }
+        public GlobalRole Role { get; set; }
         public DateTimeOffset RegisteredAt { get; set; } = DateTimeOffset.UtcNow;
-        public ChatMemberAddPermissionType ChatMemberAddPermissionType { get; set; }
+        public HwoCanAddYouTypes HwoCanAddType { get; set; }
         public DateTimeOffset LastSeen { get; set; } = DateTimeOffset.UtcNow;
         public ICollection<MessageReaction> MessageReactions { get; set; }
         public ICollection<Message> Messages { get; set; }
@@ -23,7 +25,6 @@ namespace Simpchat.Domain.Entities
         public ICollection<ChannelSubscriber> SubscribedChannels { get; set; }
         public ICollection<GroupMember> ParticipatedGroups { get; set; }
         public ICollection<ChatUserPermission> ChatPermissions { get; set; }
-        public ICollection<GlobalRoleUser> GlobalRoles { get; set; }
         public ICollection<Notification> Notifications { get; set; }
         public ICollection<ChatBan> ChatBans { get; set; }
         public ICollection<UserOtp> UserOtps { get; set; }

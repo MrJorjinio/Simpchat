@@ -1,10 +1,12 @@
-﻿using Simpchat.Application.Interfaces.Repositories;
+﻿using Simpchat.Application.Errors;
+using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Messages;
 using Simpchat.Domain.Enums;
+using Simpchat.Shared.Models;
 
 namespace Simpchat.Application.Features
 {
@@ -27,27 +29,27 @@ namespace Simpchat.Application.Features
             _messageRepo = messageRepo;
         }
 
-        public async Task<ApiResult> DeleteAsync(Guid conversationId)
+        public async Task<Result> DeleteAsync(Guid conversationId)
         {
             var conversation = await _conversationRepo.GetByIdAsync(conversationId);
 
             if (conversation is null)
             {
-                return ApiResult.FailureResult($"Conversation with ID[{conversationId}] not found");
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
             }
 
             await _conversationRepo.DeleteAsync(conversation);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
 
-        public async Task<ApiResult<List<UserChatResponseDto>>> GetUserConversationsAsync(Guid userId)
+        public async Task<Result<List<UserChatResponseDto>>> GetUserConversationsAsync(Guid userId)
         {
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult<List<UserChatResponseDto>>.FailureResult($"User with ID[{userId}] not found");
+                return Result.Failure<List<UserChatResponseDto>>(ApplicationErrors.User.IdNotFound);
             }
 
             var conversations = await _conversationRepo.GetUserConversationsAsync(userId);
@@ -65,7 +67,7 @@ namespace Simpchat.Application.Features
                     AvatarUrl = conversation.UserId1 == userId ? conversation.User2.AvatarUrl : conversation.User1.AvatarUrl,
                     Name = conversation.UserId1 == userId ? conversation.User2.Username : conversation.User1.Username,
                     Id = conversation.Id,
-                    Type = ChatType.Conversation,
+                    Type = ChatTypes.Conversation,
                     LastMessage = new LastMessageResponseDto
                     {
                         Content = lastMessage.Content,
@@ -82,7 +84,7 @@ namespace Simpchat.Application.Features
 
             modeledConversations.OrderByDescending(mc => (DateTimeOffset?)mc.LastMessage.SentAt ?? DateTimeOffset.MinValue);
 
-            return ApiResult<List<UserChatResponseDto>>.SuccessResult(modeledConversations);
+            return modeledConversations;
         }
     }
 }

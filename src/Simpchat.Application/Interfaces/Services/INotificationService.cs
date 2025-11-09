@@ -1,5 +1,5 @@
 ﻿using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
+using Simpchat.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +10,6 @@ namespace Simpchat.Application.Interfaces.Services
 {
     public interface INotificationService
     {
-        Task<ApiResult> SetAsSeenAsync(Guid notificationId);
+        Task<Result> SetAsSeenAsync(Guid notificationId);
     }
 }

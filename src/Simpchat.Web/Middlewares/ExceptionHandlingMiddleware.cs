@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
+
 using System.Diagnostics;
 
 namespace Simpchat.Web.Middlewares

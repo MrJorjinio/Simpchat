@@ -2,8 +2,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Simpchat.Application.Common.Pagination.Chat;
+using Simpchat.Application.Extentions;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Application.Models.Files;
 using Simpchat.Application.Models.Messages;
 using Simpchat.Domain.Enums;
@@ -18,12 +19,10 @@ namespace Simpchat.Web.Controllers
         private readonly IChatService _chatService;
         private readonly IMessageService _messageService;
         private readonly IChatBanService _chatBanService;
-        private readonly IValidator<PostMessageDto> _validator;
 
-        public ChatController(IChatService chatService, IValidator<PostMessageDto> validator, IMessageService messageService, IChatBanService chatBanService)
+        public ChatController(IChatService chatService, IMessageService messageService, IChatBanService chatBanService)
         {
             _chatService = chatService;
-            _validator = validator;
             _messageService = messageService;
             _chatBanService = chatBanService;
         }
@@ -33,16 +32,11 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> SearchByNameAsync(ChatSearchPageModel model)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var response = await _chatService.SearchAsync(model.searchTerm, userId);
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            var response = await _chatService.SearchAsync(model.searchTerm, userId);
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
         }
 
         [HttpPost("add-user-permission")]
@@ -52,15 +46,9 @@ namespace Simpchat.Web.Controllers
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             var response = await _chatService.AddUserPermissionAsync(userId, chatId, permissionName);
+            var apiResponse = response.ToApiResult();
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            return apiResponse.ToActionResult();
         }
 
         [HttpGet("me")]
@@ -68,16 +56,11 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> GetMyChatsAsync()
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var response = await _chatService.GetUserChatsAsync(userId);
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            var response = await _chatService.GetUserChatsAsync(userId);
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
         }
 
         [HttpGet("{chatId}")]
@@ -85,16 +68,11 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> GetByIdAsync(Guid chatId)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var response = await _chatService.GetByIdAsync(chatId, userId);
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            var response = await _chatService.GetByIdAsync(chatId, userId);
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
         }
 
         [HttpGet("{chatId}/profile")]
@@ -102,62 +80,40 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> GetProfileByIdAsync(Guid chatId)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var response = await _chatService.GetProfileAsync(chatId, userId);
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            var response = await _chatService.GetProfileAsync(chatId, userId);
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
         }
 
         [HttpPut("privacy-type")]
         public async Task<IActionResult> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyType privacyType)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-            var response = await _chatService.UpdatePrivacyTypeAsync(chatId, privacyType);
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            var response = await _chatService.UpdatePrivacyTypeAsync(chatId, privacyType);
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
         }
 
         [HttpPost("ban/{userId}")]
         public async Task<IActionResult> BanUserAsync(Guid chatId, Guid userId)
         {
             var response = await _chatBanService.BanUserAsync(chatId, userId);
+            var apiResponse = response.ToApiResult();
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            return apiResponse.ToActionResult();
         }
 
         [HttpPost("unban/{userId}")]
         public async Task<IActionResult> UnbanUserAsync(Guid chatId, Guid userId)
         {
             var response = await _chatBanService.DeleteAsync(chatId, userId);
+            var apiResponse = response.ToApiResult();
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            return apiResponse.ToActionResult();
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Simpchat.Application.Models.Chats
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string? AvatarUrl { get; set; }
-        public ChatType Type { get; set; }
+        public ChatTypes Type { get; set; }
         public int ParticipantsCount { get; set; }
         public int ParticipantsOnline { get; set; }
         public int NotificationsCount { get; set; }

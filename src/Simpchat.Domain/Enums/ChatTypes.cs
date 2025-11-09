@@ -1,6 +1,6 @@
 ﻿namespace Simpchat.Domain.Enums
 {
-    public enum ChatType
+    public enum ChatTypes
     {
         Conversation,
         Group,
