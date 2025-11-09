@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Simpchat.Application.Extentions;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults;
+
 using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
@@ -23,15 +24,9 @@ namespace Simpchat.Web.Controllers
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             var response = await _conversationService.DeleteAsync(conversationId);
+            var apiResponse = response.ToApiResult();
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            return apiResponse.ToActionResult();
         }
     }
 }

@@ -38,7 +38,7 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.Users
             builder.Property(u => u.LastSeen)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
 
-            builder.Property(u => u.ChatMemberAddPermissionType)
+            builder.Property(u => u.HwoCanAddType)
                 .HasConversion<string>();
 
             builder.Property(u => u.AvatarUrl)

@@ -4,6 +4,7 @@ using Simpchat.Application.Features;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Messages;
+using Simpchat.Application.Models.Reactions;
 using Simpchat.Application.Models.Users;
 using Simpchat.Application.Validators;
 
@@ -39,14 +40,17 @@ namespace Simpchat.Application
 
         private static IServiceCollection AddValidation(this IServiceCollection services)
         {
-            services.AddTransient<IValidator<RegisterUserDto>, RegisterUserValidator>();
-            services.AddTransient<IValidator<LoginUserDto>, LoginUserValidator>();
-            services.AddTransient<IValidator<PostChatDto>, PostChatValidator>();
-            services.AddTransient<IValidator<PostMessageDto>, PostMessageValidator>();
-            services.AddTransient<IValidator<UpdateChatDto>,UpdateChatValidator >();
-            services.AddTransient<IValidator<UpdateUserDto>, UpdateUserInfoValidator>();
-            services.AddTransient<IValidator<ResetPasswordDto>, ResetPasswordValidator>();
-            services.AddTransient<IValidator<UpdatePasswordDto>, UpdatePasswordValidator>();
+            services.AddScoped<IValidator<RegisterUserDto>, RegisterUserValidator>();
+            services.AddScoped<IValidator<LoginUserDto>, LoginUserValidator>();
+            services.AddScoped<IValidator<PostChatDto>, PostChatValidator>();
+            services.AddScoped<IValidator<PostMessageDto>, PostMessageValidator>();
+            services.AddScoped<IValidator<UpdateChatDto>,UpdateChatValidator >();
+            services.AddScoped<IValidator<UpdateUserDto>, UpdateUserInfoValidator>();
+            services.AddScoped<IValidator<ResetPasswordDto>, ResetPasswordValidator>();
+            services.AddScoped<IValidator<UpdatePasswordDto>, UpdatePasswordValidator>();
+            services.AddScoped<IValidator<PostReactionDto>, PostReactionValidator>();
+            services.AddScoped<IValidator<UpdateReactionDto>, UpdateReactionValidator>();
+            services.AddScoped<IValidator<UpdateMessageDto>, UpdateMessageValidator>();
 
             return services;
         }

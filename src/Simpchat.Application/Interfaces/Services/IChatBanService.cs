@@ -1,4 +1,5 @@
-﻿using Simpchat.Application.Models.ApiResults;
+﻿
+using Simpchat.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace Simpchat.Application.Interfaces.Services
 {
     public interface IChatBanService
     {
-        Task<ApiResult<Guid>> BanUserAsync(Guid chatId, Guid userId);
-        Task<ApiResult> DeleteAsync(Guid chatId, Guid userId);
+        Task<Result<Guid>> BanUserAsync(Guid chatId, Guid userId);
+        Task<Result> DeleteAsync(Guid chatId, Guid userId);
     }
 }

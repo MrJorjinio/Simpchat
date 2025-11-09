@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Simpchat.Application.Extentions;
 using Simpchat.Application.Interfaces.Email;
 using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
+
 using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
@@ -23,23 +24,23 @@ namespace Simpchat.Web.Controllers
 
         [HttpPost("send-to-user")]
         [Authorize]
-        public async Task<IActionResult> SendToUserAsync(string email)
+        public async Task<IActionResult> SendToUserAsync()
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var otp = await _otpService.GenerateAndSaveUserOtpAsync(userId);
-            await _emailService.SendOtpAsync(email, otp);
+            var response = await _otpService.SendAndSaveUserOtpAsync(userId);
+            var apiResponse = response.ToApiResult();
 
-            return Ok(ApiResult.SuccessResult());
+            return apiResponse.ToActionResult();
         }
 
         [HttpPost("send-to-email")]
         public async Task<IActionResult> SendToEmailAsync(string email)
         {
-            var otpCode = await _otpService.GenerateAndSaveEmailOtpAsync(email);
-            await _emailService.SendOtpAsync(email, otpCode);
+            var response = await _otpService.SendAndSaveEmailOtpAsync(email);
+            var apiResponse = response.ToApiResult();
 
-            return Ok(ApiResult.SuccessResult());
+            return apiResponse.ToActionResult();
         }
     }
 }

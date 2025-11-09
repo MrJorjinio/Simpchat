@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Simpchat.Application.Extentions;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Application.Models.Files;
 using Simpchat.Application.Models.Users;
 using System.Security.Claims;
@@ -14,12 +15,10 @@ namespace Simpchat.Web.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IMapper _mapper;
 
-        public UserController(IUserService userService, IMapper mapper)
+        public UserController(IUserService userService)
         {
             _userService = userService;
-            _mapper = mapper;
         }
 
         [HttpGet("{id}")]
@@ -27,15 +26,11 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> GetByIdAsync(Guid id)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
             var response = await _userService.GetByIdAsync(id, userId);
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
         }
 
         [HttpGet("search/{username}")]
@@ -44,8 +39,10 @@ namespace Simpchat.Web.Controllers
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var users = await _userService.SearchAsync(username, userId);
-            return Ok(users);
+            var response = await _userService.SearchAsync(username, userId);
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
         }
 
         [HttpPut("last-seen")]
@@ -53,15 +50,11 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> SetLastSeenAsync()
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
             var response = await _userService.SetLastSeenAsync(userId);
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
         }
 
         [HttpPut]
@@ -82,15 +75,9 @@ namespace Simpchat.Web.Controllers
             }
 
             var response = await _userService.UpdateAsync(userId, model, fileUploadRequest);
+            var apiResponse = response.ToApiResult();
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            return apiResponse.ToActionResult();
         }
     }
 }

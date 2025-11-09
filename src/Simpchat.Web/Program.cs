@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Simpchat.Application;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Infrastructure;
+using Simpchat.Infrastructure.Persistence.Interfaces;
 using Simpchat.Shared;
 using Simpchat.Web;
 using Simpchat.Web.Middlewares;
@@ -54,13 +55,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+using (var scope = app.Services.CreateAsyncScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
+    await seeder.SeedAsync();
+}
+
 app.UseHttpsRedirection();
 
 app.UseCors("CorsPolicy");
 
 app.UseAuthorization();
-
-app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.MapControllers();
 

@@ -1,10 +1,14 @@
-﻿using Simpchat.Application.Interfaces.File;
+﻿using FluentValidation;
+using Simpchat.Application.Errors;
+using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Application.Models.Files;
 using Simpchat.Application.Models.Reactions;
+using Simpchat.Application.Validators;
 using Simpchat.Domain.Entities;
+using Simpchat.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,16 +22,35 @@ namespace Simpchat.Application.Features
     {
         private readonly IReactionRepository _repo;
         private readonly IFileStorageService _fileStorageService;
+        private readonly IValidator<PostReactionDto> _postReactionValidator;
+        private readonly IValidator<UpdateReactionDto> _updateReactionValidator;
         private const string BucketName = "reactions-images";
 
-        public ReactionService(IReactionRepository repo, IFileStorageService fileStorageService)
+        public ReactionService(
+            IReactionRepository repo,
+            IFileStorageService fileStorageService,
+            IValidator<PostReactionDto> postReactionValidator,
+            IValidator<UpdateReactionDto> updateReactionValidator)
         {
             _repo = repo;
             _fileStorageService = fileStorageService;
+            _postReactionValidator = postReactionValidator;
+            _updateReactionValidator = updateReactionValidator;
         }
 
-        public async Task<ApiResult<Guid>> CreateAsync(PostReactionDto postReactionDto, UploadFileRequest? uploadFileRequest)
+        public async Task<Result<Guid>> CreateAsync(PostReactionDto postReactionDto, UploadFileRequest? uploadFileRequest)
         {
+            var validationResult = await _postReactionValidator.ValidateAsync(postReactionDto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return Result.Failure<Guid>(ApplicationErrors.Validation.Failed, errors);
+            }
+
             var reaction = new Reaction
             {
                 Name = postReactionDto.Name
@@ -43,24 +66,24 @@ namespace Simpchat.Application.Features
 
             await _repo.CreateAsync(reaction);
 
-            return ApiResult<Guid>.SuccessResult(reaction.Id);
+            return reaction.Id;
         }
 
-        public async Task<ApiResult> DeleteAsync(Guid reactionId)
+        public async Task<Result> DeleteAsync(Guid reactionId)
         {
             var reaction = await _repo.GetByIdAsync(reactionId);
 
             if (reaction is null)
             {
-                return ApiResult.FailureResult($"Reaction with ID[{reactionId} not found");
+                return Result.Failure(ApplicationErrors.Reaction.IdNotFound);
             }
 
             await _repo.DeleteAsync(reaction);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
 
-        public async Task<ApiResult<List<GetAllReactionDto>>> GetAllAsync()
+        public async Task<Result<List<GetAllReactionDto>>> GetAllAsync()
         {
             var reactions = await _repo.GetAllAsync();
 
@@ -77,16 +100,16 @@ namespace Simpchat.Application.Features
                 reactionModels.Add(reactionModel);
             }
 
-            return ApiResult<List<GetAllReactionDto>>.SuccessResult(reactionModels);
+            return reactionModels;
         }
 
-        public async Task<ApiResult<GetByIdReactionDto>> GetByIdAsync(Guid reactionId)
+        public async Task<Result<GetByIdReactionDto>> GetByIdAsync(Guid reactionId)
         {
             var reaction = await _repo.GetByIdAsync(reactionId);
 
             if (reaction is null)
             {
-                return ApiResult<GetByIdReactionDto>.FailureResult($"Reaction with ID[{reactionId} not found");
+                return Result.Failure<GetByIdReactionDto>(ApplicationErrors.Reaction.IdNotFound);
             }
 
             var reactionModel = new GetByIdReactionDto
@@ -95,16 +118,27 @@ namespace Simpchat.Application.Features
                 ImageUrl = reaction.ImageUrl
             };
 
-            return ApiResult<GetByIdReactionDto>.SuccessResult(reactionModel);
+            return reactionModel;
         }
 
-        public async Task<ApiResult> UpdateAsync(Guid reactionId, UpdateReactionDto updateReactionDto, UploadFileRequest? uploadFileRequest)
+        public async Task<Result> UpdateAsync(Guid reactionId, UpdateReactionDto updateReactionDto, UploadFileRequest? uploadFileRequest)
         {
+            var validationResult = await _updateReactionValidator.ValidateAsync(updateReactionDto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return Result.Failure<Guid>(ApplicationErrors.Validation.Failed, errors);
+            }
+
             var reaction = await _repo.GetByIdAsync(reactionId);
 
             if (reaction is null)
             {
-                return ApiResult.FailureResult($"Reaction with ID[{reactionId} not found");
+                return Result.Failure(ApplicationErrors.Reaction.IdNotFound);
             }
 
             reaction.Name = updateReactionDto.Name;
@@ -119,7 +153,7 @@ namespace Simpchat.Application.Features
 
             await _repo.UpdateAsync(reaction);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
     }
 }

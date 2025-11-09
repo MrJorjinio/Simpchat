@@ -1,6 +1,7 @@
 ﻿using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Application.Models.Chats;
+using Simpchat.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace Simpchat.Application.Interfaces.Services
 {
     public interface IConversationService
     {
-        Task<ApiResult<List<UserChatResponseDto>>> GetUserConversationsAsync(Guid userId);
-        Task<ApiResult> DeleteAsync(Guid conversationId);
+        Task<Result<List<UserChatResponseDto>>> GetUserConversationsAsync(Guid userId);
+        Task<Result> DeleteAsync(Guid conversationId);
     }
 }

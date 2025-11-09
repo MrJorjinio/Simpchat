@@ -1,13 +1,15 @@
-﻿using Simpchat.Application.Extentions;
+﻿using Simpchat.Application.Errors;
+using Simpchat.Application.Extentions;
 using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Files;
 using Simpchat.Application.Models.Users;
 using Simpchat.Domain.Enums;
+using Simpchat.Shared.Models;
 
 namespace Simpchat.Application.Features
 {
@@ -23,20 +25,20 @@ namespace Simpchat.Application.Features
             _userRepo = userRepo;
         }
 
-        public async Task<ApiResult<GetByIdUserDto>> GetByIdAsync(Guid userId, Guid currentUserId)
+        public async Task<Result<GetByIdUserDto>> GetByIdAsync(Guid userId, Guid currentUserId)
         {
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult<GetByIdUserDto>.FailureResult($"User with ID[{userId}] not found", ResultStatus.NotFound);
+                return Result.Failure<GetByIdUserDto>(ApplicationErrors.User.IdNotFound);
             }
 
             var currentUser = await _userRepo.GetByIdAsync(currentUserId);
 
             if (currentUser is null)
             {
-                return ApiResult<GetByIdUserDto>.FailureResult($"User with ID[{currentUserId}] not found", ResultStatus.NotFound);
+                return Result.Failure<GetByIdUserDto>(ApplicationErrors.User.IdNotFound);
             }
 
             var conversationBetweenId = await _conversationRepo.GetConversationBetweenAsync(userId, currentUserId);
@@ -52,10 +54,10 @@ namespace Simpchat.Application.Features
                 Username = user.Username
             };
 
-            return ApiResult<GetByIdUserDto>.SuccessResult(model);
+            return model;
         }
 
-        public async Task<ApiResult<List<SearchChatResponseDto>>> SearchAsync(string term, Guid userId)
+        public async Task<Result<List<SearchChatResponseDto>>> SearchAsync(string term, Guid userId)
         {
             var users = await _userRepo.SearchAsync(term);
 
@@ -70,44 +72,44 @@ namespace Simpchat.Application.Features
                     EntityId = user.Id,
                     DisplayName = user.Description,
                     AvatarUrl = user.AvatarUrl,
-                    ChatType = ChatType.Conversation,
+                    ChatType = ChatTypes.Conversation,
                     ChatId = conversationBetweenId
                 };
 
                 modeledUsers.Add(model);
             }
 
-            return ApiResult<List<SearchChatResponseDto>>.SuccessResult(modeledUsers);
+            return modeledUsers;
         }
 
-        public async Task<ApiResult> SetLastSeenAsync(Guid userId)
+        public async Task<Result> SetLastSeenAsync(Guid userId)
         {
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult.FailureResult($"User with ID[{userId}] not found", ResultStatus.NotFound);
+                return Result.Failure(ApplicationErrors.User.IdNotFound);
             }
 
             user.LastSeen = DateTimeOffset.UtcNow;
 
             await _userRepo.UpdateAsync(user);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
 
-        public async Task<ApiResult> UpdateAsync(Guid userId, UpdateUserDto updateUserDto, UploadFileRequest? avatar)
+        public async Task<Result> UpdateAsync(Guid userId, UpdateUserDto updateUserDto, UploadFileRequest? avatar)
         {
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult.FailureResult($"User with ID[{userId}] not found", ResultStatus.NotFound);
+                return Result.Failure(ApplicationErrors.User.IdNotFound);
             }
 
             if (_userRepo.SearchAsync(user.Username) is not null)
             {
-                return ApiResult.FailureResult($"USERNAME[{updateUserDto.Username}] is already exists");
+                return Result.Failure(ApplicationErrors.User.UsernameNotFound);
             }
 
             if (avatar is not null)
@@ -120,11 +122,11 @@ namespace Simpchat.Application.Features
 
             user.Username = updateUserDto.Username;
             user.Description = updateUserDto.Description;
-            user.ChatMemberAddPermissionType = updateUserDto.AddChatMinLvl;
+            user.HwoCanAddType = updateUserDto.AddChatMinLvl;
 
             await _userRepo.UpdateAsync(user);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
     }
 }

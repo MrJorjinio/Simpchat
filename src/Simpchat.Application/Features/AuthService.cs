@@ -1,12 +1,13 @@
-﻿using Simpchat.Application.Interfaces.Auth;
+﻿using FluentValidation;
+using Simpchat.Application.Errors;
+using Simpchat.Application.Interfaces.Auth;
 using Simpchat.Application.Interfaces.Email;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
 using Simpchat.Application.Models.Users;
 using Simpchat.Domain.Entities;
 using Simpchat.Domain.Enums;
+using Simpchat.Shared.Models;
 using System.Text.RegularExpressions;
 
 namespace Simpchat.Application.Features
@@ -18,30 +19,48 @@ namespace Simpchat.Application.Features
         private readonly IUserRepository _userRepo;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IGlobalRoleRepository _globalRoleRepo;
-        private readonly IGlobalRoleUserRepository _globalRoleUserRepository;
         private readonly IOtpService _otpService;
-        private readonly IEmailService _emailService;
+        private readonly IValidator<RegisterUserDto> _registerValidator;
+        private readonly IValidator<LoginUserDto> _loginUserDto;
+        private readonly IValidator<ResetPasswordDto> _resetPasswordValidator;
+        private readonly IValidator<UpdatePasswordDto> _updatePasswordValidator;
         private const string EmailRegex = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
         public AuthService(
             IJwtTokenGenerator jwtTokenGenerator,
             IPasswordHasher passwordHasher,
             IUserRepository userRepo,
             IGlobalRoleRepository globalRoleRepo,
-            IGlobalRoleUserRepository globalRoleUserRepo,
-            IOtpService otpService,
-            IEmailService emailService)
+            IOtpService otpService
+,
+            IValidator<RegisterUserDto> registerValidator,
+            IValidator<LoginUserDto> loginUserDto,
+            IValidator<ResetPasswordDto> resetPasswordValidator,
+            IValidator<UpdatePasswordDto> updatePasswordValidator)
         {
             _jwtTokenGenerator = jwtTokenGenerator;
             _passwordHasher = passwordHasher;
             _userRepo = userRepo;
             _globalRoleRepo = globalRoleRepo;
-            _globalRoleUserRepository = globalRoleUserRepo;
             _otpService = otpService;
-            _emailService = emailService;
+            _registerValidator = registerValidator;
+            _loginUserDto = loginUserDto;
+            _resetPasswordValidator = resetPasswordValidator;
+            _updatePasswordValidator = updatePasswordValidator;
         }
 
-        public async Task<ApiResult<string>> LoginAsync(LoginUserDto loginUserDto)
+        public async Task<Result<string>> LoginAsync(LoginUserDto loginUserDto)
         {
+            var validationResult = await _loginUserDto.ValidateAsync(loginUserDto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return Result.Failure<string>(ApplicationErrors.Validation.Failed, errors);
+            }
+
             bool isEmail = Regex.IsMatch(loginUserDto.Credential, EmailRegex);
 
             var user = new User();
@@ -52,12 +71,12 @@ namespace Simpchat.Application.Features
 
                 if (user is null)
                 {
-                    return ApiResult<string>.FailureResult($"User with EMAIL[{loginUserDto.Credential}] not found", ResultStatus.NotFound);
+                    return Result.Failure<string>(ApplicationErrors.User.EmailNotFound);
                 }
 
                 if (await _passwordHasher.VerifyAsync(user.PasswordHash, loginUserDto.Password, user.Salt) is false)
                 {
-                    return ApiResult<string>.FailureResult("Email or Password is invalid", ResultStatus.Failure);
+                    return Result.Failure<string>(ApplicationErrors.User.WrongPasswordOrEmail);
                 }
             }
             else
@@ -66,40 +85,63 @@ namespace Simpchat.Application.Features
 
                 if (user is null)
                 {
-                    return ApiResult<string>.FailureResult($"User with USERNAME[{loginUserDto.Credential}] not found", ResultStatus.NotFound);
+                    return Result.Failure<string>(ApplicationErrors.User.UsernameNotFound);
                 }
 
                 if (await _passwordHasher.VerifyAsync(user.PasswordHash, loginUserDto.Password, user.Salt) is false)
                 {
-                    return ApiResult<string>.FailureResult("Username or Password is invalid", ResultStatus.Failure);
+                    return Result.Failure<string>(ApplicationErrors.User.WrongPasswordOrUsername);
                 }
             }
 
-            string jwtToken = await _jwtTokenGenerator.GenerateJwtTokenAsync(user.Id, await _globalRoleUserRepository.GetUserRolesAsync(user.Id));
-            return ApiResult<string>.SuccessResult(jwtToken);
+            string jwtToken = await _jwtTokenGenerator.GenerateJwtTokenAsync(user.Id, user.Role);
+            return jwtToken;
         }
 
-        public async Task<ApiResult<Guid>> RegisterAsync(RegisterUserDto registerUserDto)
+        public async Task<Result<Guid>> RegisterAsync(RegisterUserDto registerUserDto)
         {
+            var validationResult = await _registerValidator.ValidateAsync(registerUserDto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return Result.Failure<Guid>(ApplicationErrors.Validation.Failed, errors);
+            }
+
             if (await _userRepo.GetByUsernameAsync(registerUserDto.Username) is not null)
             {
-                return ApiResult<Guid>.FailureResult($"User with USERNAME[{registerUserDto.Username}] already exists", ResultStatus.Failure);
+                return Result.Failure<Guid>(ApplicationErrors.User.UsernameAlreadyExists);
             }
 
             if (await _userRepo.GetByEmailAsync(registerUserDto.Email) is not null)
             {
-                return ApiResult<Guid>.FailureResult($"User with EMAIL[{registerUserDto.Email}] already exists", ResultStatus.Failure);
+                return Result.Failure<Guid>(ApplicationErrors.User.EmailAlreadyExists);
             }
 
-            var emailOtpCode = await _otpService.GetEmailOtpAsync(registerUserDto.Email);
+            var emailOtpCodeResult = await _otpService.ValidateEmailOtpAsync(registerUserDto.Email, registerUserDto.OtpCode);
 
-            if (emailOtpCode != registerUserDto.OtpCode)
+            if (emailOtpCodeResult.IsSuccess is false)
             {
-                return ApiResult<Guid>.FailureResult($"OTP[{registerUserDto.OtpCode}] is wrong");
+                return Result.Failure<Guid>(emailOtpCodeResult.Error);
+            }
+
+            if (emailOtpCodeResult.Value is false)
+            {
+                return Result.Failure<Guid>(ApplicationErrors.Otp.Wrong);
             }
 
             string salt = Guid.NewGuid().ToString();
             string passwordHash = await _passwordHasher.EncryptAsync(registerUserDto.Password, salt);
+
+            var role = await _globalRoleRepo.GetByNameAsync(Enum.GetName(GlobalRoleType.User));
+
+            if (role is null)
+            {
+                return Result.Failure<Guid>(ApplicationErrors.GlobalRole.NameNotFound);
+            }
 
             var user = new User()
             {
@@ -108,40 +150,40 @@ namespace Simpchat.Application.Features
                 PasswordHash = passwordHash,
                 Salt = salt,
                 Description = string.Empty,
-                ChatMemberAddPermissionType = ChatMemberAddPermissionType.WithConversations
+                HwoCanAddType = HwoCanAddYouTypes.WithConversations,
+                RoleId = role.Id
             };
+
             await _userRepo.CreateAsync(user);
 
-            var defaultRole = await _globalRoleRepo.GetByNameAsync("User");
-
-            if (defaultRole is not null)
-            {
-                var globalRoleUser = new GlobalRoleUser
-                {
-                    RoleId = defaultRole.Id,
-                    UserId = user.Id
-                };
-
-                await _globalRoleUserRepository.CreateAsync(globalRoleUser);
-            }
-
-            return ApiResult<Guid>.SuccessResult(user.Id);
+            return user.Id;
         }
 
-        public async Task<ApiResult> ResetPasswordAsync(Guid userId, ResetPasswordDto resetPasswordDto)
+        public async Task<Result> ResetPasswordAsync(Guid userId, ResetPasswordDto resetPasswordDto)
         {
+            var validationResult = await _resetPasswordValidator.ValidateAsync(resetPasswordDto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return Result.Failure(ApplicationErrors.Validation.Failed, errors);
+            }
+
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult.FailureResult($"User with ID[{userId}] not found", ResultStatus.NotFound);
+                return Result.Failure(ApplicationErrors.User.IdNotFound);
             }
 
-            var userOtp = await _otpService.ValidateOtpCodeAsync(userId, resetPasswordDto.Otp);
+            var userOtpCodeResult = await _otpService.ValidateUserOtpAsync(userId, resetPasswordDto.Otp);
 
-            if (userOtp is null)
+            if (userOtpCodeResult.IsSuccess is false)
             {
-                return ApiResult.FailureResult($"OTP[{resetPasswordDto.Otp}] is expired");
+                return Result.Failure(userOtpCodeResult.Error);
             }
 
             var newPasswrodHash = await _passwordHasher.EncryptAsync(resetPasswordDto.Password, user.Salt);
@@ -149,21 +191,32 @@ namespace Simpchat.Application.Features
 
             await _userRepo.UpdateAsync(user);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
 
-        public async Task<ApiResult> UpdatePasswordAsync(Guid userId, UpdatePasswordDto updatePasswordDto)
+        public async Task<Result> UpdatePasswordAsync(Guid userId, UpdatePasswordDto updatePasswordDto)
         {
+            var validationResult = await _updatePasswordValidator.ValidateAsync(updatePasswordDto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return Result.Failure(ApplicationErrors.Validation.Failed, errors);
+            }
+
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult.FailureResult($"User with ID[{userId}] not found", ResultStatus.NotFound);
+                return Result.Failure(ApplicationErrors.User.IdNotFound);
             }
 
             if (await _passwordHasher.VerifyAsync(user.PasswordHash, updatePasswordDto.CurrentPassword, user.Salt) is false)
             {
-                return ApiResult.FailureResult("Password is invalid", ResultStatus.Failure);
+                return Result.Failure(ApplicationErrors.User.WrongPassword);
             }
 
             var newPasswrodHash = await _passwordHasher.EncryptAsync(updatePasswordDto.NewPassword, user.Salt);
@@ -171,7 +224,7 @@ namespace Simpchat.Application.Features
 
             await _userRepo.UpdateAsync(user);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
     }
 }

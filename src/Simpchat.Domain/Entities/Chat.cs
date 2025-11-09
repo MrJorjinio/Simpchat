@@ -6,7 +6,7 @@ namespace Simpchat.Domain.Entities
     public class Chat : BaseEntity
     {
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-        public ChatType Type { get; set; }
+        public ChatTypes Type { get; set; }
         public ChatPrivacyType PrivacyType { get; set; }
         public Group? Group { get; set; }
         public Conversation? Conversation { get; set; }

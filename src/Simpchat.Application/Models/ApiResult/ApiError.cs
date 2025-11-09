@@ -6,11 +6,15 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Models.ApiResult
 {
-    public class ApiError
+    public sealed class ApiError
     {
-        public string Code { get; set; }
-        public string Message { get; set; }
-        public IDictionary<string, string[]> Validation { get; set; }
-        public string Details { get; set; }
+        public ApiError(string code, string message)
+        {
+            Code = code;
+            Message = message;
+        }
+
+        public string Code { get; }
+        public string Message { get; }
     }
 }

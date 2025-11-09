@@ -1,12 +1,15 @@
-﻿using Simpchat.Application.Interfaces.File;
+﻿using FluentValidation;
+using Simpchat.Application.Errors;
+using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Application.Models.Files;
 using Simpchat.Application.Models.Messages;
 using Simpchat.Domain.Entities;
 using Simpchat.Domain.Enums;
+using Simpchat.Shared.Models;
 
 namespace Simpchat.Application.Features
 {
@@ -17,24 +20,41 @@ namespace Simpchat.Application.Features
         private readonly IChatRepository _chatRepo;
         private readonly IFileStorageService _fileStorageService;
         private readonly IConversationRepository _conversationRepo;
+        private readonly IValidator<PostMessageDto> _postMessageValidator;
+        private readonly IValidator<UpdateMessageDto> _updateMessageValidator;
         private const string BucketName = "Messages-Files";
 
         public MessageService(
             IMessageRepository repo,
-            IUserRepository userRepo, 
-            IFileStorageService fileStorageService, 
-            IChatRepository chatRepo, 
-            IConversationRepository conversationRepo)
+            IUserRepository userRepo,
+            IFileStorageService fileStorageService,
+            IChatRepository chatRepo,
+            IConversationRepository conversationRepo,
+            IValidator<PostMessageDto> postMessageValidator,
+            IValidator<UpdateMessageDto> updateMessageValidator)
         {
             _repo = repo;
             _userRepo = userRepo;
             _fileStorageService = fileStorageService;
             _chatRepo = chatRepo;
             _conversationRepo = conversationRepo;
+            _postMessageValidator = postMessageValidator;
+            _updateMessageValidator = updateMessageValidator;
         }
 
-        public async Task<ApiResult<Guid>> SendMessageAsync(PostMessageDto postMessageDto, UploadFileRequest? uploadFileRequest)
+        public async Task<Result<Guid>> SendMessageAsync(PostMessageDto postMessageDto, UploadFileRequest? uploadFileRequest)
         {
+            var validationResult = await _postMessageValidator.ValidateAsync(postMessageDto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return Result.Failure<Guid>(ApplicationErrors.Validation.Failed, errors);
+            }
+
             string? fileUrl = null;
             if (uploadFileRequest.Content != null &&
                 uploadFileRequest.FileName != null &&
@@ -52,7 +72,7 @@ namespace Simpchat.Application.Features
             {
                 if (await _repo.GetByIdAsync((Guid)postMessageDto.ReplyId) is null)
                 {
-                    return ApiResult<Guid>.FailureResult($"Reply-Message ID[{postMessageDto.ReplyId} not found");
+                    return Result.Failure<Guid>(ApplicationErrors.Message.IdNotFound);
                 }
             }            
 
@@ -74,7 +94,7 @@ namespace Simpchat.Application.Features
                     var newChat = new Chat
                     {
                         Id = Guid.NewGuid(),
-                        Type = ChatType.Conversation,
+                        Type = ChatTypes.Conversation,
                     };
 
                     await _chatRepo.CreateAsync(newChat);
@@ -103,11 +123,22 @@ namespace Simpchat.Application.Features
 
             await _repo.CreateAsync(message);
 
-            return ApiResult<Guid>.SuccessResult(message.Id);
+            return message.Id;
         }
 
-        public async Task<ApiResult> UpdateAsync(Guid messageId, UpdateMessageDto updateMessageDto, UploadFileRequest? uploadFileRequest)
+        public async Task<Result> UpdateAsync(Guid messageId, UpdateMessageDto updateMessageDto, UploadFileRequest? uploadFileRequest)
         {
+            var validationResult = await _updateMessageValidator.ValidateAsync(updateMessageDto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return Result.Failure<Guid>(ApplicationErrors.Validation.Failed, errors);
+            }
+
             string? fileUrl = null;
             if (uploadFileRequest.Content != null &&
                 uploadFileRequest.FileName != null &&
@@ -125,7 +156,7 @@ namespace Simpchat.Application.Features
             {
                 if (await _repo.GetByIdAsync((Guid)updateMessageDto.ReplyId) is null)
                 {
-                    return ApiResult.FailureResult($"Reply-Message ID[{updateMessageDto.ReplyId} not found");
+                    return Result.Failure(ApplicationErrors.Message.IdNotFound);
                 }
             }
 
@@ -133,7 +164,7 @@ namespace Simpchat.Application.Features
 
             if (message is null)
             {
-                return ApiResult.FailureResult($"Message with ID[{messageId}] not found");
+                return Result.Failure(ApplicationErrors.Message.IdNotFound);
             }
 
             if (fileUrl is null)
@@ -147,21 +178,21 @@ namespace Simpchat.Application.Features
 
             await _repo.UpdateAsync(message);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
 
-        public async Task<ApiResult> DeleteAsync(Guid messageId)
+        public async Task<Result> DeleteAsync(Guid messageId)
         {
             var message = await _repo.GetByIdAsync(messageId);
 
             if (message is null)
             {
-                return ApiResult.FailureResult($"Message with ID[{messageId}] not found");
+                return Result.Failure(ApplicationErrors.Message.IdNotFound);
             }
 
             await _repo.DeleteAsync(message);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
     }
 }

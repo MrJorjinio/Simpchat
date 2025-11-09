@@ -1,12 +1,8 @@
-﻿using Simpchat.Application.Interfaces.Repositories;
+﻿using Simpchat.Application.Errors;
+using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults;
 using Simpchat.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Simpchat.Shared.Models;
 
 namespace Simpchat.Application.Features
 {
@@ -23,20 +19,20 @@ namespace Simpchat.Application.Features
             _userRepo = userRepo;
         }
 
-        public async Task<ApiResult<Guid>> BanUserAsync(Guid chatId, Guid userId)
+        public async Task<Result<Guid>> BanUserAsync(Guid chatId, Guid userId)
         {
             var chat = await _chatRepo.GetByIdAsync(chatId);
 
             if (chat is null)
             {
-                return ApiResult<Guid>.FailureResult($"Chat with ID[{chatId}] not found");
+                return Result.Failure<Guid>(ApplicationErrors.Chat.IdNotFound);
             }
 
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult<Guid>.FailureResult($"User with ID{userId} not found");
+                return Result.Failure<Guid>(ApplicationErrors.User.IdNotFound);
             }
 
             var chatBan = new ChatBan
@@ -47,23 +43,23 @@ namespace Simpchat.Application.Features
 
             await _repo.CreateAsync(chatBan);
 
-            return ApiResult<Guid>.SuccessResult(chatBan.Id);
+            return chatBan.Id;
         }
 
-        public async Task<ApiResult> DeleteAsync(Guid chatId, Guid userId)
+        public async Task<Result> DeleteAsync(Guid chatId, Guid userId)
         {
             var chat = await _chatRepo.GetByIdAsync(chatId);
 
             if (chat is null)
             {
-                return ApiResult.FailureResult($"Chat with ID[{chatId}] not found");
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
             }
 
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult.FailureResult($"User with ID{userId} not found");
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
             }
 
             var chatBan = new ChatBan
@@ -74,7 +70,7 @@ namespace Simpchat.Application.Features
 
             await _repo.DeleteAsync(chatBan);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
     }
 }
