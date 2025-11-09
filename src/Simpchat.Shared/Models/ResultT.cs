@@ -10,8 +10,8 @@ namespace Simpchat.Shared.Models
     {
         private readonly TValue? _value;
 
-        protected internal Result(TValue? value, bool isSuccess, Error error)
-            : base(isSuccess, error) => _value = value;
+        protected internal Result(TValue? value, bool isSuccess, Error error, IReadOnlyDictionary<string, string[]> validationErrors = null)
+            : base(isSuccess, error, validationErrors) => _value = value;
 
         public TValue Value => IsSuccess
             ? _value!

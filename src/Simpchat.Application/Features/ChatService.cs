@@ -1,15 +1,17 @@
-﻿using Simpchat.Application.Extentions;
+﻿using Simpchat.Application.Errors;
+using Simpchat.Application.Extentions;
 using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Messages;
 using Simpchat.Application.Models.Reactions;
 using Simpchat.Application.Models.Users;
 using Simpchat.Domain.Entities;
 using Simpchat.Domain.Enums;
+using Simpchat.Shared.Models;
 
 namespace Simpchat.Application.Features
 {
@@ -69,20 +71,20 @@ namespace Simpchat.Application.Features
             _messageReactionRepo = messageReactionRepo;
         }
 
-        public async Task<ApiResult<Guid>> AddUserPermissionAsync(Guid chatId, Guid userId, string permissionName)
+        public async Task<Result<Guid>> AddUserPermissionAsync(Guid chatId, Guid userId, string permissionName)
         {
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult<Guid>.FailureResult($"User with ID{userId} not found");
+                return Result.Failure<Guid>(ApplicationErrors.User.IdNotFound);
             }
 
             var chatPermission = await _chatPermissionRepository.GetByNameAsync(permissionName);
 
             if (chatPermission is null)
             {
-                return ApiResult<Guid>.FailureResult($"Chat-Permission with NAME[{permissionName}] not found");
+                return Result.Failure<Guid>(ApplicationErrors.ChatPermission.NameNotFound);
             }
 
             var chatUserPermission = new ChatUserPermission
@@ -94,23 +96,23 @@ namespace Simpchat.Application.Features
 
             await _chatUserPermissionRepository.CreateAsync(chatUserPermission);
 
-            return ApiResult<Guid>.SuccessResult(chatUserPermission.Id);
+            return chatUserPermission.Id;
         }
 
-        public async Task<ApiResult<GetByIdChatDto>> GetByIdAsync(Guid chatId, Guid userId)
+        public async Task<Result<GetByIdChatDto>> GetByIdAsync(Guid chatId, Guid userId)
         {
             var chat = await _repo.GetByIdAsync(chatId);
 
             if (chat is null)
             {
-                return ApiResult<GetByIdChatDto>.FailureResult($"Chat with ID[{chatId}] not found");
+                return Result.Failure<GetByIdChatDto>(ApplicationErrors.Chat.IdNotFound);
             }
 
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult<GetByIdChatDto>.FailureResult($"User with ID{userId} not found");
+                return Result.Failure<GetByIdChatDto>(ApplicationErrors.User.IdNotFound);
             }
 
             var participantsCount = 0;
@@ -118,7 +120,7 @@ namespace Simpchat.Application.Features
             var avatarUrl = "";
             var name = "";
 
-            if (chat.Type == ChatType.Conversation)
+            if (chat.Type == ChatTypes.Conversation)
             {
                 var conversation = await _conversationRepo.GetByIdAsync(chatId);
 
@@ -126,7 +128,7 @@ namespace Simpchat.Application.Features
 
                 if (isParticipated is false)
                 {
-                    return ApiResult<GetByIdChatDto>.FailureResult($"User don't participated in chat[{chatId}]", ResultStatus.Unauthorized);
+                    return Result.Failure<GetByIdChatDto>(ApplicationErrors.User.NotParticipatedInChat);
                 }
 
                 participantsCount = 2;
@@ -144,16 +146,11 @@ namespace Simpchat.Application.Features
                 avatarUrl = conversation.UserId1 == userId ? conversation.User2.AvatarUrl : conversation.User1.AvatarUrl;
                 name = conversation.UserId1 == userId ? conversation.User2.Username : conversation.User1.Username;
             }
-            else if (chat.Type == ChatType.Group)
+            else if (chat.Type == ChatTypes.Group)
             {
                 var group = await _groupRepo.GetByIdAsync(chatId);
 
                 bool isParticipated = group.Members.FirstOrDefault(m => m.UserId == userId) != null;
-
-                if (isParticipated is not true)
-                {
-                    return ApiResult<GetByIdChatDto>.FailureResult($"User don't participated in chat[{chatId}]", ResultStatus.Unauthorized);
-                }
 
                 participantsCount = group.Members.Count();
 
@@ -168,16 +165,11 @@ namespace Simpchat.Application.Features
                 avatarUrl = group.AvatarUrl;
                 name = group.Name;
             }
-            else if (chat.Type == ChatType.Channel)
+            else if (chat.Type == ChatTypes.Channel)
             {
                 var channel = await _channelRepo.GetByIdAsync(chatId);
 
                 bool isParticipated = channel.Subscribers.FirstOrDefault(m => m.UserId == userId) != null;
-
-                if (isParticipated is not true)
-                {
-                    return ApiResult<GetByIdChatDto>.FailureResult($"User don't participated in chat[{chatId}]", ResultStatus.Unauthorized);
-                }
 
                 participantsCount = channel.Subscribers.Count();
 
@@ -241,23 +233,23 @@ namespace Simpchat.Application.Features
                 Type = chat.Type
             };
 
-            return ApiResult<GetByIdChatDto>.SuccessResult(model);
+            return model;
         }
 
-        public async Task<ApiResult<GetByIdChatProfile>> GetProfileAsync(Guid chatId, Guid userId)
+        public async Task<Result<GetByIdChatProfile>> GetProfileAsync(Guid chatId, Guid userId)
         {
             var chat = await _repo.GetByIdAsync(chatId);
 
             if (chat is null)
             {
-                return ApiResult<GetByIdChatProfile>.FailureResult($"Chat with ID[{chatId}] not found");
+                return Result.Failure<GetByIdChatProfile>(ApplicationErrors.Chat.IdNotFound);
             }
 
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult<GetByIdChatProfile>.FailureResult($"User with ID{userId} not found");
+                return Result.Failure<GetByIdChatProfile>(ApplicationErrors.User.IdNotFound);
             }
 
             var participantsCount = 0;
@@ -267,7 +259,7 @@ namespace Simpchat.Application.Features
             var name = "";
             var description = "";
 
-            if (chat.Type == ChatType.Conversation)
+            if (chat.Type == ChatTypes.Conversation)
             {
                 var conversation = await _conversationRepo.GetByIdAsync(chatId);
 
@@ -275,7 +267,7 @@ namespace Simpchat.Application.Features
 
                 if (isParticipated is false)
                 {
-                    return ApiResult<GetByIdChatProfile>.FailureResult($"User don't participated in chat[{chatId}]", ResultStatus.Unauthorized);
+                    return Result.Failure<GetByIdChatProfile>(ApplicationErrors.User.NotParticipatedInChat);
                 }
 
                 participantsCount = 2;
@@ -296,16 +288,11 @@ namespace Simpchat.Application.Features
                 participants.Add(UserResponseDto.ConvertFromDomainObject(conversation.User1));
                 participants.Add(UserResponseDto.ConvertFromDomainObject(conversation.User2));
             }
-            else if (chat.Type == ChatType.Group)
+            else if (chat.Type == ChatTypes.Group)
             {
                 var group = await _groupRepo.GetByIdAsync(chatId);
 
                 bool isParticipated = group.Members.FirstOrDefault(m => m.UserId == userId) != null;
-
-                if (isParticipated is not true)
-                {
-                    return ApiResult<GetByIdChatProfile>.FailureResult($"User don't participated in chat[{chatId}]", ResultStatus.Unauthorized);
-                }
 
                 participantsCount = group.Members.Count();
 
@@ -322,16 +309,11 @@ namespace Simpchat.Application.Features
                 name = group.Name;
                 description = group.Description;
             }
-            else if (chat.Type == ChatType.Channel)
+            else if (chat.Type == ChatTypes.Channel)
             {
                 var channel = await _channelRepo.GetByIdAsync(chatId);
 
                 bool isParticipated = channel.Subscribers.FirstOrDefault(m => m.UserId == userId) != null;
-
-                if (isParticipated is not true)
-                {
-                    return ApiResult<GetByIdChatProfile>.FailureResult($"User don't participated in chat[{chatId}]", ResultStatus.Unauthorized);
-                }
 
                 participantsCount = channel.Subscribers.Count();
 
@@ -362,10 +344,10 @@ namespace Simpchat.Application.Features
                 Participants = participants
             };
 
-            return ApiResult<GetByIdChatProfile>.SuccessResult(model);
+            return model;
         }
 
-        public async Task<ApiResult<List<UserChatResponseDto>>> GetUserChatsAsync(Guid userId)
+        public async Task<Result<List<UserChatResponseDto>>> GetUserChatsAsync(Guid userId)
         {
             var conversationsApiResult = await _conversationService.GetUserConversationsAsync(userId);
             var groupsApiResult = await _groupService.GetUserParticipatedAsync(userId);
@@ -373,46 +355,61 @@ namespace Simpchat.Application.Features
 
             var merged = new List<UserChatResponseDto>();
 
-            merged.AddRange(conversationsApiResult.Data);
-            merged.AddRange(groupsApiResult.Data);
-            merged.AddRange(channelResult.Data);
+            merged.AddRange(conversationsApiResult.Value);
+            merged.AddRange(groupsApiResult.Value);
+            merged.AddRange(channelResult.Value);
 
             merged.OrderByDescending(m => (DateTimeOffset?)m.LastMessage.SentAt ?? DateTimeOffset.MinValue);
 
-            return ApiResult<List<UserChatResponseDto>>.SuccessResult(merged);
+            return merged;
         }
 
-        public async Task<ApiResult<List<SearchChatResponseDto>>> SearchAsync(string term, Guid userId)
+        public async Task<Result<List<SearchChatResponseDto>>> SearchAsync(string term, Guid userId)
         {
-            var usersApiResult = await _userService.SearchAsync(term, userId);
-            var groupsApiResult = await _groupService.SearchAsync(term);
-            var channelsApiResult = await _channelService.SearchAsync(term);
+            var filteredUsersResult = await _userService.SearchAsync(term, userId);
+            var filteredGroupsResult = await _groupService.SearchAsync(term);
+            var filteredChannelsResult = await _channelService.SearchAsync(term);
 
             var merged = new List<SearchChatResponseDto>();
 
-            merged.AddRange(usersApiResult.Data);
-            merged.AddRange(groupsApiResult.Data);
-            merged.AddRange(channelsApiResult.Data);
+            if (filteredUsersResult.IsSuccess is false)
+            {
+                return Result.Failure<List<SearchChatResponseDto>>(filteredChannelsResult.Error);
+            }
+
+            if (filteredGroupsResult.IsSuccess is false)
+            {
+                return Result.Failure<List<SearchChatResponseDto>>(filteredGroupsResult.Error);
+            }
+
+            if (filteredChannelsResult.IsSuccess is false)
+            {
+                return Result.Failure<List<SearchChatResponseDto>>(filteredChannelsResult.Error);
+            }
+
+            merged.AddRange(filteredUsersResult.Value);
+            merged.AddRange(filteredGroupsResult.Value);
+            merged.AddRange(filteredChannelsResult.Value);
 
             merged.OrderBy(m => m.EntityId);
 
-            return ApiResult<List<SearchChatResponseDto>>.SuccessResult(merged);
+            return merged;
         }
 
-        public  async Task<ApiResult> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyType chatPrivacyType)
+        public  async Task<Result> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyType chatPrivacyType)
         {
             var chat = await _repo.GetByIdAsync(chatId);
 
             if (chat is null)
             {
-                return ApiResult.FailureResult($"Chat with ID[{chatId}] not found");
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
             }
 
             chat.PrivacyType = chatPrivacyType;
 
             await _repo.UpdateAsync(chat);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
     }
 }

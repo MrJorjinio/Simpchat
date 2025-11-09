@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Simpchat.Shared.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,6 @@ namespace Simpchat.Application.Interfaces.Email
 {
     public interface IEmailService
     {
-        Task<bool> SendOtpAsync(string toEmail, string otp);
+        Task<Result> SendOtpAsync(string toEmail, string otpCode);
     }
 }

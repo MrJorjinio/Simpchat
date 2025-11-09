@@ -12,6 +12,6 @@ namespace Simpchat.Application.Models.Users
     {
         public string Username { get; set; }
         public string Description { get; set; }
-        public ChatMemberAddPermissionType AddChatMinLvl { get; set; }
+        public HwoCanAddYouTypes AddChatMinLvl { get; set; }
     }
 }

@@ -1,13 +1,15 @@
-﻿using Simpchat.Application.Interfaces.File;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
+using Simpchat.Application.Errors;
+using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
 using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Files;
 using Simpchat.Application.Models.Messages;
 using Simpchat.Domain.Entities;
 using Simpchat.Domain.Enums;
+using Simpchat.Shared.Models;
 
 namespace Simpchat.Application.Features
 {
@@ -19,6 +21,8 @@ namespace Simpchat.Application.Features
         private readonly IFileStorageService _fileStorageService;
         private readonly INotificationRepository _notificationRepo;
         private readonly IMessageRepository _messageRepo;
+        private readonly IValidator<UpdateChatDto> _updateValidator;
+        private readonly IValidator<PostChatDto> _createValidator;
         private const string BucketName = "channels-avatars";
 
         public ChannelService(
@@ -27,7 +31,9 @@ namespace Simpchat.Application.Features
             IChatRepository chatRepo,
             IFileStorageService fileStorageService,
             INotificationRepository notificationRepository,
-            IMessageRepository messageRepository)
+            IMessageRepository messageRepository,
+            IValidator<UpdateChatDto> updateValidator,
+            IValidator<PostChatDto> createValidator)
         {
             _repo = repo;
             _userRepo = userRepo;
@@ -35,40 +41,50 @@ namespace Simpchat.Application.Features
             _fileStorageService = fileStorageService;
             _notificationRepo = notificationRepository;
             _messageRepo = messageRepository;
+            _updateValidator = updateValidator;
+            _createValidator = createValidator;
         }
 
-        public async Task<ApiResult> AddSubscriberAsync(Guid channelId, Guid userId)
+        public async Task<Result> AddSubscriberAsync(Guid channelId, Guid userId)
         {
             var chat = await _repo.GetByIdAsync(channelId);
 
             if (chat is null)
-                return ApiResult.FailureResult($"Chat with ID[{channelId}] not found", ResultStatus.NotFound);
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
 
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
-                return ApiResult.FailureResult($"Adding User with ID[{userId} not found", ResultStatus.NotFound);
+                return Result.Failure(ApplicationErrors.User.IdNotFound);
 
             await _repo.AddSubscriberAsync(userId, channelId);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
 
-        public async Task<ApiResult<Guid>> CreateAsync(PostChatDto chatPostDto, UploadFileRequest? avatar)
+        public async Task<Result<Guid>> CreateAsync(PostChatDto chatPostDto, UploadFileRequest? avatar)
         {
+            var validationResult = await _createValidator.ValidateAsync(chatPostDto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return Result.Failure<Guid>(ApplicationErrors.Validation.Failed, errors);
+            }
+
             var user = await _userRepo.GetByIdAsync(chatPostDto.OwnerId);
 
             if (user is null)
             {
-                return ApiResult<Guid>.FailureResult($"User with ID[{chatPostDto.OwnerId}] not found", ResultStatus.NotFound);
+                return Result.Failure<Guid>(ApplicationErrors.User.IdNotFound);
             }
-
-            if (string.IsNullOrWhiteSpace(chatPostDto?.Name))
-                return ApiResult<Guid>.FailureResult("Channel name is required", ResultStatus.Failure);
 
             var chat = new Chat
             {
-                Type = ChatType.Channel,
+                Type = ChatTypes.Channel,
                 PrivacyType = ChatPrivacyType.Public
             };
 
@@ -96,42 +112,42 @@ namespace Simpchat.Application.Features
 
             await _repo.CreateAsync(channel);
 
-            return ApiResult<Guid>.SuccessResult(channel.Id);
+            return chatId;
         }
 
-        public async Task<ApiResult> DeleteAsync(Guid channelId)
+        public async Task<Result> DeleteAsync(Guid channelId)
         {
             var channel = await _repo.GetByIdAsync(channelId);
 
             if (channel is null)
             {
-                return ApiResult.FailureResult($"Channel with ID[{channelId}] not found");
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
             }
 
             await _repo.DeleteAsync(channel);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
 
-        public async Task<ApiResult> DeleteSubscriberAsync(Guid userId, Guid channelId)
+        public async Task<Result> DeleteSubscriberAsync(Guid userId, Guid channelId)
         {
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult.FailureResult($"User with ID[{userId}] not found");
+                return Result.Failure(ApplicationErrors.User.IdNotFound);
             }
 
             var chat = await _chatRepo.GetByIdAsync(channelId);
 
             if (chat is null)
             {
-                return ApiResult.FailureResult($"Channel with ID[{channelId}] not found");
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
             }
 
-            if (chat.Type != ChatType.Channel)
+            if (chat.Type != ChatTypes.Channel)
             {
-                return ApiResult.FailureResult($"Can't delete from Chat TYPE[{chat.Type}]");
+                return Result.Failure(ApplicationErrors.Chat.NotValidChatType);
             }
 
             var channelSubscriber = new ChannelSubscriber
@@ -142,10 +158,10 @@ namespace Simpchat.Application.Features
 
             await _repo.DeleteSubscriberAsync(channelSubscriber);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
 
-        public async Task<ApiResult<List<SearchChatResponseDto>?>> SearchAsync(string searchTerm)
+        public async Task<Result<List<SearchChatResponseDto>?>> SearchAsync(string searchTerm)
         {
             var results = await _repo.SearchAsync(searchTerm);
 
@@ -155,20 +171,31 @@ namespace Simpchat.Application.Features
                     ChatId = r.Id,
                     AvatarUrl = r.AvatarUrl,
                     DisplayName = r.Name,
-                    ChatType = ChatType.Channel
+                    ChatType = ChatTypes.Channel
                 })
                 .ToList();
 
-            return ApiResult<List<SearchChatResponseDto>>.SuccessResult(modeledResults);
+            return modeledResults;
         }
 
-        public async Task<ApiResult> UpdateAsync(Guid channelId, UpdateChatDto updateChatDto, UploadFileRequest? avatar)
+        public async Task<Result> UpdateAsync(Guid channelId, UpdateChatDto updateChatDto, UploadFileRequest? avatar)
         {
+            var validationResult = await _updateValidator.ValidateAsync(updateChatDto);
+
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                  .GroupBy(e => e.PropertyName)
+                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+
+                return Result.Failure<Guid>(ApplicationErrors.Validation.Failed, errors);
+            }
+
             var channel = await _repo.GetByIdAsync(channelId);
 
             if (channel is null)
             {
-                return ApiResult.FailureResult($"Channel with ID[{channelId}] not found");
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
             }
 
             channel.Name = updateChatDto.Name;
@@ -184,16 +211,16 @@ namespace Simpchat.Application.Features
 
             await _repo.UpdateAsync(channel);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
 
-        public async Task<ApiResult<List<UserChatResponseDto>>> GetUserSubscribedAsync(Guid userId)
+        public async Task<Result<List<UserChatResponseDto>>> GetUserSubscribedAsync(Guid userId)
         {
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
             {
-                return ApiResult<List<UserChatResponseDto>>.FailureResult($"User with ID[{userId}] not found");
+                return Result.Failure<List<UserChatResponseDto>>(ApplicationErrors.User.IdNotFound);
             }
 
             var channels = await _repo.GetUserSubscribedChannelsAsync(userId);
@@ -219,7 +246,7 @@ namespace Simpchat.Application.Features
                     },
                     Name = channel.Name,
                     NotificationsCount = notificationsCount,
-                    Type = ChatType.Channel,
+                    Type = ChatTypes.Channel,
                     UserLastMessage = lastUserSendedMessage?.SentAt
                 };
 
@@ -228,7 +255,7 @@ namespace Simpchat.Application.Features
 
             modeledChannels.OrderByDescending(mc => (DateTimeOffset?)mc.LastMessage.SentAt ?? DateTimeOffset.MinValue);
 
-            return ApiResult<List<UserChatResponseDto>>.SuccessResult(modeledChannels);
+            return modeledChannels;
         }
     }
 }

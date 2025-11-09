@@ -9,9 +9,11 @@ using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Infrastructure.Email;
 using Simpchat.Infrastructure.FileStorage;
 using Simpchat.Infrastructure.Persistence;
+using Simpchat.Infrastructure.Persistence.Interfaces;
 using Simpchat.Infrastructure.Persistence.Repositories;
 using Simpchat.Infrastructure.Security;
 using Simpchat.Shared.Config;
+using System.Threading.Tasks;
 
 namespace Simpchat.Infrastructure
 {
@@ -20,8 +22,8 @@ namespace Simpchat.Infrastructure
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
         {
             services
-                .AddPersistence(config)
                 .AddSecurity()
+                .AddPersistence(config)
                 .AddFileStorage(config)
                 .AddEmail();
 
@@ -41,10 +43,8 @@ namespace Simpchat.Infrastructure
             });
 
             services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IChannelRepository, ChannelRepository>();
             services.AddScoped<IGlobalRoleRepository, GlobalRoleRepository>();
             services.AddScoped<IGlobalPermissionRepository, GlobalPermissionRepository>();
-            services.AddScoped<IGlobalRoleUserRepository, GlobalRoleUserRepository>();
             services.AddScoped<IChannelRepository, ChannelRepository>();
             services.AddScoped<IGroupRepository, GroupRepository>();
             services.AddScoped<IChatRepository, ChatRepository>();
@@ -58,6 +58,8 @@ namespace Simpchat.Infrastructure
             services.AddScoped<IChatBanRepository, ChatBanRepository>();
             services.AddScoped<IReactionRepository, ReactionRepository>();
             services.AddScoped<IMessageReactionRepository, MessageReactionRepository>();
+
+            services.AddScoped<IDataSeeder, DataSeeder>();
 
             return services;
         }

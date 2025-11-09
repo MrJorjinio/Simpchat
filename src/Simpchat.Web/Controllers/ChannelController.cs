@@ -1,8 +1,9 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Simpchat.Application.Extentions;
 using Simpchat.Application.Interfaces.Services;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Files;
 using System.Security.Claims;
@@ -15,32 +16,18 @@ namespace Simpchat.Web.Controllers
     {
         private readonly IChannelService _channelService;
         private readonly IChatService _chatService;
-        private readonly IValidator<UpdateChatDto> _updateValidator;
-        private readonly IValidator<PostChatDto> _createValidator;
+        
 
-        public ChannelController(IChannelService channelService, IChatService chatService, IValidator<UpdateChatDto> updateValidator, IValidator<PostChatDto> createValidator)
+        public ChannelController(IChannelService channelService, IChatService chatService)
         {
             _channelService = channelService;
             _chatService = chatService;
-            _updateValidator = updateValidator;
-            _createValidator = createValidator;
         }
 
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> CreateAsync([FromForm]PostChatDto model, IFormFile? file)
         {
-            var result = await _createValidator.ValidateAsync(model);
-
-            if (!result.IsValid)
-            {
-                var errors = result.Errors
-                  .GroupBy(e => e.PropertyName)
-                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
-
-                return BadRequest(new ValidationProblemDetails(errors));
-            }
-
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             var fileUploadRequest = new UploadFileRequest();
@@ -59,15 +46,10 @@ namespace Simpchat.Web.Controllers
             model.OwnerId = userId;
 
             var response = await _channelService.CreateAsync(model, fileUploadRequest);
+            var apiResponse = response.ToApiResult();
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            return apiResponse.ToActionResult();
+
         }
 
         [HttpPost("add-member")]
@@ -77,15 +59,9 @@ namespace Simpchat.Web.Controllers
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             var response = await _channelService.AddSubscriberAsync(chatId, userId);
+            var apiResponse = response.ToApiResult();
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            return apiResponse.ToActionResult();
         }
 
         [HttpDelete("leave")]
@@ -95,15 +71,9 @@ namespace Simpchat.Web.Controllers
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
             var response = await _channelService.DeleteSubscriberAsync(userId, chatId);
+            var apiResponse = response.ToApiResult();
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            return apiResponse.ToActionResult();
         }
 
         [HttpDelete]
@@ -111,32 +81,15 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> DeleteAsync(Guid chatId)
         {
             var response = await _channelService.DeleteAsync(chatId);
+            var apiResponse = response.ToApiResult();
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            return apiResponse.ToActionResult();
         }
 
         [HttpPost("update")]
         [Authorize]
         public async Task<IActionResult> UpdateAsync(Guid chatId, [FromForm]UpdateChatDto updateChatDto, IFormFile file)
         {
-            var result = await _updateValidator.ValidateAsync(updateChatDto);
-
-            if (!result.IsValid)
-            {
-                var errors = result.Errors
-                  .GroupBy(e => e.PropertyName)
-                  .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
-
-                return BadRequest(new ValidationProblemDetails(errors));
-            }
-
             var fileUploadRequest = new UploadFileRequest();
 
             if (file is not null)
@@ -150,15 +103,9 @@ namespace Simpchat.Web.Controllers
             }
 
             var response = await _channelService.UpdateAsync(chatId, updateChatDto, fileUploadRequest);
+            var apiResponse = response.ToApiResult();
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            return apiResponse.ToActionResult();
         }
 
         [HttpGet("search")]
@@ -166,15 +113,9 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> SearchAsync(string searchTerm)
         {
             var response = await _channelService.SearchAsync(searchTerm);
+            var apiResponse = response.ToApiResult();
 
-            return response.Status switch
-            {
-                ResultStatus.Success => Ok(response),
-                ResultStatus.NotFound => NotFound(response),
-                ResultStatus.Failure => BadRequest(response),
-                ResultStatus.Unauthorized => Unauthorized(response),
-                _ => StatusCode(500, response)
-            };
+            return apiResponse.ToActionResult();
         }
     }
 }

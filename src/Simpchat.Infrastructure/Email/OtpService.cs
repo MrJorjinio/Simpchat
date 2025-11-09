@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Simpchat.Application.Errors;
 using Simpchat.Application.Interfaces.Email;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Models.ApiResult;
 using Simpchat.Domain.Entities;
+using Simpchat.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,22 +16,62 @@ namespace Simpchat.Infrastructure.Email
     public class OtpService : IOtpService
     {
         private readonly IUserRepository _userRepo;
+        private readonly IEmailService _emailService;
         private readonly IUserOtpRepository _userOtpRepository;
         private readonly IEmailOtpRepository _emailOtpRepository;
 
-        public OtpService(IUserRepository userRepo, IUserOtpRepository userOtpRepository, IEmailOtpRepository emailOtpRepository)
+        public OtpService(IUserRepository userRepo, IUserOtpRepository userOtpRepository, IEmailOtpRepository emailOtpRepository, IEmailService emailService)
         {
             _userRepo = userRepo;
             _userOtpRepository = userOtpRepository;
             _emailOtpRepository = emailOtpRepository;
+            _emailService = emailService;
         }
 
-        public async Task<string> GenerateAndSaveUserOtpAsync(Guid userId)
+        public async Task<Result<bool>> ValidateUserOtpAsync(Guid userId, string otpCode)
+        {
+            var otp = await _userOtpRepository.GetUserLatestAsync(userId);
+
+            if (otp is not null)
+            {
+                if (otp.Code == otpCode && otp.ExpiredAt > DateTimeOffset.UtcNow)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return Result.Failure<bool>(ApplicationErrors.Otp.Expired);
+        }
+
+        public async Task<Result<bool>> ValidateEmailOtpAsync(string email, string otpCode)
+        {
+            var emailOtp = await _emailOtpRepository.GetLatestByEmailAsync(email);
+
+            if (emailOtp is not null)
+            {
+                if (emailOtp.ExpiredAt > DateTimeOffset.UtcNow && emailOtp.Code == otpCode)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return Result.Failure<bool>(ApplicationErrors.Otp.Expired);
+        }
+
+        public async Task<Result> SendAndSaveUserOtpAsync(Guid userId)
         {
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user == null)
-                return "";
+                return Result.Failure<Guid>(ApplicationErrors.User.IdNotFound);
 
             var otpCode = new Random().Next(100000, 999999).ToString();
 
@@ -42,11 +84,17 @@ namespace Simpchat.Infrastructure.Email
             };
 
             await _userOtpRepository.CreateAsync(otp);
+            var response = await _emailService.SendOtpAsync(user.Email, otpCode);
 
-            return otpCode;
+            if (response.IsSuccess is false)
+            {
+                return Result.Failure(response.Error);
+            }
+
+            return Result.Success();
         }
 
-        public async Task<string> GenerateAndSaveEmailOtpAsync(string email)
+        public async Task<Result> SendAndSaveEmailOtpAsync(string email)
         {
             var otpCode = new Random().Next(100000, 999999).ToString();
 
@@ -58,35 +106,14 @@ namespace Simpchat.Infrastructure.Email
             };
 
             await _emailOtpRepository.CreateAsync(emailOtp);
+            var response = await _emailService.SendOtpAsync(email, otpCode);
 
-            return otpCode;
-        }
-
-        public async Task<string> ValidateOtpCodeAsync(Guid userId, string code)
-        {
-            var otp = await _userOtpRepository.GetUserLatestAsync(userId);
-
-            if (otp is not null)
+            if (response.IsSuccess is false)
             {
-                if (otp.Code == code && otp.ExpiredAt > DateTimeOffset.UtcNow)
-                {
-                    return otp.Code;
-                }
+                return Result.Failure(response.Error);
             }
 
-            return "";
-        }
-
-        public async Task<string> GetEmailOtpAsync(string email)
-        {
-            var emailOtp = await _emailOtpRepository.GetLatestByEmailAsync(email);
-
-            if (emailOtp is not null && emailOtp.ExpiredAt > DateTimeOffset.UtcNow)
-            {
-                return emailOtp.Code;
-            }
-
-            return "";
+            return Result.Success();
         }
     }
 }

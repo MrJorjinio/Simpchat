@@ -1,7 +1,8 @@
-﻿using Simpchat.Application.Interfaces.Repositories;
+﻿using Simpchat.Application.Errors;
+using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
+using Simpchat.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,20 +20,20 @@ namespace Simpchat.Application.Features
             _notificationRepo = notificationRepo;
         }
 
-        public async Task<ApiResult> SetAsSeenAsync(Guid notificationId)
+        public async Task<Result> SetAsSeenAsync(Guid notificationId)
         {
             var notification = await _notificationRepo.GetByIdAsync(notificationId);
 
             if (notification is null)
             {
-                return ApiResult.FailureResult($"Notification with ID[{notificationId}] not found");
+                return Result.Failure(ApplicationErrors.Notification.IdNotFound);
             }
 
             notification.IsSeen = true;
 
             await _notificationRepo.UpdateAsync(notification);
 
-            return ApiResult.SuccessResult();
+            return Result.Success();
         }
     }
 }

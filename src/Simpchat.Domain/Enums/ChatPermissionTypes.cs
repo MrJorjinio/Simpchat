@@ -1,6 +1,6 @@
 ﻿namespace Simpchat.Domain.Enums
 {
-    public enum ChatPermissionType
+    public enum ChatPermissionTypes
     {
         SendMessage,
         ReactToMessage,

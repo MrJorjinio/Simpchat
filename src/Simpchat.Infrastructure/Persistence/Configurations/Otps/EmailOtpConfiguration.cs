@@ -13,9 +13,6 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.Emails
     {
         public void Configure(EntityTypeBuilder<EmailOtp> builder)
         {
-            builder.HasIndex(eo => eo.Email)
-                .IsUnique();
-
             builder.Property(u => u.Id)
               .HasDefaultValueSql("gen_random_uuid()");
         }

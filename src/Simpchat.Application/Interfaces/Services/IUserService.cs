@@ -1,8 +1,9 @@
 ﻿using Simpchat.Application.Models.ApiResult;
-using Simpchat.Application.Models.ApiResults;
+
 using Simpchat.Application.Models.Chats;
 using Simpchat.Application.Models.Files;
 using Simpchat.Application.Models.Users;
+using Simpchat.Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,9 +14,9 @@ namespace Simpchat.Application.Interfaces.Services
 {
     public interface IUserService
     {
-        Task<ApiResult<List<SearchChatResponseDto>>> SearchAsync(string term, Guid userId);
-        Task<ApiResult<GetByIdUserDto>> GetByIdAsync(Guid userId, Guid currentUserId);
-        Task<ApiResult> UpdateAsync(Guid userId, UpdateUserDto updateUserInfoDto, UploadFileRequest avatar);
-        Task<ApiResult> SetLastSeenAsync(Guid userId);
+        Task<Result<List<SearchChatResponseDto>>> SearchAsync(string term, Guid userId);
+        Task<Result<GetByIdUserDto>> GetByIdAsync(Guid userId, Guid currentUserId);
+        Task<Result> UpdateAsync(Guid userId, UpdateUserDto updateUserInfoDto, UploadFileRequest avatar);
+        Task<Result> SetLastSeenAsync(Guid userId);
     }
 }
