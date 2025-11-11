@@ -1,2 +1,2 @@
 # Simpchat
-Wep chatting application
+Web chatting application
