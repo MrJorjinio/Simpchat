@@ -28,6 +28,6 @@ jobs:
           image: jorjinio/simpchat.web
           tags: latest
           registry: docker.io
-          dockerfile: Dockerfile.ci
+          dockerfile: src/Simpchat.Web/Dockerfile
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
