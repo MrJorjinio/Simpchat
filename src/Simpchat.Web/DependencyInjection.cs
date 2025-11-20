@@ -20,10 +20,10 @@ namespace Simpchat.Web
 
         private static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration config)
         {
-            var appSettings = config.GetSection("AppSettings").Get<AppSettings>();
+            var jwtSettings = config.GetSection("JwtSettings").Get<JwtSettings>();
 
-            if (appSettings == null)
-                throw new Exception("AppSettings section is missing from configuration.");
+            if (jwtSettings == null)
+                throw new Exception("JwtSettings section is missing from configuration.");
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -34,9 +34,9 @@ namespace Simpchat.Web
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = true,
-                        ValidIssuer = appSettings.JwtSettings.Issuer,
-                        ValidAudience = appSettings.JwtSettings.Audience,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(appSettings.JwtSettings.Key))
+                        ValidIssuer = jwtSettings.Issuer,
+                        ValidAudience = jwtSettings.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
                     };
                 });
 

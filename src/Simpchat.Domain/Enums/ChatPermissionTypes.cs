@@ -3,13 +3,11 @@
     public enum ChatPermissionTypes
     {
         SendMessage,
-        ReactToMessage,
         ManageMessages,
         ManageReactions,
         ManageUsers,
-        ManageGroupBasics,
+        ManageChatInfo,
         ManageBans,
-        PinMessages,
-        FullAccess
+        PinMessages
     }
 }

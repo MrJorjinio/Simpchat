@@ -86,7 +86,7 @@ namespace Simpchat.Application.Features
             var chat = new Chat
             {
                 Type = ChatTypes.Group,
-                PrivacyType = ChatPrivacyType.Private
+                PrivacyType = ChatPrivacyTypes.Private
             };
 
             var chatId = await _chatRepo.CreateAsync(chat);

@@ -14,9 +14,11 @@ namespace Simpchat.Application.Interfaces.Services
 {
     public interface IUserService
     {
+        Task<Result<List<GetAllUserDto>>> GetAllAsync();
         Task<Result<List<SearchChatResponseDto>>> SearchAsync(string term, Guid userId);
         Task<Result<GetByIdUserDto>> GetByIdAsync(Guid userId, Guid currentUserId);
         Task<Result> UpdateAsync(Guid userId, UpdateUserDto updateUserInfoDto, UploadFileRequest avatar);
         Task<Result> SetLastSeenAsync(Guid userId);
+        Task<Result> DeleteAsync(Guid userId);
     }
 }

@@ -14,12 +14,6 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task AddSubscriberAsync(Guid userId, Guid channelId)
-        {
-            await _dbContext.ChannelsSubscribers.AddAsync(new ChannelSubscriber { UserId = userId, ChannelId = channelId });
-            await _dbContext.SaveChangesAsync();
-        }
-
         public async Task<Guid> CreateAsync(Channel entity)
         {
             await _dbContext.Channels.AddAsync(entity);
@@ -31,12 +25,6 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         public async Task DeleteAsync(Channel entity)
         {
             _dbContext.Channels.Remove(entity);
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task DeleteSubscriberAsync(ChannelSubscriber channelSubscriber)
-        {
-            _dbContext.ChannelsSubscribers.Remove(channelSubscriber);
             await _dbContext.SaveChangesAsync();
         }
 

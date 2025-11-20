@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Simpchat.Application;
 
 using Simpchat.Infrastructure;
+using Simpchat.Infrastructure.Persistence.Extentions;
 using Simpchat.Infrastructure.Persistence.Interfaces;
 using Simpchat.Shared;
 using Simpchat.Web;
@@ -53,6 +54,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.ApplyMigrations();
 }
 
 using (var scope = app.Services.CreateAsyncScope())

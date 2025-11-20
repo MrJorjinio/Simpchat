@@ -16,8 +16,11 @@ namespace Simpchat.Application.Features
     public class ChannelService : IChannelService
     {
         private readonly IChannelRepository _repo;
+        private readonly IChannelSubscriberRepository _channelSubscriberRepo;
         private readonly IUserRepository _userRepo;
         private readonly IChatRepository _chatRepo;
+        private readonly IChatPermissionRepository _chatPermissionRepository;
+        private readonly IChatUserPermissionRepository _chatUserPermissionRepository;
         private readonly IFileStorageService _fileStorageService;
         private readonly INotificationRepository _notificationRepo;
         private readonly IMessageRepository _messageRepo;
@@ -33,7 +36,10 @@ namespace Simpchat.Application.Features
             INotificationRepository notificationRepository,
             IMessageRepository messageRepository,
             IValidator<UpdateChatDto> updateValidator,
-            IValidator<PostChatDto> createValidator)
+            IValidator<PostChatDto> createValidator,
+            IChannelSubscriberRepository channelSubscriberRepo,
+            IChatPermissionRepository chatPermissionRepository,
+            IChatUserPermissionRepository chatUserPermissionRepository)
         {
             _repo = repo;
             _userRepo = userRepo;
@@ -43,6 +49,9 @@ namespace Simpchat.Application.Features
             _messageRepo = messageRepository;
             _updateValidator = updateValidator;
             _createValidator = createValidator;
+            _channelSubscriberRepo = channelSubscriberRepo;
+            _chatPermissionRepository = chatPermissionRepository;
+            _chatUserPermissionRepository = chatUserPermissionRepository;
         }
 
         public async Task<Result> AddSubscriberAsync(Guid channelId, Guid userId)
@@ -57,7 +66,13 @@ namespace Simpchat.Application.Features
             if (user is null)
                 return Result.Failure(ApplicationErrors.User.IdNotFound);
 
-            await _repo.AddSubscriberAsync(userId, channelId);
+            var channelSubscriber = new ChannelSubscriber
+            {
+                UserId = user.Id,
+                ChannelId = channelId,
+            };
+
+            await _channelSubscriberRepo.CreateAsync(channelSubscriber);
 
             return Result.Success();
         }
@@ -85,7 +100,7 @@ namespace Simpchat.Application.Features
             var chat = new Chat
             {
                 Type = ChatTypes.Channel,
-                PrivacyType = ChatPrivacyType.Public
+                PrivacyType = ChatPrivacyTypes.Public
             };
 
             var chatId = await _chatRepo.CreateAsync(chat);
@@ -156,7 +171,7 @@ namespace Simpchat.Application.Features
                 UserId = userId
             };
 
-            await _repo.DeleteSubscriberAsync(channelSubscriber);
+            await _channelSubscriberRepo.DeleteAsync(channelSubscriber);
 
             return Result.Success();
         }

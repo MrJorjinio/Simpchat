@@ -1,6 +1,6 @@
 ﻿namespace Simpchat.Domain.Enums
 {
-    public enum GlobalRoleType
+    public enum GlobalRoleTypes
     {
         User,
         Moderator,

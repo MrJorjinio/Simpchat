@@ -1,4 +1,6 @@
-﻿namespace Simpchat.Shared.Config
+﻿using Microsoft.Extensions.Configuration;
+
+namespace Simpchat.Shared.Config
 {
     public class AppSettings
     {
