@@ -1,6 +1,6 @@
 ﻿namespace Simpchat.Domain.Enums
 {
-    public enum GlobalPermissionType
+    public enum GlobalPermissionTypes
     {
         // Moderator
         DeleteAnyMessage,

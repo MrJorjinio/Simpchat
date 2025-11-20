@@ -1,0 +1,33 @@
+services:
+  simpchat.web:
+    image: jorjinio/simpchat.web:latest
+    container_name: "simpchat.web"
+    build:
+      context: .
+      dockerfile: src/Simpchat.Web/Dockerfile
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+  simpchat.database:
+    image: "postgres:latest"
+    container_name: "simpchat.database"
+    environment: 
+      - POSTGRES_DB=simpchat
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - /var/lib/postgresql
+    ports:
+      - "5432:5432"
+  simpchat.filestorage:
+    image: minio/minio:latest
+    container_name:  simpchat.filestorage
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin12345
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./minio_data:/data

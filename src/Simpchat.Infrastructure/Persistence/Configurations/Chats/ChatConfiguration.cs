@@ -16,7 +16,7 @@ namespace Simpchat.Infrastructure.Persistence.Configurations.Chats
                 .IsRequired();
             builder.Property(c => c.PrivacyType)
                 .HasConversion<string>()
-                .HasDefaultValue(ChatPrivacyType.Public)
+                .HasDefaultValue(ChatPrivacyTypes.Public)
                 .IsRequired();
             builder.Property(c => c.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");

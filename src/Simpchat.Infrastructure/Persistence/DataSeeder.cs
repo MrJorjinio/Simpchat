@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Extensions;
 using Simpchat.Application.Interfaces.Auth;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Domain.Entities;
@@ -35,6 +36,7 @@ namespace Simpchat.Infrastructure.Persistence
         {
             await SyncGlobalPermissionsAsync();
             await SyncGlobalRolesAsync();
+            await SyncChatPermissionsAsync();
             await SetDefaultAdminAsync();
         }
 
@@ -43,7 +45,7 @@ namespace Simpchat.Infrastructure.Persistence
             if (await _userRepo.GetByUsernameAsync("admin") is null)
             {
                 var salt = Guid.NewGuid().ToString();
-                var defaultRole = await _globalRoleRepo.GetByNameAsync(Enum.GetName(GlobalRoleType.Admin));
+                var defaultRole = await _globalRoleRepo.GetByNameAsync(Enum.GetName(GlobalRoleTypes.Admin));
 
                 if (defaultRole is null)
                 {
@@ -54,7 +56,7 @@ namespace Simpchat.Infrastructure.Persistence
                 {
                     Username = "admin",
                     Salt = salt,
-                    PasswordHash = await _passwordHasher.EncryptAsync("admin", salt),
+                    PasswordHash = await _passwordHasher.EncryptAsync("1234567890", salt),
                     Description = "Admin of Simpchat",
                     Email = "dtrum4933@gmail.com",
                     HwoCanAddType = HwoCanAddYouTypes.Nobody,
@@ -67,59 +69,93 @@ namespace Simpchat.Infrastructure.Persistence
 
         private async Task SyncGlobalPermissionsAsync()
         {
-            var dbPermissions = await _dbContext.GlobalPermissions
-                .Select(gp => gp.Name)
-                .ToListAsync();
-            var systemPermissions = Enum.GetValues<GlobalPermissionType>()
-                .Select(gpt => Enum.GetName(gpt))
+            var dbPermissions = await _dbContext.GlobalPermissions.ToListAsync();
+            var dbNames = dbPermissions.Select(gp => gp.Name).ToHashSet();
+
+            var systemPermissions = Enum.GetValues<GlobalPermissionTypes>()
+                .Select(gpt => gpt.GetDisplayName())
+                .ToHashSet();
+
+            var notAddedPermissions = systemPermissions
+                .Except(dbNames)
+                .Select(name => new GlobalPermission
+                {
+                    Name = name,
+                    Description = $"for {name}"
+                })
                 .ToList();
 
-            var notAddedPermissions = new List<GlobalPermission>();
+            var notExistingPermissions = dbPermissions
+                .Where(db => !systemPermissions.Contains(db.Name))
+                .ToList();
 
-            foreach (var systemPermission in systemPermissions)
-            {
-                if (dbPermissions.Contains(systemPermission) is false)
-                {
-                    var globalPermission = new GlobalPermission
-                    {
-                        Name = systemPermission,
-                        Description = $"for {systemPermission}"
-                    };
+            if (notExistingPermissions.Any())
+                _dbContext.GlobalPermissions.RemoveRange(notExistingPermissions);
 
-                    notAddedPermissions.Add(globalPermission);
-                }
-            }
+            if (notAddedPermissions.Any())
+                await _dbContext.GlobalPermissions.AddRangeAsync(notAddedPermissions);
 
-            await _dbContext.GlobalPermissions.AddRangeAsync(notAddedPermissions);
             await _dbContext.SaveChangesAsync();
         }
 
         private async Task SyncGlobalRolesAsync()
         {
-            var dbRoles = await _dbContext.GlobalRoles
-                .Select(gr => gr.Name)
-                .ToListAsync();
-            var systemRoles = Enum.GetValues<GlobalRoleType>()
-                .Select(grp => Enum.GetName(grp))
+            var dbRoles = await _dbContext.GlobalRoles.ToListAsync();
+            var dbNames = dbRoles.Select(gr => gr.Name).ToHashSet();
+
+            var systemRoles = Enum.GetValues<GlobalRoleTypes>()
+                .Select(grp => grp.GetDisplayName())
+                .ToHashSet();
+
+            var notAddedRoles = systemRoles
+                .Except(dbNames)
+                .Select(name => new GlobalRole
+                {
+                    Name = name,
+                    Description = $"for {name}"
+                })
                 .ToList();
 
-            var notAddedRoles = new List<GlobalRole>();
+            var notExistingRoles = dbRoles
+                .Where(db => !systemRoles.Contains(db.Name))
+                .ToList();
 
-            foreach (var systemRole in systemRoles)
-            {
-                if (dbRoles.Contains(systemRole) is false)
+            if (notExistingRoles.Any())
+                _dbContext.GlobalRoles.RemoveRange(notExistingRoles);
+
+            if (notAddedRoles.Any())
+                await _dbContext.GlobalRoles.AddRangeAsync(notAddedRoles);
+
+            await _dbContext.SaveChangesAsync();
+        }
+
+        private async Task SyncChatPermissionsAsync()
+        {
+            var dbPermissions = await _dbContext.ChatPermissions.ToListAsync();
+            var dbNames = dbPermissions.Select(cp => cp.Name).ToHashSet();
+
+            var systemPermissions = Enum.GetValues<ChatPermissionTypes>()
+                .Select(cp => cp.GetDisplayName())
+                .ToHashSet();
+
+            var notAddedPermissions = systemPermissions
+                .Except(dbNames)
+                .Select(name => new ChatPermission
                 {
-                    var dbRole = new GlobalRole
-                    {
-                        Name = systemRole,
-                        Description = $"for {systemRole}"
-                    };
+                    Name = name
+                })
+                .ToList();
 
-                    notAddedRoles.Add(dbRole);
-                }
-            }
+            var notExistingPermissions = dbPermissions
+                .Where(db => !systemPermissions.Contains(db.Name))
+                .ToList();
 
-            await _dbContext.GlobalRoles.AddRangeAsync(notAddedRoles);
+            if (notExistingPermissions.Any())
+                _dbContext.ChatPermissions.RemoveRange(notExistingPermissions);
+
+            if (notAddedPermissions.Any())
+                await _dbContext.ChatPermissions.AddRangeAsync(notAddedPermissions);
+
             await _dbContext.SaveChangesAsync();
         }
     }

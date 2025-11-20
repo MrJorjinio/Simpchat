@@ -32,14 +32,14 @@ namespace Simpchat.Infrastructure
 
         private static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration config)
         {
-            var appSettings = config.GetSection("AppSettings").Get<AppSettings>();
+            var connectionStrings = config.GetSection("ConnectionStrings").Get<ConnectionStrings>();
 
-            if (appSettings == null)
-                throw new Exception("AppSettings section is missing from configuration.");
+            if (connectionStrings == null)
+                throw new Exception("ConnectionStrings section is missing from configuration.");
 
             services.AddDbContext<SimpchatDbContext>(options =>
             {
-                options.UseNpgsql(appSettings.ConnectionStrings.Default);
+                options.UseNpgsql(connectionStrings.Default);
             });
 
             services.AddScoped<IUserRepository, UserRepository>();
@@ -58,6 +58,7 @@ namespace Simpchat.Infrastructure
             services.AddScoped<IChatBanRepository, ChatBanRepository>();
             services.AddScoped<IReactionRepository, ReactionRepository>();
             services.AddScoped<IMessageReactionRepository, MessageReactionRepository>();
+            services.AddScoped<IChannelSubscriberRepository, ChannelSubscriberRepository>();
 
             services.AddScoped<IDataSeeder, DataSeeder>();
 
@@ -74,21 +75,15 @@ namespace Simpchat.Infrastructure
 
         private static IServiceCollection AddFileStorage(this IServiceCollection services, IConfiguration config)
         {
-            var appSettings = config.GetSection("AppSettings").Get<AppSettings>();
+            var minioSettings = config.GetSection("MinioSettings").Get<MinioSettings>();
 
-            if (appSettings == null)
-                throw new Exception("AppSettings section is missing from configuration.");
+            if (minioSettings == null)
+                throw new Exception("MinioSettings section is missing from configuration.");
 
             services.AddScoped<IFileStorageService, FileStorageService>();
 
             services.AddSingleton<IMinioClient>(sp =>
             {
-                var minioSettings = appSettings.MinioSettings;
-                if (appSettings.MinioSettings == null)
-                {
-                    throw new InvalidOperationException("MinioSettings is not configured in appsettings.json");
-                }
-
                 var client = new MinioClient()
                     .WithEndpoint(minioSettings.Endpoint)
                     .WithCredentials(minioSettings.AccessKey, minioSettings.SecretKey);

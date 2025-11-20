@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi.Extensions;
 using Simpchat.Application.Extentions;
 using Simpchat.Application.Interfaces.Services;
 
 using Simpchat.Application.Models.Files;
 using Simpchat.Application.Models.Users;
+using Simpchat.Domain.Enums;
 using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
@@ -57,8 +59,9 @@ namespace Simpchat.Web.Controllers
             return apiResponse.ToActionResult();
         }
 
-        [HttpPut]
-        public async Task<IActionResult> UpdateAsync([FromForm]UpdateUserDto model, IFormFile? file)
+        [HttpPut("me")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateMeAsync([FromForm]UpdateUserDto model, IFormFile? file)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
@@ -75,6 +78,47 @@ namespace Simpchat.Web.Controllers
             }
 
             var response = await _userService.UpdateAsync(userId, model, fileUploadRequest);
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
+        }
+
+        [HttpPut("{userId}")]
+        public async Task<IActionResult> UpdateAsync(Guid userId, [FromForm] UpdateUserDto model, IFormFile? file)
+        {
+            var fileUploadRequest = new UploadFileRequest();
+
+            if (file is not null)
+            {
+                fileUploadRequest = new UploadFileRequest
+                {
+                    Content = file.OpenReadStream(),
+                    ContentType = file.ContentType,
+                    FileName = file.Name
+                };
+            }
+
+            var response = await _userService.UpdateAsync(userId, model, fileUploadRequest);
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
+        }
+
+        [HttpDelete("{userId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteAsync(Guid userId)
+        {
+            var response = await _userService.DeleteAsync(userId);
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAllAsync()
+        {
+            var response = await _userService.GetAllAsync();
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();

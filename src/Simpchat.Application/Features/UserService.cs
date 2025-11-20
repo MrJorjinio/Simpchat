@@ -128,5 +128,44 @@ namespace Simpchat.Application.Features
 
             return Result.Success();
         }
+
+        public async Task<Result<List<GetAllUserDto>>> GetAllAsync()
+        {
+            var users = await _userRepo.GetAllAsync();
+
+            var modeledUsers = users
+                .Where(u => u.Role.Name == GlobalRoleTypes.User.ToString())
+                .Select(u => new GetAllUserDto
+                {
+                    Username = u.Username,
+                    Description = u.Description,
+                    Id = u.Id,
+                    AvatarUrl = u.AvatarUrl,
+                    Email = u.Email,
+                    IsOnline = u.LastSeen.GetOnlineStatus(),
+                    LastSeen = u.LastSeen,
+                }).ToList();
+
+            return modeledUsers;
+        }
+
+        public async Task<Result> DeleteAsync(Guid userId)
+        {
+            var user = await _userRepo.GetByIdAsync(userId);
+
+            if (user is null)
+            {
+                return Result.Failure(ApplicationErrors.User.IdNotFound);
+            }
+
+            if (user.Role.Name == GlobalRoleTypes.Admin.ToString())
+            {
+                return Result.Failure(ApplicationErrors.User.CanNotDeleteAdmin);
+            }
+
+            await _userRepo.DeleteAsync(user);
+
+            return Result.Success();
+        }
     }
 }

@@ -30,7 +30,9 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
 
         public async Task<List<User>?> GetAllAsync()
         {
-            return await _dbContext.Users.ToListAsync();
+            return await _dbContext.Users
+                .Include(u => u.Role)
+                .ToListAsync();
         }
 
         public async Task<User?> GetByIdAsync(Guid id)
@@ -56,12 +58,14 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         public async Task<User?> GetByUsernameAsync(string username)
         {
             return await _dbContext.Users
+                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Username == username);
         }
 
         public async Task<User?> GetByEmailAsync(string email)
         {
             return await _dbContext.Users
+                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
     }

@@ -13,7 +13,20 @@ namespace Simpchat.Shared
     {
         public static IServiceCollection AddShared(this IServiceCollection services, IConfiguration config)
         {
-            services.Configure<AppSettings>(config.GetSection("AppSettings"));
+            var jwtSettings = config.GetSection("JwtSettings").Get<JwtSettings>();
+            services.AddSingleton(jwtSettings);
+
+            var connectionStrings = config.GetSection("ConnectionStrings").Get<ConnectionStrings>();
+            services.AddSingleton(connectionStrings);
+
+            var minioSettings = config.GetSection("MinioSettings").Get<MinioSettings>();
+           services.AddSingleton(minioSettings);
+
+            var rabbitMQSettings = config.GetSection("RabbitMQ").Get<RabbitMQSettings>();
+            services.AddSingleton(rabbitMQSettings);
+
+            var emailSettings = config.GetSection("EmailSettings").Get<EmailSettings>();
+            services.AddSingleton(emailSettings);
             return services;
         }
     }

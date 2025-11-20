@@ -88,7 +88,7 @@ namespace Simpchat.Web.Controllers
         }
 
         [HttpPut("privacy-type")]
-        public async Task<IActionResult> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyType privacyType)
+        public async Task<IActionResult> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyTypes privacyType)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 

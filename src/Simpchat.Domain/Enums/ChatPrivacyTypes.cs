@@ -1,6 +1,6 @@
 ﻿namespace Simpchat.Domain.Enums
 {
-    public enum ChatPrivacyType
+    public enum ChatPrivacyTypes
     {
         Public,
         Private

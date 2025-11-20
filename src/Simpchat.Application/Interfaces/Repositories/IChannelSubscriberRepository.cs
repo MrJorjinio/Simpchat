@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 
 namespace Simpchat.Application.Interfaces.Repositories
 {
-    public interface IChannelRepository : IBaseRepository<Channel>, ISearchableRepository<Channel>
-    {
-        Task<List<Channel>> GetUserSubscribedChannelsAsync(Guid userId);
-    }
+    public interface IChannelSubscriberRepository : IBaseRepository<ChannelSubscriber>
+    { }
 }

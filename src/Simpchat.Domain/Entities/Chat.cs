@@ -7,7 +7,7 @@ namespace Simpchat.Domain.Entities
     {
         public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         public ChatTypes Type { get; set; }
-        public ChatPrivacyType PrivacyType { get; set; }
+        public ChatPrivacyTypes PrivacyType { get; set; }
         public Group? Group { get; set; }
         public Conversation? Conversation { get; set; }
         public Channel? Channel { get; set; }

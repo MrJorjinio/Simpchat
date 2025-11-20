@@ -45,15 +45,51 @@ namespace Simpchat.Application.Extentions
             };
         }
 
-        private static int MapToStatusCode(Error error, IReadOnlyDictionary<string, string[]>? validationErrors)
+        private static int MapToStatusCode(Error? error, IReadOnlyDictionary<string, string[]>? validationErrors)
         {
+            // Validation errors 
             if (validationErrors != null && validationErrors.Any())
                 return (int)HttpStatusCode.BadRequest;
 
+            // Null error object
             if (error == null) return (int)HttpStatusCode.InternalServerError;
 
             return error.Code switch
             {
+                // Authentication
+                "User.WrongPasswordOrEmail" or
+                "User.WrongPasswordOrUsername" or
+                "User.WrongPassword" or
+                "Otp.Wrong" => (int)HttpStatusCode.Unauthorized,
+
+                // Resources not found
+                "User.IdNotFound" or
+                "User.UsernameNotFound" or
+                "User.EmailNotFound" or
+                "Chat.IdNotFound" or
+                "Reaction.IdNotFound" or
+                "Message.IdNotFound" or
+                "UserReaction.IdNotFound" or
+                "UserReaction.NotFoundWithUserIdAndReactionId" or
+                "Notification.IdNotFound" or
+                "GlobalRole.NameNotFound" or
+                "Chat.Permission.NameNotFound" => (int)HttpStatusCode.NotFound,
+
+                // Conflicts
+                "User.UsernameAlreadyExists" or
+                "User.EmailAlreadyExists" => (int)HttpStatusCode.Conflict,
+
+                // Forbidden actions
+                "User.NotParticipatedInChat" or
+                "User.CanNotDeleteAdmin" or
+                "Chat.Permission.Denied" => (int)HttpStatusCode.Forbidden,
+
+                "Chat.NotValidChatType" => (int)HttpStatusCode.BadRequest,
+
+                "Otp.Expired" => (int)HttpStatusCode.Gone,
+
+                "Validation.Failed" => 422,
+
                 "Error.NullValue" => (int)HttpStatusCode.NotFound,
                 "" or null => (int)HttpStatusCode.OK,
                 _ => (int)HttpStatusCode.BadRequest

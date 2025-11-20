@@ -55,6 +55,11 @@ namespace Simpchat.Application.Errors
                 "User.NotParticipatedInChat",
                 "User not participated in [CHAT] to perform [ACTION]"
                 );
+
+            public static readonly Error CanNotDeleteAdmin = new Error(
+                "User.CanNotDeleteAdmin",
+                "User can't delete user with [ROLE] - Admin"
+                );
         }
 
         public static class Otp

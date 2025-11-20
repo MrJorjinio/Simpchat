@@ -13,9 +13,9 @@ namespace Simpchat.Infrastructure.Security
     {
         private readonly JwtSettings _jwtSettings;
 
-        public JwtTokenGenerator(IOptions<AppSettings> appSettings)
+        public JwtTokenGenerator(JwtSettings jwtSettings)
         {
-            _jwtSettings = appSettings.Value.JwtSettings;
+            _jwtSettings = jwtSettings;
         }
 
         public async Task<string> GenerateJwtTokenAsync(Guid userId, GlobalRole role)

@@ -12,9 +12,9 @@ namespace Simpchat.Infrastructure.Email
     {
         private readonly EmailSettings _config;
 
-        public EmailService(IOptions<AppSettings> config)
+        public EmailService(EmailSettings emailSettings)
         {
-            _config = config.Value.EmailSettings;
+            _config = emailSettings;
         }
         public async Task<Result> SendOtpAsync(string toEmail, string otpCode)
         {
