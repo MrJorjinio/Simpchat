@@ -396,7 +396,7 @@ namespace Simpchat.Application.Features
             return merged;
         }
 
-        public  async Task<Result> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyType chatPrivacyType)
+        public  async Task<Result> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyTypes chatPrivacyType)
         {
             var chat = await _repo.GetByIdAsync(chatId);
 

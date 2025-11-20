@@ -12,10 +12,10 @@ namespace Simpchat.Infrastructure.FileStorage
         private readonly IMinioClient _minioClient;
         private readonly MinioSettings _minioSettings;
 
-        public FileStorageService(IMinioClient minioClient, IOptions<AppSettings> appSettings)
+        public FileStorageService(IMinioClient minioClient, MinioSettings minioSettings)
         {
             _minioClient = minioClient;
-            _minioSettings = appSettings.Value.MinioSettings;
+            _minioSettings = minioSettings;
         }
 
         public async Task<string> UploadFileAsync(string bucketName, string objectName, Stream data, string contentType)

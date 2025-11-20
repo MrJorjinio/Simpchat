@@ -136,7 +136,7 @@ namespace Simpchat.Application.Features
             string salt = Guid.NewGuid().ToString();
             string passwordHash = await _passwordHasher.EncryptAsync(registerUserDto.Password, salt);
 
-            var role = await _globalRoleRepo.GetByNameAsync(Enum.GetName(GlobalRoleType.User));
+            var role = await _globalRoleRepo.GetByNameAsync(Enum.GetName(GlobalRoleTypes.User));
 
             if (role is null)
             {
