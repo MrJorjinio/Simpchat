@@ -12,6 +12,6 @@ namespace Simpchat.Application.Interfaces.Services
         Task<Result<GetByIdChatDto>> GetByIdAsync(Guid chatId, Guid userId);
         Task<Result<List<UserChatResponseDto>>> GetUserChatsAsync(Guid userId);
         Task<Result<List<SearchChatResponseDto>>> SearchAsync(string term, Guid userId);
-        Task<Result<Guid>> AddUserPermissionAsync(Guid userId, Guid chatId, string permissionName);
+        Task<Result<Guid>> AddUserPermissionAsync(Guid chatId, Guid userId, string permissionName, Guid requesterId);
     }
 }

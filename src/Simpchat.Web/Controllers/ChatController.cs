@@ -43,9 +43,9 @@ namespace Simpchat.Web.Controllers
         [Authorize]
         public async Task<IActionResult> AddPermissionAsync(string permissionName, Guid chatId, Guid addingUserId)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var requesterId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var response = await _chatService.AddUserPermissionAsync(userId, chatId, permissionName);
+            var response = await _chatService.AddUserPermissionAsync(chatId, addingUserId, permissionName, requesterId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();

@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Simpchat.Application.Errors;
+using Simpchat.Application.Extentions;
 using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
@@ -22,6 +23,7 @@ namespace Simpchat.Application.Features
         private readonly IConversationRepository _conversationRepo;
         private readonly IValidator<PostMessageDto> _postMessageValidator;
         private readonly IValidator<UpdateMessageDto> _updateMessageValidator;
+        private readonly IChatBanRepository _chatBanRepository;
         private const string BucketName = "Messages-Files";
 
         public MessageService(
@@ -31,7 +33,8 @@ namespace Simpchat.Application.Features
             IChatRepository chatRepo,
             IConversationRepository conversationRepo,
             IValidator<PostMessageDto> postMessageValidator,
-            IValidator<UpdateMessageDto> updateMessageValidator)
+            IValidator<UpdateMessageDto> updateMessageValidator,
+            IChatBanRepository chatBanRepository)
         {
             _repo = repo;
             _userRepo = userRepo;
@@ -40,6 +43,7 @@ namespace Simpchat.Application.Features
             _conversationRepo = conversationRepo;
             _postMessageValidator = postMessageValidator;
             _updateMessageValidator = updateMessageValidator;
+            _chatBanRepository = chatBanRepository;
         }
 
         public async Task<Result<Guid>> SendMessageAsync(PostMessageDto postMessageDto, UploadFileRequest? uploadFileRequest)
@@ -53,6 +57,12 @@ namespace Simpchat.Application.Features
                   .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
 
                 return Result.Failure<Guid>(ApplicationErrors.Validation.Failed, errors);
+            }
+
+            var sender = await _userRepo.GetByIdAsync(postMessageDto.SenderId);
+            if (sender is null)
+            {
+                return Result.Failure<Guid>(ApplicationErrors.User.IdNotFound);
             }
 
             string? fileUrl = null;
@@ -74,7 +84,7 @@ namespace Simpchat.Application.Features
                 {
                     return Result.Failure<Guid>(ApplicationErrors.Message.IdNotFound);
                 }
-            }            
+            }
 
             Guid chatId;
             if (postMessageDto.ChatId != null)
@@ -111,6 +121,18 @@ namespace Simpchat.Application.Features
                 }
             }
 
+            var chat = await _chatRepo.GetByIdAsync(chatId);
+            if (chat is null)
+            {
+                return Result.Failure<Guid>(ApplicationErrors.Chat.IdNotFound);
+            }
+
+            var isBanned = await _chatBanRepository.IsUserBannedAsync(chatId, postMessageDto.SenderId);
+            if (isBanned)
+            {
+                return Result.Failure<Guid>(ApplicationErrors.ChatPermission.Denied);
+            }
+
             var message = new Message
             {
                 ChatId = chatId,
@@ -126,7 +148,7 @@ namespace Simpchat.Application.Features
             return message.Id;
         }
 
-        public async Task<Result> UpdateAsync(Guid messageId, UpdateMessageDto updateMessageDto, UploadFileRequest? uploadFileRequest)
+        public async Task<Result> UpdateAsync(Guid messageId, UpdateMessageDto updateMessageDto, UploadFileRequest? uploadFileRequest, Guid userId)
         {
             var validationResult = await _updateMessageValidator.ValidateAsync(updateMessageDto);
 
@@ -137,6 +159,18 @@ namespace Simpchat.Application.Features
                   .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
 
                 return Result.Failure<Guid>(ApplicationErrors.Validation.Failed, errors);
+            }
+
+            var message = await _repo.GetByIdAsync(messageId);
+
+            if (message is null)
+            {
+                return Result.Failure(ApplicationErrors.Message.IdNotFound);
+            }
+
+            if (!message.IsMessageSender(userId))
+            {
+                return Result.Failure(ApplicationErrors.ChatPermission.Denied);
             }
 
             string? fileUrl = null;
@@ -160,13 +194,6 @@ namespace Simpchat.Application.Features
                 }
             }
 
-            var message = await _repo.GetByIdAsync(messageId);
-
-            if (message is null)
-            {
-                return Result.Failure(ApplicationErrors.Message.IdNotFound);
-            }
-
             if (fileUrl is null)
             {
                 fileUrl = message.FileUrl;
@@ -181,13 +208,18 @@ namespace Simpchat.Application.Features
             return Result.Success();
         }
 
-        public async Task<Result> DeleteAsync(Guid messageId)
+        public async Task<Result> DeleteAsync(Guid messageId, Guid userId)
         {
             var message = await _repo.GetByIdAsync(messageId);
 
             if (message is null)
             {
                 return Result.Failure(ApplicationErrors.Message.IdNotFound);
+            }
+
+            if (!message.IsMessageSender(userId))
+            {
+                return Result.Failure(ApplicationErrors.ChatPermission.Denied);
             }
 
             await _repo.DeleteAsync(message);

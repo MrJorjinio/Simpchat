@@ -64,13 +64,26 @@ namespace Simpchat.Web.Controllers
             return apiResponse.ToActionResult();
         }
 
+        [HttpPost("join")]
+        [Authorize]
+        public async Task<IActionResult> JoinAsync(Guid channelId)
+        {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var response = await _channelService.JoinChannelAsync(channelId, userId);
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
+        }
+
         [HttpDelete("leave")]
         [Authorize]
         public async Task<IActionResult> LeaveAsync(Guid chatId)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var requesterId = userId;
 
-            var response = await _channelService.DeleteSubscriberAsync(userId, chatId);
+            var response = await _channelService.DeleteSubscriberAsync(userId, chatId, requesterId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();
@@ -80,16 +93,20 @@ namespace Simpchat.Web.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteAsync(Guid chatId)
         {
-            var response = await _channelService.DeleteAsync(chatId);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var response = await _channelService.DeleteAsync(chatId, userId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();
         }
 
-        [HttpPost("update")]
+        [HttpPut]
         [Authorize]
         public async Task<IActionResult> UpdateAsync(Guid chatId, [FromForm]UpdateChatDto updateChatDto, IFormFile file)
         {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
             var fileUploadRequest = new UploadFileRequest();
 
             if (file is not null)
@@ -102,7 +119,7 @@ namespace Simpchat.Web.Controllers
                 };
             }
 
-            var response = await _channelService.UpdateAsync(chatId, updateChatDto, fileUploadRequest);
+            var response = await _channelService.UpdateAsync(chatId, updateChatDto, fileUploadRequest, userId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();

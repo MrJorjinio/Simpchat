@@ -8,7 +8,7 @@ using Simpchat.Application.Models.Reactions;
 
 namespace Simpchat.Web.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/reactions")]
     [ApiController]
     public class ReactionController : ControllerBase
     {

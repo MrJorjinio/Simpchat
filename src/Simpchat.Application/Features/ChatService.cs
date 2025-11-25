@@ -71,8 +71,50 @@ namespace Simpchat.Application.Features
             _messageReactionRepo = messageReactionRepo;
         }
 
-        public async Task<Result<Guid>> AddUserPermissionAsync(Guid chatId, Guid userId, string permissionName)
+        public async Task<Result<Guid>> AddUserPermissionAsync(Guid chatId, Guid userId, string permissionName, Guid requesterId)
         {
+            var chat = await _repo.GetByIdAsync(chatId);
+
+            if (chat is null)
+            {
+                return Result.Failure<Guid>(ApplicationErrors.Chat.IdNotFound);
+            }
+
+            if (chat.Type == ChatTypes.Group)
+            {
+                var group = await _groupRepo.GetByIdAsync(chatId);
+                if (group is null)
+                {
+                    return Result.Failure<Guid>(ApplicationErrors.Chat.IdNotFound);
+                }
+
+                var canGrantPermission = group.IsGroupOwner(requesterId) ||
+                                        await _chatUserPermissionRepository.HasUserPermissionAsync(
+                                            chatId, requesterId, nameof(ChatPermissionTypes.ManageUsers));
+
+                if (!canGrantPermission)
+                {
+                    return Result.Failure<Guid>(ApplicationErrors.ChatPermission.Denied);
+                }
+            }
+            else if (chat.Type == ChatTypes.Channel)
+            {
+                var channel = await _channelRepo.GetByIdAsync(chatId);
+                if (channel is null)
+                {
+                    return Result.Failure<Guid>(ApplicationErrors.Chat.IdNotFound);
+                }
+
+                var canGrantPermission = channel.IsChannelOwner(requesterId) ||
+                                        await _chatUserPermissionRepository.HasUserPermissionAsync(
+                                            chatId, requesterId, nameof(ChatPermissionTypes.ManageUsers));
+
+                if (!canGrantPermission)
+                {
+                    return Result.Failure<Guid>(ApplicationErrors.ChatPermission.Denied);
+                }
+            }
+
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
@@ -113,6 +155,12 @@ namespace Simpchat.Application.Features
             if (user is null)
             {
                 return Result.Failure<GetByIdChatDto>(ApplicationErrors.User.IdNotFound);
+            }
+
+            var isBanned = await _chatBanRepository.IsUserBannedAsync(chatId, userId);
+            if (isBanned)
+            {
+                return Result.Failure<GetByIdChatDto>(ApplicationErrors.ChatPermission.Denied);
             }
 
             var participantsCount = 0;

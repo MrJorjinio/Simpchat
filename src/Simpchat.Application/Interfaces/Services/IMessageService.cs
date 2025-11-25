@@ -14,7 +14,7 @@ namespace Simpchat.Application.Interfaces.Services
     public interface IMessageService
     {
         Task<Result<Guid>> SendMessageAsync(PostMessageDto postMessageDto, UploadFileRequest? uploadFileRequest);
-        Task<Result> UpdateAsync(Guid messageId, UpdateMessageDto updateMessageDto, UploadFileRequest? uploadFileRequest);
-        Task<Result> DeleteAsync(Guid messageId);
+        Task<Result> UpdateAsync(Guid messageId, UpdateMessageDto updateMessageDto, UploadFileRequest? uploadFileRequest, Guid userId);
+        Task<Result> DeleteAsync(Guid messageId, Guid userId);
     }
 }

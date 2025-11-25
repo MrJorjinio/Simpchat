@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Simpchat.Application.Errors;
+using Simpchat.Application.Extentions;
 using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
@@ -56,7 +57,40 @@ namespace Simpchat.Application.Features
 
         public async Task<Result> AddSubscriberAsync(Guid channelId, Guid userId)
         {
-            var chat = await _repo.GetByIdAsync(channelId);
+            var channel = await _repo.GetByIdAsync(channelId);
+
+            if (channel is null)
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
+
+            var user = await _userRepo.GetByIdAsync(userId);
+
+            if (user is null)
+                return Result.Failure(ApplicationErrors.User.IdNotFound);
+
+            if (channel.IsChannelSubscriber(userId))
+            {
+                return Result.Failure(ApplicationErrors.User.NotParticipatedInChat);
+            }
+
+            var channelSubscriber = new ChannelSubscriber
+            {
+                UserId = user.Id,
+                ChannelId = channelId,
+            };
+
+            await _channelSubscriberRepo.CreateAsync(channelSubscriber);
+
+            return Result.Success();
+        }
+
+        public async Task<Result> JoinChannelAsync(Guid channelId, Guid userId)
+        {
+            var channel = await _repo.GetByIdAsync(channelId);
+
+            if (channel is null)
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
+
+            var chat = await _chatRepo.GetByIdAsync(channelId);
 
             if (chat is null)
                 return Result.Failure(ApplicationErrors.Chat.IdNotFound);
@@ -65,6 +99,15 @@ namespace Simpchat.Application.Features
 
             if (user is null)
                 return Result.Failure(ApplicationErrors.User.IdNotFound);
+
+            if (chat.PrivacyType == ChatPrivacyTypes.Private)
+                return Result.Failure(new Error("Channel.Private", "Cannot join private channel"));
+
+            if (user.HwoCanAddType == HwoCanAddYouTypes.Nobody)
+                return Result.Failure(new Error("User.PrivacyRestricted", "User has restricted who can add them to chats"));
+
+            if (channel.IsChannelSubscriber(userId))
+                return Result.Failure(ApplicationErrors.User.NotParticipatedInChat);
 
             var channelSubscriber = new ChannelSubscriber
             {
@@ -100,7 +143,7 @@ namespace Simpchat.Application.Features
             var chat = new Chat
             {
                 Type = ChatTypes.Channel,
-                PrivacyType = ChatPrivacyTypes.Public
+                PrivacyType = chatPostDto.PrivacyType
             };
 
             var chatId = await _chatRepo.CreateAsync(chat);
@@ -130,7 +173,7 @@ namespace Simpchat.Application.Features
             return chatId;
         }
 
-        public async Task<Result> DeleteAsync(Guid channelId)
+        public async Task<Result> DeleteAsync(Guid channelId, Guid userId)
         {
             var channel = await _repo.GetByIdAsync(channelId);
 
@@ -139,12 +182,21 @@ namespace Simpchat.Application.Features
                 return Result.Failure(ApplicationErrors.Chat.IdNotFound);
             }
 
+            var canDelete = channel.IsChannelOwner(userId) ||
+                            await _chatUserPermissionRepository.HasUserPermissionAsync(
+                                channelId, userId, nameof(ChatPermissionTypes.ManageChatInfo));
+
+            if (!canDelete)
+            {
+                return Result.Failure(ApplicationErrors.ChatPermission.Denied);
+            }
+
             await _repo.DeleteAsync(channel);
 
             return Result.Success();
         }
 
-        public async Task<Result> DeleteSubscriberAsync(Guid userId, Guid channelId)
+        public async Task<Result> DeleteSubscriberAsync(Guid userId, Guid channelId, Guid requesterId)
         {
             var user = await _userRepo.GetByIdAsync(userId);
 
@@ -165,6 +217,24 @@ namespace Simpchat.Application.Features
                 return Result.Failure(ApplicationErrors.Chat.NotValidChatType);
             }
 
+            var channel = await _repo.GetByIdAsync(channelId);
+            if (channel is null)
+            {
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
+            }
+
+            if (userId != requesterId)
+            {
+                var canManage = channel.IsChannelOwner(requesterId) ||
+                                await _chatUserPermissionRepository.HasUserPermissionAsync(
+                                    channelId, requesterId, nameof(ChatPermissionTypes.ManageUsers));
+
+                if (!canManage)
+                {
+                    return Result.Failure(ApplicationErrors.ChatPermission.Denied);
+                }
+            }
+
             var channelSubscriber = new ChannelSubscriber
             {
                 ChannelId = channelId,
@@ -180,20 +250,28 @@ namespace Simpchat.Application.Features
         {
             var results = await _repo.SearchAsync(searchTerm);
 
-            var modeledResults = results
-                .Select(r => new SearchChatResponseDto
+            var modeledResults = new List<SearchChatResponseDto>();
+
+            foreach (var channel in results)
+            {
+                var chat = await _chatRepo.GetByIdAsync(channel.Id);
+
+                if (chat != null && chat.PrivacyType == ChatPrivacyTypes.Public)
                 {
-                    ChatId = r.Id,
-                    AvatarUrl = r.AvatarUrl,
-                    DisplayName = r.Name,
-                    ChatType = ChatTypes.Channel
-                })
-                .ToList();
+                    modeledResults.Add(new SearchChatResponseDto
+                    {
+                        ChatId = channel.Id,
+                        AvatarUrl = channel.AvatarUrl,
+                        DisplayName = channel.Name,
+                        ChatType = ChatTypes.Channel
+                    });
+                }
+            }
 
             return modeledResults;
         }
 
-        public async Task<Result> UpdateAsync(Guid channelId, UpdateChatDto updateChatDto, UploadFileRequest? avatar)
+        public async Task<Result> UpdateAsync(Guid channelId, UpdateChatDto updateChatDto, UploadFileRequest? avatar, Guid userId)
         {
             var validationResult = await _updateValidator.ValidateAsync(updateChatDto);
 
@@ -211,6 +289,15 @@ namespace Simpchat.Application.Features
             if (channel is null)
             {
                 return Result.Failure(ApplicationErrors.Chat.IdNotFound);
+            }
+
+            var canUpdate = channel.IsChannelOwner(userId) ||
+                            await _chatUserPermissionRepository.HasUserPermissionAsync(
+                                channelId, userId, nameof(ChatPermissionTypes.ManageChatInfo));
+
+            if (!canUpdate)
+            {
+                return Result.Failure(ApplicationErrors.ChatPermission.Denied);
             }
 
             channel.Name = updateChatDto.Name;
