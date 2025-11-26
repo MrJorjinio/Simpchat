@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
 using Minio.Exceptions;
@@ -11,11 +12,13 @@ namespace Simpchat.Infrastructure.FileStorage
     {
         private readonly IMinioClient _minioClient;
         private readonly MinioSettings _minioSettings;
+        private readonly ILogger<FileStorageService> _logger;
 
-        public FileStorageService(IMinioClient minioClient, MinioSettings minioSettings)
+        public FileStorageService(IMinioClient minioClient, MinioSettings minioSettings, ILogger<FileStorageService> logger)
         {
             _minioClient = minioClient;
             _minioSettings = minioSettings;
+            _logger = logger;
         }
 
         public async Task<string> UploadFileAsync(string bucketName, string objectName, Stream data, string contentType)

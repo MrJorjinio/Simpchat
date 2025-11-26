@@ -10,6 +10,6 @@ namespace Simpchat.Application.Interfaces.Repositories
 {
     public interface IEmailOtpRepository : IBaseRepository<EmailOtp>
     {
-        Task<EmailOtp> GetLatestByEmailAsync(string email);
+        Task<EmailOtp?> GetLatestByEmailAsync(string email);
     }
 }

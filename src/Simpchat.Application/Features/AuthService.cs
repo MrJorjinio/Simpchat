@@ -133,7 +133,7 @@ namespace Simpchat.Application.Features
                 return Result.Failure<Guid>(ApplicationErrors.Otp.Wrong);
             }
 
-            string salt = Guid.NewGuid().ToString();
+            string salt = await _passwordHasher.GenerateSaltAsync();
             string passwordHash = await _passwordHasher.EncryptAsync(registerUserDto.Password, salt);
 
             var role = await _globalRoleRepo.GetByNameAsync(Enum.GetName(GlobalRoleTypes.User));
@@ -186,8 +186,8 @@ namespace Simpchat.Application.Features
                 return Result.Failure(userOtpCodeResult.Error);
             }
 
-            var newPasswrodHash = await _passwordHasher.EncryptAsync(resetPasswordDto.Password, user.Salt);
-            user.PasswordHash = newPasswrodHash;
+            var newPasswordHash = await _passwordHasher.EncryptAsync(resetPasswordDto.Password, user.Salt);
+            user.PasswordHash = newPasswordHash;
 
             await _userRepo.UpdateAsync(user);
 
@@ -219,8 +219,8 @@ namespace Simpchat.Application.Features
                 return Result.Failure(ApplicationErrors.User.WrongPassword);
             }
 
-            var newPasswrodHash = await _passwordHasher.EncryptAsync(updatePasswordDto.NewPassword, user.Salt);
-            user.PasswordHash = newPasswrodHash;
+            var newPasswordHash = await _passwordHasher.EncryptAsync(updatePasswordDto.NewPassword, user.Salt);
+            user.PasswordHash = newPasswordHash;
 
             await _userRepo.UpdateAsync(user);
 

@@ -1,35 +1,37 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Simpchat.Application.Interfaces.Auth;
-using Simpchat.Shared.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
+using Simpchat.Application.Interfaces.Auth;
 
 namespace Simpchat.Infrastructure.Security
 {
     internal class PasswordHasher : IPasswordHasher
     {
+        private const int SaltSizeInBytes = 16;
+        private const int IterationCount = 10000;
+
         public async Task<string> EncryptAsync(string password, string salt)
         {
+            var saltBytes = Encoding.UTF8.GetBytes(salt);
             using var algorithm = new Rfc2898DeriveBytes(
                 password: password,
-                salt: Encoding.UTF8.GetBytes(salt),
-                iterations: 10,
+                salt: saltBytes,
+                iterations: IterationCount,
                 hashAlgorithm: HashAlgorithmName.SHA256);
             return Convert.ToBase64String(algorithm.GetBytes(64));
+        }
+
+        public Task<string> GenerateSaltAsync()
+        {
+            using var rng = RandomNumberGenerator.Create();
+            var saltBytes = new byte[SaltSizeInBytes];
+            rng.GetBytes(saltBytes);
+            return Task.FromResult(Convert.ToBase64String(saltBytes));
         }
 
         public async Task<bool> VerifyAsync(string hash, string password, string salt)
         {
             var requestHash = await EncryptAsync(password, salt);
-            if (requestHash != hash)
-            {
-                return false;
-            }
-            return true;
+            return requestHash == hash;
         }
     }
 }

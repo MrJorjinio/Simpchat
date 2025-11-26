@@ -107,7 +107,8 @@ namespace Simpchat.Application.Features
                 return Result.Failure(ApplicationErrors.User.IdNotFound);
             }
 
-            if (_userRepo.SearchAsync(user.Username) is not null)
+            var existingUsers = await _userRepo.SearchAsync(updateUserDto.Username);
+            if (existingUsers != null && existingUsers.Any(u => u.Id != userId))
             {
                 return Result.Failure(ApplicationErrors.User.UsernameNotFound);
             }
@@ -116,7 +117,8 @@ namespace Simpchat.Application.Features
             {
                 if (avatar.FileName != null && avatar.Content != null && avatar.ContentType != null)
                 {
-                    user.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
+                    var uniqueFileName = $"{Guid.NewGuid()}_{avatar.FileName}";
+                    user.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, uniqueFileName, avatar.Content, avatar.ContentType);
                 }
             }
 

@@ -24,6 +24,9 @@ namespace Simpchat.Application.Features
         private readonly IValidator<PostMessageDto> _postMessageValidator;
         private readonly IValidator<UpdateMessageDto> _updateMessageValidator;
         private readonly IChatBanRepository _chatBanRepository;
+        private readonly IGroupRepository _groupRepository;
+        private readonly IChannelRepository _channelRepository;
+        private readonly INotificationRepository _notificationRepository;
         private const string BucketName = "Messages-Files";
 
         public MessageService(
@@ -34,7 +37,10 @@ namespace Simpchat.Application.Features
             IConversationRepository conversationRepo,
             IValidator<PostMessageDto> postMessageValidator,
             IValidator<UpdateMessageDto> updateMessageValidator,
-            IChatBanRepository chatBanRepository)
+            IChatBanRepository chatBanRepository,
+            IGroupRepository groupRepository,
+            IChannelRepository channelRepository,
+            INotificationRepository notificationRepository)
         {
             _repo = repo;
             _userRepo = userRepo;
@@ -44,6 +50,9 @@ namespace Simpchat.Application.Features
             _postMessageValidator = postMessageValidator;
             _updateMessageValidator = updateMessageValidator;
             _chatBanRepository = chatBanRepository;
+            _groupRepository = groupRepository;
+            _channelRepository = channelRepository;
+            _notificationRepository = notificationRepository;
         }
 
         public async Task<Result<Guid>> SendMessageAsync(PostMessageDto postMessageDto, UploadFileRequest? uploadFileRequest)
@@ -66,16 +75,20 @@ namespace Simpchat.Application.Features
             }
 
             string? fileUrl = null;
-            if (uploadFileRequest.Content != null &&
+            if (uploadFileRequest is not null)
+            {
+                if (uploadFileRequest.Content != null &&
                 uploadFileRequest.FileName != null &&
                 uploadFileRequest.ContentType != null)
-            {
-                fileUrl = await _fileStorageService.UploadFileAsync(
-                    BucketName,
-                    uploadFileRequest.FileName,
-                    uploadFileRequest.Content,
-                    uploadFileRequest.ContentType
-                );
+                {
+                    var uniqueFileName = $"{Guid.NewGuid()}_{uploadFileRequest.FileName}";
+                    fileUrl = await _fileStorageService.UploadFileAsync(
+                        BucketName,
+                        uniqueFileName,
+                        uploadFileRequest.Content,
+                        uploadFileRequest.ContentType
+                    );
+                }
             }
 
             if (postMessageDto.ReplyId is not null)
@@ -145,6 +158,8 @@ namespace Simpchat.Application.Features
 
             await _repo.CreateAsync(message);
 
+            await CreateNotificationsAsync(chatId, message, chat.Type);
+
             return message.Id;
         }
 
@@ -174,13 +189,15 @@ namespace Simpchat.Application.Features
             }
 
             string? fileUrl = null;
-            if (uploadFileRequest.Content != null &&
+            if (uploadFileRequest is not null &&
+                uploadFileRequest.Content != null &&
                 uploadFileRequest.FileName != null &&
                 uploadFileRequest.ContentType != null)
             {
+                var uniqueFileName = $"{Guid.NewGuid()}_{uploadFileRequest.FileName}";
                 fileUrl = await _fileStorageService.UploadFileAsync(
                     BucketName,
-                    uploadFileRequest.FileName,
+                    uniqueFileName,
                     uploadFileRequest.Content,
                     uploadFileRequest.ContentType
                 );
@@ -225,6 +242,57 @@ namespace Simpchat.Application.Features
             await _repo.DeleteAsync(message);
 
             return Result.Success();
+        }
+
+        private async Task CreateNotificationsAsync(Guid chatId, Message message, ChatTypes chatType)
+        {
+            var recipientIds = new List<Guid>();
+
+            if (chatType == ChatTypes.Group)
+            {
+                var group = await _groupRepository.GetByIdAsync(chatId);
+                if (group != null)
+                {
+                    recipientIds = group.Members
+                        .Where(m => m.UserId != message.SenderId)
+                        .Select(m => m.UserId)
+                        .ToList();
+                }
+            }
+            else if (chatType == ChatTypes.Channel)
+            {
+                var channel = await _channelRepository.GetByIdAsync(chatId);
+                if (channel != null)
+                {
+                    recipientIds = channel.Subscribers
+                        .Where(s => s.UserId != message.SenderId)
+                        .Select(s => s.UserId)
+                        .ToList();
+                }
+            }
+            else if (chatType == ChatTypes.Conversation)
+            {
+                var conversation = await _conversationRepo.GetByIdAsync(chatId);
+                if (conversation != null)
+                {
+                    if (conversation.UserId1 != message.SenderId)
+                        recipientIds.Add(conversation.UserId1);
+                    if (conversation.UserId2 != message.SenderId)
+                        recipientIds.Add(conversation.UserId2);
+                }
+            }
+
+            foreach (var recipientId in recipientIds)
+            {
+                var notification = new Notification
+                {
+                    MessageId = message.Id,
+                    ReceiverId = recipientId,
+                    IsSeen = false
+                };
+
+                await _notificationRepository.CreateAsync(notification);
+            }
         }
     }
 }

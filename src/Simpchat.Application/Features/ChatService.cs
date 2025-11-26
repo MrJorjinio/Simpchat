@@ -239,20 +239,24 @@ namespace Simpchat.Application.Features
             foreach (var message in chat.Messages)
             {
                 var messageReactions = await _messageReactionRepo.GetMessageReactionAsync(message.Id);
-                var messageReactionModels = messageReactions
-                    .GroupBy(mr => mr.ReactionId)
-                    .Select(g => new GetAllMessageReaction
-                    {
-                        Id = g.Key,
-                        Count = g.Count(),
-                        ImageUrl = g.First().Reaction.ImageUrl
-                    }).ToList();
+                var messageReactionModels = messageReactions is not null
+                    ? messageReactions
+                        .GroupBy(mr => mr.ReactionId)
+                        .Select(g => new GetAllMessageReaction
+                        {
+                            Id = g.Key,
+                            Count = g.Count(),
+                            ImageUrl = g.First().Reaction.ImageUrl
+                        }).ToList()
+                    : new List<GetAllMessageReaction>();
+
+                var notificationId = await _notificationRepo.GetIdAsync(message.Id, userId);
 
                 var messageModel = new GetByIdMessageDto
                 {
                     MessageId = message.Id,
                     Content = message.Content,
-                    FileUrl = message.Content,
+                    FileUrl = message.FileUrl,
                     ReplyId = message.ReplyId,
                     IsSeen = (await _notificationRepo.GetMessageSeenStatusAsync(message.Id)),
                     SenderAvatarUrl = message.Sender.AvatarUrl,
@@ -260,7 +264,7 @@ namespace Simpchat.Application.Features
                     SenderId = message.SenderId,
                     SentAt = message.SentAt,
                     IsNotificated = await _notificationRepo.CheckIsNotSeenAsync(message.Id, userId),
-                    NotificationId = await _notificationRepo.GetIdAsync(message.Id, userId),
+                    NotificationId = notificationId ?? Guid.Empty,
                     MessageReactions = messageReactionModels
                 };
 
@@ -407,7 +411,7 @@ namespace Simpchat.Application.Features
             merged.AddRange(groupsApiResult.Value);
             merged.AddRange(channelResult.Value);
 
-            merged.OrderByDescending(m => (DateTimeOffset?)m.LastMessage.SentAt ?? DateTimeOffset.MinValue);
+            merged = merged.OrderByDescending(m => (DateTimeOffset?)m.LastMessage.SentAt ?? DateTimeOffset.MinValue).ToList();
 
             return merged;
         }
@@ -444,7 +448,7 @@ namespace Simpchat.Application.Features
             return merged;
         }
 
-        public  async Task<Result> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyTypes chatPrivacyType)
+        public async Task<Result> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyTypes chatPrivacyType, Guid userId)
         {
             var chat = await _repo.GetByIdAsync(chatId);
 

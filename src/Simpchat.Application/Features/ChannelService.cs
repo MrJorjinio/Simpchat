@@ -164,7 +164,8 @@ namespace Simpchat.Application.Features
             {
                 if (avatar.FileName != null && avatar.Content != null && avatar.ContentType != null)
                 {
-                    channel.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
+                    var uniqueFileName = $"{Guid.NewGuid()}_{avatar.FileName}";
+                    channel.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, uniqueFileName, avatar.Content, avatar.ContentType);
                 }
             }
 
@@ -307,7 +308,8 @@ namespace Simpchat.Application.Features
             {
                 if (avatar.FileName != null && avatar.Content != null && avatar.ContentType != null)
                 {
-                    channel.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content,avatar.ContentType);
+                    var uniqueFileName = $"{Guid.NewGuid()}_{avatar.FileName}";
+                    channel.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, uniqueFileName, avatar.Content,avatar.ContentType);
                 }
             }
 
@@ -341,10 +343,10 @@ namespace Simpchat.Application.Features
                     AvatarUrl = channel.AvatarUrl,
                     LastMessage = new LastMessageResponseDto
                     {
-                        Content = lastMessage.Content,
-                        FileUrl = lastMessage.FileUrl,
-                        SenderUsername = lastMessage.Sender.Username,
-                        SentAt = lastMessage.SentAt
+                        Content = lastMessage?.Content,
+                        FileUrl = lastMessage?.FileUrl,
+                        SenderUsername = lastMessage?.Sender.Username,
+                        SentAt = lastMessage?.SentAt
                     },
                     Name = channel.Name,
                     NotificationsCount = notificationsCount,
@@ -355,7 +357,7 @@ namespace Simpchat.Application.Features
                 modeledChannels.Add(modeledChannel);
             }
 
-            modeledChannels.OrderByDescending(mc => (DateTimeOffset?)mc.LastMessage.SentAt ?? DateTimeOffset.MinValue);
+            modeledChannels = modeledChannels.OrderByDescending(mc => (DateTimeOffset?)mc.LastMessage.SentAt ?? DateTimeOffset.MinValue).ToList();
 
             return modeledChannels;
         }

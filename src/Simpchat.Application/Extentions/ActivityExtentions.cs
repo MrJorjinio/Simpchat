@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Simpchat.Application.Extentions
+﻿namespace Simpchat.Application.Extentions
 {
     public static class ActivityExtentions
     {
-        private static double OnlineThreshold = 1;
+        private static readonly double OnlineThresholdMinutes = 1;
 
         public static string GetTimeAgo(this DateTimeOffset dateTimeOffset)
         {
-            var timeSpan = DateTimeOffset.Now - dateTimeOffset;
+            var timeSpan = DateTimeOffset.UtcNow - dateTimeOffset;
 
             if (timeSpan.TotalMinutes < 1)
                 return "Just now";
@@ -28,14 +22,7 @@ namespace Simpchat.Application.Extentions
 
         public static bool GetOnlineStatus(this DateTimeOffset dateTimeOffset)
         {
-            if (dateTimeOffset.AddMinutes(OnlineThreshold) > DateTimeOffset.UtcNow)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return dateTimeOffset.AddMinutes(OnlineThresholdMinutes) > DateTimeOffset.UtcNow;
         }
     }
 }

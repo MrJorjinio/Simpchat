@@ -8,6 +8,6 @@ namespace Simpchat.Application.Interfaces.Repositories
         Task<int> GetUserChatNotificationsCountAsync(Guid userId, Guid chatId);
         Task<bool> GetMessageSeenStatusAsync(Guid messageId);
         Task<bool> CheckIsNotSeenAsync(Guid messageId, Guid userId);
-        Task<Guid> GetIdAsync(Guid messageId, Guid userId);
+        Task<Guid?> GetIdAsync(Guid messageId, Guid userId);
     }
 }

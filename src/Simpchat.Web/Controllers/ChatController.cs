@@ -88,29 +88,36 @@ namespace Simpchat.Web.Controllers
         }
 
         [HttpPut("privacy-type")]
+        [Authorize]
         public async Task<IActionResult> UpdatePrivacyTypeAsync(Guid chatId, ChatPrivacyTypes privacyType)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var response = await _chatService.UpdatePrivacyTypeAsync(chatId, privacyType);
+            var response = await _chatService.UpdatePrivacyTypeAsync(chatId, privacyType, userId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();
         }
 
         [HttpPost("ban/{userId}")]
+        [Authorize]
         public async Task<IActionResult> BanUserAsync(Guid chatId, Guid userId)
         {
-            var response = await _chatBanService.BanUserAsync(chatId, userId);
+            var requesterId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var response = await _chatBanService.BanUserAsync(chatId, userId, requesterId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();
         }
 
         [HttpPost("unban/{userId}")]
+        [Authorize]
         public async Task<IActionResult> UnbanUserAsync(Guid chatId, Guid userId)
         {
-            var response = await _chatBanService.DeleteAsync(chatId, userId);
+            var requesterId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var response = await _chatBanService.DeleteAsync(chatId, userId, requesterId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();

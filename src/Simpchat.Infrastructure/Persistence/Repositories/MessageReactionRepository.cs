@@ -46,7 +46,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             var userReaction = await _dbContext.MessagesReactions
                 .FirstOrDefaultAsync(mr => mr.UserId == userId && mr.MessageId == messageId);
 
-            return userReaction.Id;
+            return userReaction?.Id;
         }
 
         public async Task<List<MessageReaction>?> GetMessageReactionAsync(Guid messageId)

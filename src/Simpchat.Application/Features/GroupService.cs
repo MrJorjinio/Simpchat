@@ -156,7 +156,8 @@ namespace Simpchat.Application.Features
             {
                 if (avatar.FileName != null && avatar.Content != null && avatar.ContentType != null)
                 {
-                    group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
+                    var uniqueFileName = $"{Guid.NewGuid()}_{avatar.FileName}";
+                    group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, uniqueFileName, avatar.Content, avatar.ContentType);
                 }
             }
 
@@ -299,7 +300,8 @@ namespace Simpchat.Application.Features
             {
                 if (avatar.FileName != null && avatar.Content != null && avatar.ContentType != null)
                 {
-                    group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
+                    var uniqueFileName = $"{Guid.NewGuid()}_{avatar.FileName}";
+                    group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, uniqueFileName, avatar.Content, avatar.ContentType);
                 }
             }
 
@@ -333,10 +335,10 @@ namespace Simpchat.Application.Features
                     AvatarUrl = group.AvatarUrl,
                     LastMessage = new LastMessageResponseDto
                     {
-                        Content = lastMessage.Content,
-                        FileUrl = lastMessage.FileUrl,
-                        SenderUsername = lastMessage.Sender.Username,
-                        SentAt = lastMessage.SentAt
+                        Content = lastMessage?.Content,
+                        FileUrl = lastMessage?.FileUrl,
+                        SenderUsername = lastMessage?.Sender.Username,
+                        SentAt = lastMessage?.SentAt
                     },
                     Name = group.Name,
                     NotificationsCount = notificationsCount,
@@ -347,7 +349,7 @@ namespace Simpchat.Application.Features
                 modeledGroups.Add(modeledGroup);
             }
 
-            modeledGroups.OrderByDescending(mg => (DateTimeOffset?)mg.LastMessage.SentAt ?? DateTimeOffset.MinValue);
+            modeledGroups = modeledGroups.OrderByDescending(mg => (DateTimeOffset?)mg.LastMessage.SentAt ?? DateTimeOffset.MinValue).ToList();
 
             return modeledGroups;
         }

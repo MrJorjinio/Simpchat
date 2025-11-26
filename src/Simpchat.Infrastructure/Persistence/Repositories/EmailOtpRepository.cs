@@ -34,7 +34,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             return await _dbContext.EmailOtps.ToListAsync();
         }
 
-        public async Task<EmailOtp> GetLatestByEmailAsync(string email)
+        public async Task<EmailOtp?> GetLatestByEmailAsync(string email)
         {
             return await _dbContext.EmailOtps
                 .Where(eo => eo.Email == email)

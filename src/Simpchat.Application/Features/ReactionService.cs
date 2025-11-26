@@ -60,7 +60,8 @@ namespace Simpchat.Application.Features
             {
                 if (uploadFileRequest.FileName != null && uploadFileRequest.Content != null && uploadFileRequest.ContentType != null)
                 {
-                    reaction.ImageUrl = await _fileStorageService.UploadFileAsync(BucketName, uploadFileRequest.FileName, uploadFileRequest.Content, uploadFileRequest.ContentType);
+                    var uniqueFileName = $"{Guid.NewGuid()}_{uploadFileRequest.FileName}";
+                    reaction.ImageUrl = await _fileStorageService.UploadFileAsync(BucketName, uniqueFileName, uploadFileRequest.Content, uploadFileRequest.ContentType);
                 }
             }
 
@@ -147,7 +148,8 @@ namespace Simpchat.Application.Features
             {
                 if (uploadFileRequest.FileName != null && uploadFileRequest.Content != null && uploadFileRequest.ContentType != null)
                 {
-                    reaction.ImageUrl = await _fileStorageService.UploadFileAsync(BucketName, uploadFileRequest.FileName, uploadFileRequest.Content, uploadFileRequest.ContentType);
+                    var uniqueFileName = $"{Guid.NewGuid()}_{uploadFileRequest.FileName}";
+                    reaction.ImageUrl = await _fileStorageService.UploadFileAsync(BucketName, uniqueFileName, uploadFileRequest.Content, uploadFileRequest.ContentType);
                 }
             }
 

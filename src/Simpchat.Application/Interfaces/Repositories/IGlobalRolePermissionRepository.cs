@@ -10,6 +10,6 @@ namespace Simpchat.Application.Interfaces.Repositories
 {
     public interface IGlobalRolePermissionRepository : IBaseRepository<GlobalRolePermission>
     {
-        Task<Guid> GetIdAsync(Guid roleId, Guid permissionId);
+        Task<Guid?> GetIdAsync(Guid roleId, Guid permissionId);
     }
 }
