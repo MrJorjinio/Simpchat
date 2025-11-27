@@ -1,4 +1,5 @@
 ﻿using Simpchat.Application.Errors;
+using Simpchat.Application.Extentions;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
 using Simpchat.Domain.Entities;
