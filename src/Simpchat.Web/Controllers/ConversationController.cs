@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/conversations")]
     [ApiController]
     public class ConversationController : ControllerBase
     {

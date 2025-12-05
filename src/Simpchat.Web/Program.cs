@@ -33,19 +33,6 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod()
         .AllowAnyHeader();
     });
-
-    options.AddPolicy("StrictCorsPolicy", policy =>
-    {
-        policy.WithOrigins(
-            "https://myapp.com",
-            "https://www.myapp.com",
-            "http://localhost:3000",
-            "http://127.0.0.1:5500"
-        )
-        .WithMethods("GET", "POST", "PUT", "DELETE")
-        .WithHeaders("Content-Type", "Authorization")
-        .AllowCredentials();
-    });
 });
 
 var app = builder.Build();

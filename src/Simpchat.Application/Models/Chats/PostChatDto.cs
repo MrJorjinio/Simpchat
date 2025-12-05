@@ -1,4 +1,5 @@
 ﻿using Simpchat.Application.Models.Files;
+using Simpchat.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +13,6 @@ namespace Simpchat.Application.Models.Chats
         public string Name { get; set; }
         public string? Description { get; set; }
         public Guid OwnerId { get; set; }
+        public ChatPrivacyTypes PrivacyType { get; set; } = ChatPrivacyTypes.Private;
     }
 }

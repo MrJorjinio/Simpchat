@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/otp")]
     [ApiController]
     public class OtpController : ControllerBase
     {

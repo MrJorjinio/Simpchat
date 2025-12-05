@@ -70,19 +70,19 @@ namespace Simpchat.Application.Features
                     Type = ChatTypes.Conversation,
                     LastMessage = new LastMessageResponseDto
                     {
-                        Content = lastMessage.Content,
-                        FileUrl = lastMessage.FileUrl,
-                        SenderUsername = lastMessage.Sender.Username,
-                        SentAt = lastMessage.SentAt
+                        Content = lastMessage?.Content,
+                        FileUrl = lastMessage?.FileUrl,
+                        SenderUsername = lastMessage?.Sender.Username,
+                        SentAt = lastMessage?.SentAt
                     },
                     NotificationsCount = notificationsCount,
-                    UserLastMessage = lastUserSendedMessage.SentAt
+                    UserLastMessage = lastUserSendedMessage?.SentAt
                 };
 
                 modeledConversations.Add(modeledConversation);
             }
 
-            modeledConversations.OrderByDescending(mc => (DateTimeOffset?)mc.LastMessage.SentAt ?? DateTimeOffset.MinValue);
+            modeledConversations = modeledConversations.OrderByDescending(mc => (DateTimeOffset?)mc.LastMessage.SentAt ?? DateTimeOffset.MinValue).ToList();
 
             return modeledConversations;
         }

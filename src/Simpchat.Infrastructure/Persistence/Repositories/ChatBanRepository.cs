@@ -46,7 +46,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             var chatBan = await _dbContext.ChatBans
                 .FirstOrDefaultAsync(cb => cb.ChatId == chatId && cb.UserId == userId);
 
-            return chatBan.Id;
+            return chatBan?.Id;
         }
 
         public async Task UpdateAsync(ChatBan entity)

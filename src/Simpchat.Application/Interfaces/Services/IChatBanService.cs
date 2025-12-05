@@ -10,7 +10,7 @@ namespace Simpchat.Application.Interfaces.Services
 {
     public interface IChatBanService
     {
-        Task<Result<Guid>> BanUserAsync(Guid chatId, Guid userId);
-        Task<Result> DeleteAsync(Guid chatId, Guid userId);
+        Task<Result<Guid>> BanUserAsync(Guid chatId, Guid userId, Guid requesterId);
+        Task<Result> DeleteAsync(Guid chatId, Guid userId, Guid requesterId);
     }
 }

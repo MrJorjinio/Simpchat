@@ -10,7 +10,7 @@ using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
 {
-    [Route("api/group")]
+    [Route("api/groups")]
     [ApiController]
     public class GroupController : ControllerBase
     {
@@ -53,9 +53,21 @@ namespace Simpchat.Web.Controllers
         [Authorize]
         public async Task<IActionResult> AddMemberAsync(Guid chatId, Guid addingUserId)
         {
+            var requesterId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var response = await _groupService.AddMemberAsync(chatId, addingUserId, requesterId);
+            var apiResponse = response.ToApiResult();
+
+            return apiResponse.ToActionResult();
+        }
+
+        [HttpPost("join")]
+        [Authorize]
+        public async Task<IActionResult> JoinAsync(Guid groupId)
+        {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
-            var response = await _groupService.AddMemberAsync(chatId, userId);
+            var response = await _groupService.JoinGroupAsync(groupId, userId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();
@@ -66,8 +78,9 @@ namespace Simpchat.Web.Controllers
         public async Task<IActionResult> LeaveAsync(Guid chatId)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var requesterId = userId;
 
-            var response = await _groupService.DeleteMemberAsync(userId, chatId);
+            var response = await _groupService.DeleteMemberAsync(userId, chatId, requesterId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();
@@ -77,7 +90,9 @@ namespace Simpchat.Web.Controllers
         [Authorize]
         public async Task<IActionResult> DeleteAsync(Guid chatId)
         {
-            var response = await _groupService.DeleteAsync(chatId);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var response = await _groupService.DeleteAsync(chatId, userId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();
@@ -87,6 +102,8 @@ namespace Simpchat.Web.Controllers
         [Authorize]
         public async Task<IActionResult> UpdateAsync(Guid chatId, [FromForm]UpdateChatDto updateChatDto, IFormFile file)
         {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
             var fileUploadRequest = new UploadFileRequest();
 
             if (file is not null)
@@ -99,7 +116,7 @@ namespace Simpchat.Web.Controllers
                 };
             }
 
-            var response = await _groupService.UpdateAsync(chatId, updateChatDto, fileUploadRequest);
+            var response = await _groupService.UpdateAsync(chatId, updateChatDto, fileUploadRequest, userId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();

@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Simpchat.Application.Errors;
+using Simpchat.Application.Extentions;
 using Simpchat.Application.Interfaces.File;
 using Simpchat.Application.Interfaces.Repositories;
 using Simpchat.Application.Interfaces.Services;
@@ -24,6 +25,7 @@ namespace Simpchat.Application.Features
         private readonly IMessageRepository _messageRepo;
         private readonly IValidator<UpdateChatDto> _updateValidator;
         private readonly IValidator<PostChatDto> _createValidator;
+        private readonly IChatUserPermissionRepository _chatUserPermissionRepository;
         private const string BucketName = "groups-avatars";
 
         public GroupService(
@@ -34,7 +36,8 @@ namespace Simpchat.Application.Features
             INotificationRepository notificationRepository,
             IMessageRepository messageRepository,
             IValidator<UpdateChatDto> updateValidator,
-            IValidator<PostChatDto> createValidator)
+            IValidator<PostChatDto> createValidator,
+            IChatUserPermissionRepository chatUserPermissionRepository)
         {
             _repo = repo;
             _userRepo = userRepo;
@@ -44,19 +47,65 @@ namespace Simpchat.Application.Features
             _messageRepo = messageRepository;
             _updateValidator = updateValidator;
             _createValidator = createValidator;
+            _chatUserPermissionRepository = chatUserPermissionRepository;
         }
 
-        public async Task<Result> AddMemberAsync(Guid groupId, Guid userId)
+        public async Task<Result> AddMemberAsync(Guid groupId, Guid userId, Guid requesterId)
         {
             var group = await _repo.GetByIdAsync(groupId);
 
             if (group is null)
                 return Result.Failure(ApplicationErrors.Chat.IdNotFound);
 
+            var canManage = group.CanManageChat(requesterId) ||
+                            await _chatUserPermissionRepository.HasUserPermissionAsync(
+                                groupId, requesterId, nameof(ChatPermissionTypes.ManageUsers));
+
+            if (!canManage)
+            {
+                return Result.Failure(ApplicationErrors.ChatPermission.Denied);
+            }
+
             var user = await _userRepo.GetByIdAsync(userId);
 
             if (user is null)
                 return Result.Failure(ApplicationErrors.User.IdNotFound);
+
+            if (group.IsGroupMember(userId))
+            {
+                return Result.Failure(ApplicationErrors.User.NotParticipatedInChat);
+            }
+
+            await _repo.AddMemberAsync(userId, groupId);
+
+            return Result.Success();
+        }
+
+        public async Task<Result> JoinGroupAsync(Guid groupId, Guid userId)
+        {
+            var group = await _repo.GetByIdAsync(groupId);
+
+            if (group is null)
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
+
+            var chat = await _chatRepo.GetByIdAsync(groupId);
+
+            if (chat is null)
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
+
+            var user = await _userRepo.GetByIdAsync(userId);
+
+            if (user is null)
+                return Result.Failure(ApplicationErrors.User.IdNotFound);
+
+            if (chat.PrivacyType == ChatPrivacyTypes.Private)
+                return Result.Failure(new Error("Group.Private", "Cannot join private group"));
+
+            if (user.HwoCanAddType == HwoCanAddYouTypes.Nobody)
+                return Result.Failure(new Error("User.PrivacyRestricted", "User has restricted who can add them to chats"));
+
+            if (group.IsGroupMember(userId))
+                return Result.Failure(ApplicationErrors.User.NotParticipatedInChat);
 
             await _repo.AddMemberAsync(userId, groupId);
 
@@ -86,7 +135,7 @@ namespace Simpchat.Application.Features
             var chat = new Chat
             {
                 Type = ChatTypes.Group,
-                PrivacyType = ChatPrivacyTypes.Private
+                PrivacyType = groupPostDto.PrivacyType
             };
 
             var chatId = await _chatRepo.CreateAsync(chat);
@@ -107,7 +156,8 @@ namespace Simpchat.Application.Features
             {
                 if (avatar.FileName != null && avatar.Content != null && avatar.ContentType != null)
                 {
-                    group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
+                    var uniqueFileName = $"{Guid.NewGuid()}_{avatar.FileName}";
+                    group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, uniqueFileName, avatar.Content, avatar.ContentType);
                 }
             }
 
@@ -116,7 +166,7 @@ namespace Simpchat.Application.Features
             return group.Id;
         }
 
-        public async Task<Result> DeleteAsync(Guid groupId)
+        public async Task<Result> DeleteAsync(Guid groupId, Guid userId)
         {
             var group = await _repo.GetByIdAsync(groupId);
 
@@ -125,12 +175,21 @@ namespace Simpchat.Application.Features
                 return Result.Failure(ApplicationErrors.Chat.IdNotFound);
             }
 
+            var canDelete = group.IsGroupOwner(userId) ||
+                            await _chatUserPermissionRepository.HasUserPermissionAsync(
+                                groupId, userId, nameof(ChatPermissionTypes.ManageChatInfo));
+
+            if (!canDelete)
+            {
+                return Result.Failure(ApplicationErrors.ChatPermission.Denied);
+            }
+
             await _repo.DeleteAsync(group);
 
             return Result.Success();
         }
 
-        public async Task<Result> DeleteMemberAsync(Guid userId, Guid groupId)
+        public async Task<Result> DeleteMemberAsync(Guid userId, Guid groupId, Guid requesterId)
         {
             var user = await _userRepo.GetByIdAsync(userId);
 
@@ -151,6 +210,24 @@ namespace Simpchat.Application.Features
                 return Result.Failure(ApplicationErrors.Chat.NotValidChatType);
             }
 
+            var group = await _repo.GetByIdAsync(groupId);
+            if (group is null)
+            {
+                return Result.Failure(ApplicationErrors.Chat.IdNotFound);
+            }
+
+            if (userId != requesterId)
+            {
+                var canManage = group.CanManageChat(requesterId) ||
+                                await _chatUserPermissionRepository.HasUserPermissionAsync(
+                                    groupId, requesterId, nameof(ChatPermissionTypes.ManageUsers));
+
+                if (!canManage)
+                {
+                    return Result.Failure(ApplicationErrors.ChatPermission.Denied);
+                }
+            }
+
             var groupMember = new GroupMember
             {
                 GroupId = groupId,
@@ -166,20 +243,28 @@ namespace Simpchat.Application.Features
         {
             var results = await _repo.SearchAsync(searchTerm);
 
-            var modeledResults = results
-                .Select(r => new SearchChatResponseDto
+            var modeledResults = new List<SearchChatResponseDto>();
+
+            foreach (var group in results)
+            {
+                var chat = await _chatRepo.GetByIdAsync(group.Id);
+
+                if (chat != null && chat.PrivacyType == ChatPrivacyTypes.Public)
                 {
-                    ChatId = r.Id,
-                    AvatarUrl = r.AvatarUrl,
-                    DisplayName = r.Name,
-                    ChatType = ChatTypes.Group
-                })
-                .ToList();
+                    modeledResults.Add(new SearchChatResponseDto
+                    {
+                        ChatId = group.Id,
+                        AvatarUrl = group.AvatarUrl,
+                        DisplayName = group.Name,
+                        ChatType = ChatTypes.Group
+                    });
+                }
+            }
 
             return modeledResults;
         }
 
-        public async Task<Result> UpdateAsync(Guid groupId, UpdateChatDto updateChatDto, UploadFileRequest? avatar)
+        public async Task<Result> UpdateAsync(Guid groupId, UpdateChatDto updateChatDto, UploadFileRequest? avatar, Guid userId)
         {
             var validationResult = await _updateValidator.ValidateAsync(updateChatDto);
 
@@ -199,6 +284,15 @@ namespace Simpchat.Application.Features
                 return Result.Failure(ApplicationErrors.Chat.IdNotFound);
             }
 
+            var canUpdate = group.IsGroupOwner(userId) ||
+                            await _chatUserPermissionRepository.HasUserPermissionAsync(
+                                groupId, userId, nameof(ChatPermissionTypes.ManageChatInfo));
+
+            if (!canUpdate)
+            {
+                return Result.Failure(ApplicationErrors.ChatPermission.Denied);
+            }
+
             group.Name = updateChatDto.Name;
             group.Description = updateChatDto.Description;
 
@@ -206,7 +300,8 @@ namespace Simpchat.Application.Features
             {
                 if (avatar.FileName != null && avatar.Content != null && avatar.ContentType != null)
                 {
-                    group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, avatar.FileName, avatar.Content, avatar.ContentType);
+                    var uniqueFileName = $"{Guid.NewGuid()}_{avatar.FileName}";
+                    group.AvatarUrl = await _fileStorageService.UploadFileAsync(BucketName, uniqueFileName, avatar.Content, avatar.ContentType);
                 }
             }
 
@@ -240,10 +335,10 @@ namespace Simpchat.Application.Features
                     AvatarUrl = group.AvatarUrl,
                     LastMessage = new LastMessageResponseDto
                     {
-                        Content = lastMessage.Content,
-                        FileUrl = lastMessage.FileUrl,
-                        SenderUsername = lastMessage.Sender.Username,
-                        SentAt = lastMessage.SentAt
+                        Content = lastMessage?.Content,
+                        FileUrl = lastMessage?.FileUrl,
+                        SenderUsername = lastMessage?.Sender.Username,
+                        SentAt = lastMessage?.SentAt
                     },
                     Name = group.Name,
                     NotificationsCount = notificationsCount,
@@ -254,7 +349,7 @@ namespace Simpchat.Application.Features
                 modeledGroups.Add(modeledGroup);
             }
 
-            modeledGroups.OrderByDescending(mg => (DateTimeOffset?)mg.LastMessage.SentAt ?? DateTimeOffset.MinValue);
+            modeledGroups = modeledGroups.OrderByDescending(mg => (DateTimeOffset?)mg.LastMessage.SentAt ?? DateTimeOffset.MinValue).ToList();
 
             return modeledGroups;
         }

@@ -34,6 +34,7 @@ namespace Simpchat.Application
             services.AddScoped<IReactionService, ReactionService>();
             services.AddScoped<IMessageReactionService, MessageReactionService>();
             services.AddScoped<IChatBanService, ChatBanService>();
+            services.AddScoped<IPermissionService, PermissionService>();
 
             return services;
         }

@@ -50,5 +50,42 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             _dbContext.ChatsUsersPermissions.Update(entity);
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task<ChatUserPermission?> GetByUserChatPermissionAsync(Guid chatId, Guid userId, Guid permissionId)
+        {
+            return await _dbContext.ChatsUsersPermissions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ChatId == chatId && p.UserId == userId && p.PermissionId == permissionId);
+        }
+
+        public async Task<List<ChatUserPermission>> GetUserChatPermissionsAsync(Guid chatId, Guid userId)
+        {
+            return await _dbContext.ChatsUsersPermissions
+                .AsNoTracking()
+                .Include(p => p.Permission)
+                .Include(p => p.User)
+                .Where(p => p.ChatId == chatId && p.UserId == userId)
+                .ToListAsync();
+        }
+
+        public async Task<List<ChatUserPermission>> GetChatPermissionsAsync(Guid chatId)
+        {
+            return await _dbContext.ChatsUsersPermissions
+                .AsNoTracking()
+                .Include(p => p.Permission)
+                .Include(p => p.User)
+                .Where(p => p.ChatId == chatId)
+                .ToListAsync();
+        }
+
+        public async Task DeleteByUserChatPermissionAsync(Guid chatId, Guid userId, Guid permissionId)
+        {
+            var permission = await GetByUserChatPermissionAsync(chatId, userId, permissionId);
+            if (permission is not null)
+            {
+                _dbContext.ChatsUsersPermissions.Remove(permission);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
     }
 }

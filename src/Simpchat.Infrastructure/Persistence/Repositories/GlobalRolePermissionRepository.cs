@@ -45,12 +45,12 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(grp => grp.Id == id);
         }
 
-        public async Task<Guid> GetIdAsync(Guid roleId, Guid permissionId)
+        public async Task<Guid?> GetIdAsync(Guid roleId, Guid permissionId)
         {
             var rolePermission = await _dbContext.GlobalRolesPermissions
                 .FirstOrDefaultAsync(grp => grp.RoleId == roleId && grp.PermissionId == permissionId);
 
-            return rolePermission.Id;
+            return rolePermission?.Id;
         }
 
         public async Task UpdateAsync(GlobalRolePermission entity)

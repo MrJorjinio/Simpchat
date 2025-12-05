@@ -11,5 +11,6 @@ namespace Simpchat.Application.Interfaces.Auth
     {
         Task<string> EncryptAsync(string password, string salt);
         Task<bool> VerifyAsync(string hash, string password, string salt);
+        Task<string> GenerateSaltAsync();
     }
 }

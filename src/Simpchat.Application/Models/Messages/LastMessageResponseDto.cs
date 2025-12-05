@@ -10,7 +10,7 @@ namespace Simpchat.Application.Models.Messages
     {
         public string? Content { get; set; }
         public string? FileUrl { get; set; }
-        public string SenderUsername { get; set; }
-        public DateTimeOffset SentAt { get; set; }
+        public string? SenderUsername { get; set; }
+        public DateTimeOffset? SentAt { get; set; }
     }
 }

@@ -12,7 +12,7 @@ using System.Security.Claims;
 
 namespace Simpchat.Web.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/messages")]
     [ApiController]
     public class MessageController : ControllerBase
     {
@@ -58,8 +58,11 @@ namespace Simpchat.Web.Controllers
         }
 
         [HttpPut("{messageId}")]
+        [Authorize]
         public async Task<IActionResult> UpdateAsync(Guid messageId, [FromForm] UpdateMessageDto updateMessageDto, IFormFile? file)
         {
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
             UploadFileRequest? fileUploadRequest = null;
 
             if (file != null)
@@ -72,16 +75,19 @@ namespace Simpchat.Web.Controllers
                 };
             }
 
-            var response = await _messageService.UpdateAsync(messageId, updateMessageDto, fileUploadRequest);
+            var response = await _messageService.UpdateAsync(messageId, updateMessageDto, fileUploadRequest, userId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();
         }
 
         [HttpDelete("{messageId}")]
+        [Authorize]
         public async Task<IActionResult> DeleteAsync(Guid messageId)
         {
-            var response = await _messageService.DeleteAsync(messageId);
+            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var response = await _messageService.DeleteAsync(messageId, userId);
             var apiResponse = response.ToApiResult();
 
             return apiResponse.ToActionResult();

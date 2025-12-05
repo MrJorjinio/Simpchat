@@ -25,7 +25,7 @@ namespace Simpchat.Shared
             var rabbitMQSettings = config.GetSection("RabbitMQ").Get<RabbitMQSettings>();
             services.AddSingleton(rabbitMQSettings);
 
-            var emailSettings = config.GetSection("EmailSettings").Get<EmailSettings>();
+            var emailSettings = config.GetSection("EmailConfiguration").Get<EmailSettings>();
             services.AddSingleton(emailSettings);
             return services;
         }

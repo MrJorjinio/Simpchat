@@ -45,10 +45,10 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
         public async Task<bool> CheckIsNotSeenAsync(Guid messageId, Guid userId)
         {
             var notifications = await _dbContext.Notifications
-                .Where(n => n.MessageId == messageId && n.ReceiverId == userId && n.IsSeen == false)
+                .Where(n => n.MessageId == messageId && n.ReceiverId == userId && n.IsSeen == true)
                 .ToListAsync();
 
-            return notifications is not null;
+            return notifications.Count == 0;
         }
 
         public async Task<bool> GetMessageSeenStatusAsync(Guid messageId)
@@ -57,7 +57,7 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
                 .Where(n => n.MessageId == messageId && n.IsSeen == true)
                 .ToListAsync();
 
-            if (seenNotification is not null)
+            if (seenNotification.Count != 0)
             {
                 return true;
             }
@@ -81,12 +81,12 @@ namespace Simpchat.Infrastructure.Persistence.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<Guid> GetIdAsync(Guid messageId, Guid userId)
+        public async Task<Guid?> GetIdAsync(Guid messageId, Guid userId)
         {
             var notification = await _dbContext.Notifications
                 .FirstOrDefaultAsync(n => n.MessageId == messageId && n.ReceiverId == userId);
 
-            return notification.Id;
+            return notification?.Id;
         }
     }
 }
