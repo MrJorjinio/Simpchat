@@ -108,7 +108,7 @@ docker-compose up --build
 ```
 
 **That's it!** 🎉 Your application will be running at:
-- **Frontend:** http://localhost:3000
+- **Frontend:** http://localhost:5173
 - **Backend API:** http://localhost:5000
 - **Database:** localhost:5432
 
@@ -147,7 +147,31 @@ npm install
 npm start
 ```
 
-Frontend will start at `http://localhost:3000`
+Frontend will start at `http://localhost:5173`
+
+---
+
+## 📚 A Learning Journey
+
+This project is a **real story of growth and learning**. Unlike polished, production-ready codebases, SimpChat's commit history tells an authentic story of development:
+
+### 🌱 What Makes This Special
+
+- **Early commits** show my initial attempts without deep architectural knowledge
+- **Progressive improvements** demonstrate how I learned clean architecture principles
+- **Refactoring evolution** reveals the journey from basic functionality to structured code
+- **Problem-solving moments** captured in commit messages and code changes
+
+### 🎓 Perfect for Learning
+
+If you're learning full-stack development, exploring this repository chronologically offers insights into:
+
+- How a developer evolves their understanding of software architecture
+- Common mistakes and how to fix them
+- The iterative process of building real applications
+- Practical application of design patterns as knowledge grows
+
+**💡 Tip:** Check out the commit history from oldest to newest to see the complete transformation from beginner patterns to more sophisticated approaches!
 
 ---
 
@@ -192,10 +216,13 @@ The application uses **Code First** approach with Entity Framework Core, making 
 
 ## 🌟 Why SimpChat?
 
-- **Portfolio Ready:** Clean, well-structured code that impresses recruiters
+- **Authentic Learning Journey:** Watch real development evolution through commit history
+- **Portfolio Ready:** Shows growth mindset and continuous improvement
+- **Educational Resource:** Perfect for learners to see realistic development progression
+- **Transparent Process:** From messy first attempts to clean architecture
 - **Learning Resource:** Study full-stack patterns and real-time communication
 - **Extensible:** Built to be enhanced with new features
-- **Production Practices:** Security, scalability, and maintainability baked in
+- **Production Practices:** Security, scalability, and maintainability achieved through iteration
 - **Modern Stack:** Uses current industry-standard technologies
 
 ---
@@ -224,8 +251,10 @@ This project is open source and available for learning and portfolio purposes.
 
 <div align="center">
 
-### Built with 💙 by developers, for developers
+### Built with 💙 by a solo developer on a learning journey
 
 **SimpChat** - *Where real-time conversations come alive*
+
+*"The best code isn't written perfectly the first time—it's refined through learning and iteration."*
 
 </div>
